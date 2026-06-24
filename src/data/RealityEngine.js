@@ -1,0 +1,393 @@
+// ============================================================
+// GatiFleet — Transportation Reality Engine (TRE) Core
+// The single model of reality for the transportation ecosystem
+// ============================================================
+
+class TransportationRealityEngine {
+  constructor() {
+    this.subscribers = new Set();
+    this.isSimulationRunning = true;
+
+    // Layer 1: Event Capture Layer (L1 Event)
+    this.events = [
+      { id: 'ev-0', timestamp: new Date(Date.now() - 30000).toISOString(), type: 'SHIPMENT_CREATED', desc: 'New shipment order initialized for Delhi Depot.', source: 'SYS/CLIENT' },
+      { id: 'ev-1', timestamp: new Date(Date.now() - 25000).toISOString(), type: 'ROUTE_CHANGED', desc: 'Detour set to bypass NH48 due to flooding.', source: 'SYS/NOC' },
+      { id: 'ev-2', timestamp: new Date(Date.now() - 20000).toISOString(), type: 'HARSH_BRAKE', desc: 'ADAS Warning: Harsh brake detected for TRK-90482 on NH27. G-Force: 0.85G.', source: 'TRK-90482/ADAS' },
+      { id: 'ev-3', timestamp: new Date(Date.now() - 15000).toISOString(), type: 'INVOICE_APPROVED', desc: 'Invoice INV-90481 approved by consignee. Settle ledger active.', source: 'ERP/LEDGER' }
+    ];
+
+    // Layer 2: Universal Entity Layer (L2 Entity)
+    this.entities = {
+      customer: { id: 'cust-102', label: 'Tata Motors', state: 'active', relations: ['ord-481'], riskScore: 12, performance: 98.4 },
+      order: { id: 'ord-481', label: 'PO-928410', state: 'processing', relations: ['shp-90481'], riskScore: 8, performance: 100 },
+      shipment: { id: 'shp-90481', label: 'SHP-CT-90481', state: 'in_transit', relations: ['trk-90482', 'wh-12'], riskScore: 15, performance: 94.2 },
+      truck: { id: 'trk-90482', label: 'TRK-90482', state: 'active', relations: ['drv-1209', 'car-01'], riskScore: 10, performance: 96.8 },
+      driver: { id: 'drv-1209', label: 'Rajesh Kumar', state: 'driving', relations: ['rt-nh48'], riskScore: 18, performance: 91.2 },
+      route: { id: 'rt-nh48', label: 'Delhi-Mumbai NH48', state: 'nominal', relations: ['fuel-22', 'toll-98'], riskScore: 22, performance: 88.5 },
+      fuel: { id: 'fuel-22', label: 'IOCL Jaipur Refuel', state: 'active', relations: [], riskScore: 5, performance: 100 },
+      toll: { id: 'toll-98', label: 'FASTag FT8248', state: 'active', relations: [], riskScore: 8, performance: 99.1 },
+      warehouse: { id: 'wh-12', label: 'Panvel Dock Hub', state: 'nominal', relations: [], riskScore: 14, performance: 95.0 },
+      carrier: { id: 'car-01', label: 'BlueDart Trans', state: 'active', relations: [], riskScore: 11, performance: 96.2 },
+      invoice: { id: 'inv-904', label: 'INV-90481', state: 'generated', relations: ['pay-42'], riskScore: 4, performance: 100 },
+      payment: { id: 'pay-42', label: 'ZKP Ledger Settle', state: 'pending', relations: [], riskScore: 3, performance: 100 }
+    };
+
+    // Layer 3: Digital Twin Layer (L3 Digital Twin)
+    // Every entity gets Physical, Operational, Financial, Behavioral, and Risk twins
+    this.twins = {
+      customer: {
+        physical: 'Mumbai Factory Docks',
+        operational: 'Active (42 shipments/mo)',
+        financial: 'Contract margins: 24.6%',
+        behavioral: 'Payment cycles: 2.1 days average',
+        risk: 'Low Contract Risk (12%)'
+      },
+      driver: {
+        physical: 'Obd-II Cab Telemetry OK',
+        operational: 'Active duty: 6.2 hours driven',
+        financial: 'Bonus potential accrued: ₹4,500',
+        behavioral: 'Habit safety: 91.2% score',
+        risk: 'Fatigue index: 22%'
+      },
+      route: {
+        physical: 'NH48 Western Corridor',
+        operational: 'Dwell bottlenecks: +22m average',
+        financial: 'Toll card expense: ₹4,200',
+        behavioral: 'Monday congestion loops detected',
+        risk: 'Monsoon landslide alerts: Moderate'
+      },
+      shipment: {
+        physical: 'Reefer box temp: 4.2°C',
+        operational: 'In-transit: Delhi ➔ Mumbai',
+        financial: 'Freight value: ₹36.0 Lakhs',
+        behavioral: 'SLA priority rating: High',
+        risk: 'Theft forecast risk: 0.04%'
+      }
+    };
+
+    // Layer 4: Memory Layer (L4 Memory)
+    this.lessons = [
+      {
+        id: 'les-0',
+        event: 'Siliguri landslide delay',
+        cause: 'Monsoon landslide corridor blockage on NH27',
+        factors: 'Subcontractor trailer lack of GPS telemetry + poor alternate route routing',
+        financialImpact: 'SLA penalty debit of ₹42,000 + factory standby penalty',
+        recovery: 'Re-routed en-route cargo via secondary DFC rail wagons',
+        outcome: 'Detour latency minimized. Delay duration reduced by 60%'
+      },
+      {
+        id: 'les-1',
+        event: 'FASTag toll card depletion stoppage',
+        cause: 'Toll balance zeroed out at NH8 toll gateway',
+        factors: 'Demurrage balances charged on concurrent routes, bypassing local refill triggers',
+        financialImpact: 'Idle driver overtime pay + toll block fine: ₹18,000',
+        recovery: 'Auto-refilled accounts via corporate bank credit lines',
+        outcome: 'Enabled route-based predictive toll liquidity transfers 30m prior to plaza'
+      }
+    ];
+
+    // Layer 5: Learning Layer (L5 Learning)
+    this.learningStats = {
+      etaAccuracy: 96.2,
+      costAccuracy: 98.4,
+      capacityAccuracy: 91.5,
+      activeModels: ['ETA-XGBoost-v4', 'TollPath-RNN-v1'],
+      learnedFeatures: [
+        { name: 'Monday Congestion Factor (NH48)', impact: '+4.2h delay probability weekly', source: 'Continuous loop audit' },
+        { name: 'Jaipur Toll Queue Index', impact: '+22m toll plaza backlog patterns', source: 'FASTag transit timing feedback' }
+      ]
+    };
+
+    // Layer 6: Prediction Layer (L6 Prediction)
+    this.predictions = {
+      delays: { probability: '12%', reason: 'Monsoon border checkpoints', impact: '+2.4h potential' },
+      breakdowns: { probability: '4.2%', reason: 'High radiator coolant heat', impact: 'TRK-90482 engine check' },
+      churn: { probability: '2.8%', reason: 'SLA compliance stable', impact: 'Rebate triggers inactive' },
+      capacity: { probability: '45%', reason: 'Pre-festival container volume spikes', impact: '-18 trailer shortages' },
+      costSpikes: { probability: '32%', reason: 'Diesel price revisions', impact: '+₹1.8/L forecast' },
+      resignation: {
+        probability: '82%',
+        reason: 'Overtime hours rising + average monthly bonuses declining + trip distances increasing',
+        driver: 'drv-1209 (Rajesh Kumar)'
+      }
+    };
+
+    // Layer 7: Simulation Layer (L7 Simulation)
+    this.simulationState = {
+      dieselIncrease: 0,
+      portClosed: false,
+      monsoonFlashFlood: false,
+      demandDoubled: false,
+      scenarioResult: null
+    };
+
+    // Layer 8: Decision Layer (L8 Decision)
+    this.decisionPackage = {
+      target: 'Delhi ➔ Chennai (500 Tons)',
+      optionsScanned: 30000000,
+      selectedPlan: 'Dedicated Rail DFC Line',
+      reasoning: 'DFC Rail achieves cost minimization target while protecting SLA reliability at 98.5% confidence.',
+      alternatives: ['NH44 Direct Road (High Risk)', 'Multimodal Hub (Moderate Cost)']
+    };
+
+    // Layer 9: Execution Layer (L9 Execution)
+    this.executionAgentStatus = {
+      state: 'idle',
+      lastExecutedAction: 'Reassign shipment SHP-CT-90482 to standby driver Suresh Yadav.',
+      webhookStatus: 'Secure ZKP Handshake complete',
+      autoDispatches: [
+        'Dispatched trailer allocation confirmation to BlueDart',
+        'Updated ETA records inside client intelligence dashboard',
+        'Registered geofence route tracking tags on NH14 Corridor'
+      ]
+    };
+
+    // Layer 10: Evolution Layer (L10 Evolution)
+    this.evolutionMatrix = {
+      topDataGaps: ['Odometer telemetry on subcontractor trailers', 'Real-time dock utilization in Eastern ports'],
+      topPredictionFailures: ['ETA accuracy drops near Siliguri border (+8.5% dev)'],
+      topRevenueLeaks: ['Subcontractor spot price hikes on seasonal corridors (₹14.2L lost)'],
+      experiments: [
+        { id: 'exp-1', name: 'ZKP Invoice Auto-verify', status: 'Running (Group A: 20 carriers)', result: 'Reduced billing cycle from 3.2 days to 0.4 days' }
+      ],
+      selfUpgrades: {
+        weakness: 'ETA Accuracy in West Bengal (degraded to 84% vs 97% target)',
+        rootCause: 'Missing toll plaza queue data near Raxaul border',
+        newRequirement: 'Acquire live NH27 toll queue parameters via Fastag registry APIs',
+        modelStatus: 'Retrained and Deployed (Model ETA-XGBoost-v4-WB)'
+      }
+    };
+
+    // Global Metric: Operational Certainty Index (OCI)
+    this.oci = {
+      etaCertainty: 96.2,
+      costCertainty: 98.4,
+      capacityCertainty: 91.5,
+      demandCertainty: 92.8,
+      customerCertainty: 94.6,
+      driverCertainty: 90.2,
+      networkCertainty: 88.5,
+      revenueCertainty: 95.0,
+      globalCertainty: 93.4
+    };
+
+    // Start background simulation ticker
+    this.startTicker();
+  }
+
+  // Subscribe to changes (UI triggers redraws)
+  subscribe(callback) {
+    this.subscribers.add(callback);
+    return () => this.subscribers.delete(callback);
+  }
+
+  notify() {
+    this.subscribers.forEach(cb => cb(this.getState()));
+  }
+
+  getState() {
+    return {
+      events: this.events,
+      entities: this.entities,
+      twins: this.twins,
+      lessons: this.lessons,
+      predictions: this.predictions,
+      causality: this.causality,
+      simulationState: this.simulationState,
+      decisionPackage: this.decisionPackage,
+      executionAgentStatus: this.executionAgentStatus,
+      learningStats: this.learningStats,
+      evolutionMatrix: this.evolutionMatrix,
+      oci: this.oci
+    };
+  }
+
+  // Ticks every few seconds simulating the reality flow
+  startTicker() {
+    setInterval(() => {
+      if (!this.isSimulationRunning) return;
+
+      const chosen = { type: 'TELEMETRY_SYNC', desc: 'GPS pin synced for SHP-CT-90481. Speed: 62 km/h.', tag: 'IOT' };
+      const newEvent = {
+        id: `ev-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        type: chosen.type,
+        desc: chosen.desc,
+        source: 'Edge/IoT'
+      };
+
+      this.events = [newEvent, ...this.events.slice(0, 19)];
+
+      this.oci = {
+        ...this.oci,
+        etaCertainty: +(this.oci.etaCertainty + (Math.random() - 0.5) * 0.2).toFixed(2),
+        costCertainty: +(this.oci.costCertainty + (Math.random() - 0.5) * 0.1).toFixed(2),
+        driverCertainty: +(this.oci.driverCertainty + (Math.random() - 0.5) * 0.3).toFixed(2)
+      };
+      this.oci.globalCertainty = +(
+        (this.oci.etaCertainty +
+          this.oci.costCertainty +
+          this.oci.capacityCertainty +
+          this.oci.demandCertainty +
+          this.oci.customerCertainty +
+          this.oci.driverCertainty +
+          this.oci.networkCertainty +
+          this.oci.revenueCertainty) /
+        8
+      ).toFixed(2);
+
+      this.notify();
+    }, 5000);
+  }
+
+  // Simulation Controls (What-if scenario executions)
+  setDieselSimulation(pct) {
+    this.simulationState.dieselIncrease = pct;
+    
+    if (pct > 0) {
+      this.simulationState.scenarioResult = {
+        marginImpact: `-8%`,
+        revenueImpact: `-2%`,
+        regionRisk: `+11% (West Region)`,
+        recommendation: `Shift upcoming Western corridors to container rail corridors and apply a 3% fuel card pre-buy surcharge.`
+      };
+      this.predictions.costSpikes.probability = '98%';
+      this.oci.costCertainty = +(98.4 - pct * 0.25).toFixed(2);
+    } else {
+      this.simulationState.scenarioResult = null;
+      this.predictions.costSpikes.probability = '32%';
+      this.oci.costCertainty = 98.4;
+    }
+
+    this.oci.globalCertainty = +(
+      (this.oci.etaCertainty +
+        this.oci.costCertainty +
+        this.oci.capacityCertainty +
+        this.oci.demandCertainty +
+        this.oci.customerCertainty +
+        this.oci.driverCertainty +
+        this.oci.networkCertainty +
+        this.oci.revenueCertainty) /
+      8
+    ).toFixed(2);
+
+    this.events = [{
+      id: `ev-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      type: 'SimulationParameterChanged',
+      desc: `Simulation: Diesel price spike modifier adjusted to +${pct}%. margins calculated: Scenario A active.`,
+      source: 'SIMULATION/ENGINE'
+    }, ...this.events];
+
+    this.notify();
+  }
+
+  setPortClosed(closed) {
+    this.simulationState.portClosed = closed;
+    if (closed) {
+      this.entities.route.state = 'congested';
+      this.predictions.delays.probability = '98%';
+      this.oci.networkCertainty = 68.4;
+
+      this.events = [{
+        id: `ev-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        type: 'AutonomousActionDispatched',
+        desc: 'JNPT Port Closure detected. Autonomous Agent rerouted 8 container shipments to Panvel hub.',
+        source: 'AUTONOMY/BROKER'
+      }, ...this.events];
+    } else {
+      this.entities.route.state = 'nominal';
+      this.predictions.delays.probability = '12%';
+      this.oci.networkCertainty = 88.5;
+    }
+    this.oci.globalCertainty = +(
+      (this.oci.etaCertainty +
+        this.oci.costCertainty +
+        this.oci.capacityCertainty +
+        this.oci.demandCertainty +
+        this.oci.customerCertainty +
+        this.oci.driverCertainty +
+        this.oci.networkCertainty +
+        this.oci.revenueCertainty) /
+      8
+    ).toFixed(2);
+
+    this.notify();
+  }
+
+  triggerIncidentBreakdown() {
+    this.isSimulationRunning = false;
+    this.entities.truck.state = 'broken_down';
+    this.twins.driver.risk = 'Fatigue index: 88% (Breached)';
+    this.twins.shipment.risk = 'Theft risk: Critical (12.4%)';
+    this.oci.etaCertainty = 42.1;
+    this.oci.revenueCertainty = 62.4;
+    this.oci.globalCertainty = +(
+      (this.oci.etaCertainty +
+        this.oci.costCertainty +
+        this.oci.capacityCertainty +
+        this.oci.demandCertainty +
+        this.oci.customerCertainty +
+        this.oci.driverCertainty +
+        this.oci.networkCertainty +
+        this.oci.revenueCertainty) /
+      8
+    ).toFixed(2);
+
+    this.events = [{
+      id: `ev-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      type: 'TruckBrokenDown',
+      desc: 'TRK-90482 engine coolant breach detected. Safety score degraded, fatigue flagged.',
+      source: 'TRK-90482/OBD'
+    }, ...this.events];
+
+    this.notify();
+  }
+
+  resolveIncidentBreakdown() {
+    this.isSimulationRunning = true;
+    this.entities.truck.state = 'active';
+    this.twins.driver.risk = 'Fatigue index: 22%';
+    this.twins.shipment.risk = 'Theft risk: 0.04%';
+    this.oci.etaCertainty = 96.2;
+    this.oci.revenueCertainty = 95.0;
+    this.oci.globalCertainty = +(
+      (this.oci.etaCertainty +
+        this.oci.costCertainty +
+        this.oci.capacityCertainty +
+        this.oci.demandCertainty +
+        this.oci.customerCertainty +
+        this.oci.driverCertainty +
+        this.oci.networkCertainty +
+        this.oci.revenueCertainty) /
+      8
+    ).toFixed(2);
+
+    const newLesson = {
+      id: `les-${Date.now()}`,
+      event: 'TRK-90482 coolant breach recovery',
+      cause: 'OBD-II error P0117 coolant leak sensor breach',
+      factors: 'Driver fatigue accumulation limits + highway checkpoint backlogs',
+      financialImpact: 'Auto-credited 10% SLA penalty: ₹9,600',
+      recovery: 'Dispatched backup trailer TRK-00052, transferred en-route coordinates, auto-notified customer.',
+      outcome: 'Detour success. Bypassed flood congestion, protected production lines.'
+    };
+    this.lessons = [newLesson, ...this.lessons];
+
+    this.events = [{
+      id: `ev-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      type: 'SentinelResolutionComplete',
+      desc: 'Auto-exception resolution complete. Driver rest trigger dispatched. SLA Protected.',
+      source: 'SENTINEL/AUTONOMY'
+    }, ...this.events];
+
+    this.notify();
+  }
+}
+
+// Export singleton instance representing GatiFleet's unified reality
+export const RealityEngine = new TransportationRealityEngine();
