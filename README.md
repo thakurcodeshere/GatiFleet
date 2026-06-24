@@ -1,16 +1,135 @@
-# React + Vite
+# 🚛 GatiFleet — India's Transportation OS
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+[![CI Build Status](https://github.com/thakurcodeshere/GatiFleet/actions/workflows/ci.yml/badge.svg)](https://github.com/thakurcodeshere/GatiFleet/actions)
+[![GitHub license](https://img.shields.io/github/license/thakurcodeshere/GatiFleet)](https://github.com/thakurcodeshere/GatiFleet/blob/main/LICENSE)
+[![React Version](https://img.shields.io/badge/react-v19.x-blue.svg)](https://react.dev)
+[![Vite Version](https://img.shields.io/badge/vite-v8.x-purple.svg)](https://vite.dev)
 
-Currently, two official plugins are available:
+**GatiFleet** is a high-performance, next-generation enterprise Operating System for transportation and logistics in India. Built for modern fleet operators, GatiFleet brings real-time telemetry, automated dispatching, driver payroll, analytics, supply chain knowledge graphs, and AI copiloting into a unified, fluid workspace.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## 🌟 Key Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+* **📍 Live Tracking & Telemetry**: High-fidelity geofenced maps powered by Leaflet.js with live vehicle coordinate simulations.
+* **🧠 AI Copilot**: Intelligent, real-time routing assistant and anomaly detection console for operators.
+* **💼 ERP & CRM Workspace**: End-to-end invoicing, route costing, fuel logs, and shipper relationship dashboards.
+* **👥 Human Capital Management (HCM)**: Driver log sheets, payroll rosters, compliance tracking, and shift management.
+* **📊 Deep Analytics**: Multi-dimensional operations dashboards tracking fuel efficiency, vehicle utilization, and trip margins via Chart.js.
+* **🕸️ Supply Chain Knowledge Graph**: Visual nodes illustrating hub relations, route segments, and distribution nodes.
+* **🤖 Dispatch Agents**: Autonomous scheduling and job-routing engine dashboard.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🏗️ System Architecture
+
+GatiFleet separates stateful simulation, context coordination, and views to deliver smooth, sub-second telemetry updates.
+
+```mermaid
+graph TD
+    RE[RealityEngine.js / Mock Telemetry Simulator] -->|Updates Coordinates & States| AppCtx[App State / Contexts]
+    AppCtx -->|Provides Real-time Data & Theme| Layout[Layout & Navigation]
+    Layout --> Dashboard[Dashboard.jsx]
+    Layout --> LiveTracking[LiveTracking.jsx]
+    Layout --> AICopilot[AICopilot.jsx]
+    Layout --> ERP[ERPDashboard.jsx]
+    Layout --> CRM[CRMDashboard.jsx]
+    Layout --> HCM[HCMDashboard.jsx]
+    Layout --> Knowledge[KnowledgeGraph.jsx]
+    Layout --> Agents[AgentsDashboard.jsx]
+    Layout --> Analytics[Analytics.jsx]
+```
+
+---
+
+## 🛠️ Tech Stack
+
+- **Core Framework**: React 19 (Hooks & Context API) + Vite (Superfast dev bundling)
+- **Mapping & Geospatial**: Leaflet & React-Leaflet
+- **Charts & Visualizations**: Chart.js & React-Chartjs-2
+- **Aesthetics & Animations**: Framer Motion + custom CSS system with CSS variables (light/dark mode toggle support)
+- **Icons**: Lucide React
+- **Code Quality**: ESLint + Prettier configurations
+
+---
+
+## 📂 Project Structure
+
+The project has a modular, feature-based file layout:
+
+```text
+GatiFleet/
+├── .github/                 # GitHub Action workflows & templates
+│   ├── workflows/           # CI/CD configurations
+│   │   └── ci.yml           # Automated lint & build action
+│   └── ISSUE_TEMPLATE/      # Custom GitHub bug & feature templates
+│       ├── bug_report.md
+│       └── feature_request.md
+├── public/                  # Static assets & icons
+├── src/
+│   ├── components/
+│   │   ├── layout/          # Sidebar, Topbar, and base layout
+│   │   └── shared/          # Reusable UI parts (e.g., CopilotPanel)
+│   ├── context/             # Global Context providers (e.g., ThemeContext)
+│   ├── data/                # RealityEngine simulator & mock datasets
+│   ├── pages/               # Functional pages (Dashboard, Fleet, HCM, etc.)
+│   ├── App.jsx              # Main router & page manager
+│   ├── index.css            # Global CSS variables & layout design
+│   └── main.jsx             # React DOM renderer
+├── package.json             # Build configurations & npm dependencies
+├── vite.config.js           # Vite bundler configurations
+└── eslint.config.js         # Linter configurations
+```
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+Make sure you have Node.js (version 20+ recommended) and npm installed.
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/thakurcodeshere/GatiFleet.git
+   cd GatiFleet
+   ```
+2. Install npm packages:
+   ```bash
+   npm install
+   ```
+
+### Running Locally
+
+To spin up the local hot-reloading development server, run:
+```bash
+npm run dev
+```
+Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+### Building for Production
+
+Compile and bundle the project for production distribution:
+```bash
+npm run build
+```
+The output files will be compiled into the `dist/` directory, ready to serve.
+
+### Code Verification
+
+Run ESLint to check for code violations:
+```bash
+npm run lint
+```
+
+---
+
+## 🤝 Contributing
+
+Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**. Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on opening issues and submitting pull requests.
+
+## 📄 License
+
+Distributed under the MIT License. See `LICENSE` for more information (if applicable).
