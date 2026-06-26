@@ -377,6 +377,10 @@ export default function CustomerPortal() {
 
   // Run book shipment loop simulation
   const handleBookOption = (optionName, optionCost) => {
+    if (tonsInput <= 0 || tonsInput > 5000) {
+      alert("Validation Error: Please select a valid cargo tonnage between 1 and 5,000 tons.");
+      return;
+    }
     setActiveTraceStep(1);
     setTraceLogs([`[Step 1] Emitted Event SHIPMENT_CREATED to Event Bus.`]);
     RealityEngine.events = [{

@@ -93,7 +93,7 @@ const injectAvatarAnimation = () => {
 };
 
 export default function ProfileSettings() {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, setIsLocked } = useTheme();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -799,8 +799,8 @@ export default function ProfileSettings() {
             </button>
             <button
               onClick={() => {
-                showToast('Workspace locked statefully.', 'warning');
-                navigate('/');
+                setIsLocked(true);
+                showToast('Super Admin console locked.', 'warning');
               }}
               style={{ ...styles.btnSecondary, flex: 1, padding: '8px 10px', justifyContent: 'center', fontSize: 'var(--text-xs)', color: 'var(--danger-500)' }}
               title="Lock System Node"

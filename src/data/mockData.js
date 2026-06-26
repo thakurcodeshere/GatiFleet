@@ -1305,7 +1305,9 @@ export const aiAgentsExtendedData = {
     ],
     tools: [
       { name: "Run Toll Audit Scan", actionText: "Initiated toll ledger audit scan. Scanned 342 transactions, matched 100%, identified ₹23,000 discrepancy corrected statefully." },
-      { name: "Process Fuel Payments", actionText: "Dispatched batch fuel card payouts. Transferred ₹8.4L in fuel tokens to HPCL & IOC fuel cards." }
+      { name: "Process Fuel Payments", actionText: "Dispatched batch fuel card payouts. Transferred ₹8.4L in fuel tokens to HPCL & IOC fuel cards." },
+      { name: "Verify GST Compliance", actionText: "Connects GSTN registers via API to matching tax credits under GSTR-2B discrepancies." },
+      { name: "Detect Fuel Siphoning", actionText: "Checks truck fuel level gradients en-route vs fuel card coordinate entries." }
     ]
   },
   hr: {
@@ -1331,7 +1333,9 @@ export const aiAgentsExtendedData = {
     ],
     tools: [
       { name: "Scan License Expiries", actionText: "Audited employee credentials. Found 2 expiring licenses under 30 days. Dispatched auto-notification triggers." },
-      { name: "Roster Shift Audit", actionText: "Executed roster check. Filled 3 shift vacancies on Western routes using standby drivers." }
+      { name: "Roster Shift Audit", actionText: "Executed roster check. Filled 3 shift vacancies on Western routes using standby drivers." },
+      { name: "Run Fatigue Risk Scan", actionText: "Scans active driver hours and biometric stress scores for compliance." },
+      { name: "Simulate Shift Dispatch", actionText: "Simulates driver dispatcher routing allocations matching fatigue schedules." }
     ]
   },
   sales: {
@@ -1357,7 +1361,9 @@ export const aiAgentsExtendedData = {
     ],
     tools: [
       { name: "Run Churn Analysis", actionText: "Executed customer retention model. Flagged Wipro and Dabur for high-risk alerts. Generated corrective rebate codes." },
-      { name: "Generate Renewal Reminders", actionText: "Drafted and dispatched renewal terms for 8 expiring accounts." }
+      { name: "Generate Renewal Reminders", actionText: "Drafted and dispatched renewal terms for 8 expiring accounts." },
+      { name: "Optimize Spot Rate Bids", actionText: "Optimized spot pricing rates against regional capacity corridors." },
+      { name: "Analyze Competitor Intelligence", actionText: "Scraped and evaluated competitor freight bidding quotes." }
     ]
   },
   supply_chain: {
@@ -1383,7 +1389,9 @@ export const aiAgentsExtendedData = {
     ],
     tools: [
       { name: "Recalculate Route Optimization", actionText: "Rerouted 8 trucks around NH48 bottleneck. Estimated transit saving: 45 min per vehicle." },
-      { name: "Match Idle Trucks", actionText: "Matched 14 idle trucks with pending cargo loads in Mumbai and Bangalore hubs." }
+      { name: "Match Idle Trucks", actionText: "Matched 14 idle trucks with pending cargo loads in Mumbai and Bangalore hubs." },
+      { name: "Run Corridor Load Balance", actionText: "Balances lane volume distribution dynamically across major freight corridors." },
+      { name: "Forecast Regional Demand", actionText: "Predicts regional capacity needs based on seasonal booking indicators." }
     ]
   },
   engineering: {
@@ -1409,7 +1417,9 @@ export const aiAgentsExtendedData = {
     ],
     tools: [
       { name: "IoT Sensor Health Scan", actionText: "Poked 3,124,500 active telemetry sensors. Found 2 malfunctioning gateways; flagged for replacement." },
-      { name: "Firmware Update Dispatch", actionText: "Sent firmware v3.4.1 to 12,000 active gateway devices. Install success: 99.8%." }
+      { name: "Firmware Update Dispatch", actionText: "Sent firmware v3.4.1 to 12,000 active gateway devices. Install success: 99.8%." },
+      { name: "Flush Database Logs", actionText: "Re-indexed system databases and compressed write-ahead log files, freeing up NVMe storage." },
+      { name: "Autoscale Server Nodes", actionText: "Auto-scaled container replication factors to balance edge request traffic." }
     ]
   },
   executive: {
@@ -1435,7 +1445,9 @@ export const aiAgentsExtendedData = {
     ],
     tools: [
       { name: "Run Strategic Risk Assessment", actionText: "Scanned cost indicators. Confirmed fleet fuel spend efficiency optimal. Risk index locked at Low." },
-      { name: "Generate Board Summary", actionText: "Compiled board-ready report for Q2. Uploaded to PDF server." }
+      { name: "Generate Board Summary", actionText: "Compiled board-ready report for Q2. Uploaded to PDF server." },
+      { name: "Analyze Market Competitors", actionText: "Scraped competitor shipping rates and identified peak corridor discount structures." },
+      { name: "Optimize Capital Ratios", actionText: "Simulated capital reserves reallocation to optimize working capital cycles." }
     ]
   }
 };
