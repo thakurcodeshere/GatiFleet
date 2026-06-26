@@ -149,7 +149,7 @@ export default function LiveTracking() {
   ]);
 
   // Executive AI Copilot chat state
-  const [copilotOpen, setCopilotOpen] = useState(true);
+  const [copilotOpen, setCopilotOpen] = useState(false);
   const [copilotInput, setCopilotInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [copilotMsgs, setCopilotMsgs] = useState([
@@ -211,6 +211,7 @@ export default function LiveTracking() {
   const routeLineRef = useRef(null);
   const alternativeBypassRef = useRef(null);
   const heatmapLayersRef = useRef([]);
+  const copilotEndRef = useRef(null);
 
   // Toast helper
   const showToast = (message, type = 'success') => {
@@ -626,6 +627,13 @@ export default function LiveTracking() {
     return () => clearInterval(interval);
   }, [isPlaying, isTimeMachineActive]);
 
+  // Auto-scroll to bottom of local copilot chat
+  useEffect(() => {
+    if (copilotOpen) {
+      copilotEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [copilotMsgs, isTyping, copilotOpen]);
+
   // AI Decision approvals triggers
   const handleApproveRec = (recId, costChange, msg) => {
     if (approvedRecommendations.includes(recId)) return;
@@ -683,6 +691,26 @@ export default function LiveTracking() {
       return `${x},${y}`;
     });
     return points.join(' ');
+  };
+
+  const getRadarPointsArray = (driver) => {
+    const metrics = [
+      driver.safetyScore,
+      driver.attendance,
+      Math.floor(driver.rating * 20),
+      100 - (driver.violations * 15),
+      Math.min(100, (driver.experience * 4) + 40),
+      92
+    ];
+    const center = 80;
+    const rMax = 55;
+    return metrics.map((val, idx) => {
+      const angle = (idx * 60 - 90) * Math.PI / 180;
+      const r = (val / 100) * rMax;
+      const x = center + r * Math.cos(angle);
+      const y = center + r * Math.sin(angle);
+      return { x, y };
+    });
   };
 
   // Subsystem click sensor handlers
@@ -1088,79 +1116,178 @@ export default function LiveTracking() {
           )}
 
           {/* 5. DRIVER VIEW PANEL */}
-          {activeView === 'driver' && selectedDriver && (
-            <>
-              <div style={panelHeaderStyle}>Driver Digital Twin</div>
-              
-              <div style={{ display: 'flex', gap: 6 }}>
-                <select
-                  value={selectedDriver.id}
-                  onChange={(e) => {
-                    const dr = drivers.find(d => d.id === e.target.value);
-                    if (dr) {
-                      setSelectedDriver(dr);
-                      const matchingTruck = trucks.find(t => t.id === dr.assignedTruck);
-                      if (matchingTruck) setSelectedTruck(matchingTruck);
-                    }
-                  }}
-                  style={{
-                    background: '#1a2332', border: '1px solid rgba(255,255,255,0.1)', color: '#fff',
-                    padding: '6px 12px', borderRadius: 4, width: '100%', fontSize: 12, outline: 'none'
-                  }}
-                >
-                  {drivers.map(d => (
-                    <option key={d.id} value={d.id}>{d.name} ({d.id})</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Driver twin stats */}
-              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: 8, padding: 12 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <span style={{ fontWeight: 700, fontSize: 13, color: '#fff' }}>{selectedDriver.name}</span>
-                  <span style={{ fontSize: 11, color: '#f59e0b', fontWeight: 600 }}>On Duty</span>
+          {activeView === 'driver' && selectedDriver && (() => {
+            const isRisk = selectedDriver.violations > 2;
+            const pulseColor = isRisk ? '#FF4D6B' : '#06b6d4';
+            const animationDuration = isRisk ? '1.2s' : '2.5s';
+            
+            return (
+              <>
+                <div style={panelHeaderStyle}>Driver Digital Twin</div>
+                
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <select
+                    value={selectedDriver.id}
+                    onChange={(e) => {
+                      const dr = drivers.find(d => d.id === e.target.value);
+                      if (dr) {
+                        setSelectedDriver(dr);
+                        const matchingTruck = trucks.find(t => t.id === dr.assignedTruck);
+                        if (matchingTruck) setSelectedTruck(matchingTruck);
+                      }
+                    }}
+                    style={{
+                      background: '#1a2332', border: '1px solid rgba(255,255,255,0.1)', color: '#fff',
+                      padding: '6px 12px', borderRadius: 4, width: '100%', fontSize: 12, outline: 'none'
+                    }}
+                  >
+                    {drivers.map(d => (
+                      <option key={d.id} value={d.id}>{d.name} ({d.id})</option>
+                    ))}
+                  </select>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, fontSize: 11, color: '#B0B0B0' }}>
-                  <div>Safety Score: <span style={{ color: '#38CE3C', fontWeight: 600 }}>{selectedDriver.safetyScore}%</span></div>
-                  <div>Fatigue Risk: <span style={{ color: '#FF4D6B', fontWeight: 600 }}>{selectedDriver.violations * 15}%</span></div>
-                  <div>Experience: <span style={{ color: '#fff', fontWeight: 600 }}>{selectedDriver.experience} years</span></div>
-                  <div>Assigned Truck: <span style={{ color: '#fff', fontWeight: 600 }}>{selectedDriver.assignedTruck}</span></div>
-                  <div>Trips Completed: <span style={{ color: '#fff', fontWeight: 600 }}>{selectedDriver.tripsCompleted}</span></div>
-                  <div>Attendance Rate: <span style={{ color: '#fff', fontWeight: 600 }}>{selectedDriver.attendance}%</span></div>
-                </div>
-              </div>
 
-              {/* DRIVER BEHAVIOR RADAR CHART */}
-              <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#818cf8', letterSpacing: '0.04em', marginBottom: 8 }}>DRIVER SKILLS RADAR CHART</div>
-                <div style={{ background: '#070a13', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 8, padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <svg width="160" height="160" viewBox="0 0 160 160">
-                    {/* Background concentric hex circles */}
-                    <circle cx="80" cy="80" r="55" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
-                    <circle cx="80" cy="80" r="40" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
-                    <circle cx="80" cy="80" r="25" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
+                {/* Driver twin stats (refined technically) */}
+                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: 8, padding: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <span style={{ fontWeight: 700, fontSize: 13, color: '#fff' }}>{selectedDriver.name}</span>
+                      <div style={{ fontSize: 9, color: '#64748b', fontFamily: 'var(--font-mono)' }}>ID: {selectedDriver.id}</div>
+                    </div>
+                    <span style={{ 
+                      padding: '2px 8px', borderRadius: 4, fontSize: 9, fontWeight: 700,
+                      background: isRisk ? 'rgba(255, 77, 107, 0.15)' : 'rgba(56, 206, 60, 0.15)',
+                      color: isRisk ? '#FF4D6B' : '#38CE3C',
+                      border: `1px solid ${isRisk ? 'rgba(255, 77, 107, 0.3)' : 'rgba(56, 206, 60, 0.3)'}`
+                    }}>
+                      {isRisk ? '⚠️ ATTENTION RISK' : '🟢 DUTY NOMINAL'}
+                    </span>
+                  </div>
+
+                  <div style={{ height: 1, background: 'rgba(255,255,255,0.05)' }} />
+
+                  {/* Progress bars for key parameters */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#B0B0B0', marginBottom: 2 }}>
+                        <span>SAFETY PERFORMANCE INDEX</span>
+                        <span style={{ fontWeight: 600, color: '#38CE3C' }}>{selectedDriver.safetyScore}%</span>
+                      </div>
+                      <div style={{ height: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
+                        <div style={{ width: `${selectedDriver.safetyScore}%`, height: '100%', borderRadius: 2, background: 'linear-gradient(to right, #FF4D6B, #38CE3C)' }} />
+                      </div>
+                    </div>
+
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#B0B0B0', marginBottom: 2 }}>
+                        <span>FATIGUE EXPOSURE RISK</span>
+                        <span style={{ fontWeight: 600, color: selectedDriver.violations * 15 > 40 ? '#FF4D6B' : '#f59e0b' }}>
+                          {selectedDriver.violations * 15}%
+                        </span>
+                      </div>
+                      <div style={{ height: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
+                        <div style={{ width: `${selectedDriver.violations * 15}%`, height: '100%', borderRadius: 2, background: 'linear-gradient(to right, #38CE3C, #FF4D6B)' }} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ height: 1, background: 'rgba(255,255,255,0.05)' }} />
+
+                  {/* Telemetry Biometric Oscilloscope Grid */}
+                  <div style={{
+                    position: 'relative',
+                    height: '42px',
+                    background: 'rgba(5, 8, 16, 0.6)',
+                    border: `1px solid ${isRisk ? 'rgba(255, 77, 107, 0.15)' : 'rgba(6, 182, 212, 0.15)'}`,
+                    borderRadius: 6,
+                    padding: '4px 8px',
+                    overflow: 'hidden',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    boxShadow: 'inset 0 0 12px rgba(0,0,0,0.5)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 8, fontFamily: 'var(--font-mono)', color: pulseColor, letterSpacing: '0.05em' }}>
+                      <span>TELEMETRY BIOMETRIC STREAM</span>
+                      <span className="animate-pulse">{isRisk ? '⚠️ ELEVATED STRESS' : '🟢 COHERENT BIOMETRICS'}</span>
+                    </div>
                     
-                    {/* Axis lines */}
-                    {[0, 60, 120, 180, 240, 300].map(deg => {
-                      const rad = deg * Math.PI / 180;
-                      return <line key={deg} x1="80" y1="80" x2={80 + 55 * Math.cos(rad)} y2={80 + 55 * Math.sin(rad)} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />;
-                    })}
+                    <svg width="100%" height="22" viewBox="0 0 100 22" preserveAspectRatio="none" style={{ display: 'block' }}>
+                      {/* Grid lines */}
+                      <line x1="0" y1="5.5" x2="100" y2="5.5" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" strokeDasharray="1,1" />
+                      <line x1="0" y1="11" x2="100" y2="11" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
+                      <line x1="0" y1="16.5" x2="100" y2="16.5" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" strokeDasharray="1,1" />
+                      
+                      <path
+                        d="M 0 11 L 15 11 L 20 2 L 25 20 L 30 11 L 45 11 L 50 2 L 55 20 L 60 11 L 80 11 L 85 0 L 90 22 L 95 11 L 100 11"
+                        fill="none"
+                        stroke={pulseColor}
+                        strokeWidth="1.2"
+                        strokeDasharray="200"
+                        strokeDashoffset="200"
+                        style={{
+                          animation: `ecgDraw ${animationDuration} linear infinite`
+                        }}
+                      />
+                    </svg>
+                  </div>
 
-                    {/* Radar polygon coordinates */}
-                    <polygon points={getRadarPoints(selectedDriver)} fill="rgba(99, 102, 241, 0.25)" stroke="#818cf8" strokeWidth="1.5" />
-                    
-                    {/* Labels */}
-                    <text x="80" y="16" fill="#B0B0B0" fontSize="7" textAnchor="middle">Safety</text>
-                    <text x="140" y="52" fill="#B0B0B0" fontSize="7" textAnchor="middle">Compliance</text>
-                    <text x="140" y="112" fill="#B0B0B0" fontSize="7" textAnchor="middle">Skill</text>
-                    <text x="80" y="148" fill="#B0B0B0" fontSize="7" textAnchor="middle">Fatigue</text>
-                    <text x="20" y="112" fill="#B0B0B0" fontSize="7" textAnchor="middle">Experience</text>
-                    <text x="20" y="52" fill="#B0B0B0" fontSize="7" textAnchor="middle">Reliability</text>
-                  </svg>
+                  <div style={{ height: 1, background: 'rgba(255,255,255,0.05)' }} />
+
+                  {/* Technical stats grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 12px', fontSize: 10, color: '#B0B0B0', fontFamily: 'var(--font-mono)' }}>
+                    <div>EXP: <span style={{ color: '#fff', fontWeight: 600 }}>{selectedDriver.experience} Yrs</span></div>
+                    <div>ASSIGNED: <span style={{ color: '#fff', fontWeight: 600 }}>{selectedDriver.assignedTruck}</span></div>
+                    <div>TRIPS: <span style={{ color: '#fff', fontWeight: 600 }}>{selectedDriver.tripsCompleted}</span></div>
+                    <div>ATTENDANCE: <span style={{ color: '#fff', fontWeight: 600 }}>{selectedDriver.attendance}%</span></div>
+                    <div>VIGILANCE INDEX: <span style={{ color: isRisk ? '#FF4D6B' : '#38CE3C', fontWeight: 600 }}>{isRisk ? '78.5%' : '94.2%'}</span></div>
+                    <div>COGNITIVE LOAD: <span style={{ color: isRisk ? '#FF4D6B' : '#38CE3C', fontWeight: 600 }}>{isRisk ? '74%' : '34%'}</span></div>
+                    <div>HEART RATE: <span style={{ color: isRisk ? '#FF4D6B' : '#38CE3C', fontWeight: 600 }}>{isRisk ? '89 BPM' : '72 BPM'}</span></div>
+                    <div>REACTION TIME: <span style={{ color: isRisk ? '#FF4D6B' : '#38CE3C', fontWeight: 600 }}>{isRisk ? '380ms' : '270ms'}</span></div>
+                    <div>SPO2 LEVEL: <span style={{ color: '#38CE3C', fontWeight: 600 }}>98%</span></div>
+                    <div>SKIN TEMP: <span style={{ color: '#38CE3C', fontWeight: 600 }}>36.6 °C</span></div>
+                    <div>GPS UPLINK: <span style={{ color: '#38CE3C', fontWeight: 600 }}>3D FIX (12 SAT)</span></div>
+                    <div>HARSH EVENTS: <span style={{ color: isRisk ? '#FF4D6B' : '#64748b', fontWeight: 600 }}>{selectedDriver.violations} EVENT{selectedDriver.violations !== 1 ? 'S' : ''}</span></div>
+                  </div>
                 </div>
-              </div>
-            </>
-          )}
+
+                {/* DRIVER BEHAVIOR RADAR CHART */}
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#818cf8', letterSpacing: '0.04em', marginBottom: 8 }}>DRIVER SKILLS RADAR CHART</div>
+                  <div style={{ background: '#070a13', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 8, padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <svg width="160" height="160" viewBox="0 0 160 160">
+                      {/* Background concentric hex circles */}
+                      <circle cx="80" cy="80" r="55" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
+                      <circle cx="80" cy="80" r="40" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
+                      <circle cx="80" cy="80" r="25" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
+                      
+                      {/* Axis lines */}
+                      {[0, 60, 120, 180, 240, 300].map(deg => {
+                        const rad = deg * Math.PI / 180;
+                        return <line key={deg} x1="80" y1="80" x2={80 + 55 * Math.cos(rad)} y2={80 + 55 * Math.sin(rad)} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />;
+                      })}
+
+                      {/* Radar polygon coordinates */}
+                      <polygon points={getRadarPoints(selectedDriver)} fill="rgba(99, 102, 241, 0.25)" stroke="#818cf8" strokeWidth="1.5" />
+                      
+                      {/* Glowing vertices dots */}
+                      {getRadarPointsArray(selectedDriver).map((pt, idx) => (
+                        <circle key={idx} cx={pt.x} cy={pt.y} r="2.5" fill="#818cf8" stroke="#fff" strokeWidth="0.75" />
+                      ))}
+
+                      {/* Labels */}
+                      <text x="80" y="16" fill="#B0B0B0" fontSize="7" textAnchor="middle">Safety</text>
+                      <text x="140" y="52" fill="#B0B0B0" fontSize="7" textAnchor="middle">Compliance</text>
+                      <text x="140" y="112" fill="#B0B0B0" fontSize="7" textAnchor="middle">Skill</text>
+                      <text x="80" y="148" fill="#B0B0B0" fontSize="7" textAnchor="middle">Fatigue</text>
+                      <text x="20" y="112" fill="#B0B0B0" fontSize="7" textAnchor="middle">Experience</text>
+                      <text x="20" y="52" fill="#B0B0B0" fontSize="7" textAnchor="middle">Reliability</text>
+                    </svg>
+                  </div>
+                </div>
+              </>
+            );
+          })()}
 
           {/* 6. AI DECISION CENTER */}
           {activeView === 'decision' && (
@@ -1304,84 +1431,7 @@ export default function LiveTracking() {
         </div>
       </div>
 
-      {/* EXECUTIVE COPILOT CHAT SIDEBAR PANEL (DRAWS IN WHEN TOGGLED) */}
-      <AnimatePresence>
-        {copilotOpen && (
-          <motion.div
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: '320px', opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
-            style={{
-              background: '#0a0e18',
-              borderRight: '1px solid rgba(255, 255, 255, 0.05)',
-              display: 'flex',
-              flexDirection: 'column',
-              zIndex: 19,
-              flexShrink: 0
-            }}
-          >
-            <div style={{ padding: '16px 16px 8px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justify: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontWeight: 700, color: '#fff', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Sparkles size={14} color="#818cf8" /> EXECUTIVE AI COPILOT
-              </span>
-              <button onClick={() => setCopilotOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>
-                <X size={14} color="#64748b" />
-              </button>
-            </div>
 
-            {/* Chat message list area */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {copilotMsgs.map((m, idx) => (
-                <div key={idx} style={{
-                  background: m.sender === 'user' ? 'rgba(99,102,241,0.08)' : 'rgba(255,255,255,0.02)',
-                  border: `1px solid ${m.sender === 'user' ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.04)'}`,
-                  borderRadius: 6, padding: '10px 12px', alignSelf: m.sender === 'user' ? 'flex-end' : 'flex-start',
-                  maxWidth: '90%', fontSize: 11, color: m.sender === 'user' ? '#fff' : '#B0B0B0', lineHeight: 1.4
-                }}>
-                  {m.text}
-                  {m.action && (
-                    <button
-                      onClick={() => setActiveView(m.action.view)}
-                      style={{
-                        display: 'block', width: '100%', marginTop: 8, padding: '4px 8px', fontSize: 10,
-                        background: '#818cf8', border: 'none', color: '#fff', borderRadius: 4, cursor: 'pointer', fontWeight: 600
-                      }}
-                    >
-                      {m.action.text}
-                    </button>
-                  )}
-                </div>
-              ))}
-              {isTyping && (
-                <div style={{ color: '#64748b', fontSize: 10, alignSelf: 'flex-start' }}>Copilot is thinking...</div>
-              )}
-            </div>
-
-            {/* Suggestions Chips list */}
-            <div style={{ padding: '8px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <button onClick={() => handleCopilotPrompt("Why is Western India profitability down?")} style={suggestionChipStyle}>Why is Western India profitability down?</button>
-              <button onClick={() => handleCopilotPrompt("Which customers may churn?")} style={suggestionChipStyle}>Which customers may churn?</button>
-              <button onClick={() => handleCopilotPrompt("What caused yesterday's delay spike?")} style={suggestionChipStyle}>What caused yesterday's delay spike?</button>
-            </div>
-
-            {/* Chat Input form */}
-            <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', gap: 6 }}>
-              <input
-                type="text"
-                placeholder="Ask Executive Copilot..."
-                value={copilotInput}
-                onChange={e => setCopilotInput(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && copilotInput.trim()) { handleCopilotPrompt(copilotInput); setCopilotInput(''); } }}
-                style={{
-                  flex: 1, background: '#131929', border: '1px solid rgba(255,255,255,0.05)', color: '#fff',
-                  borderRadius: 4, padding: '6px 12px', fontSize: 11, outline: 'none'
-                }}
-              />
-              <button onClick={() => { if (copilotInput.trim()) { handleCopilotPrompt(copilotInput); setCopilotInput(''); } }} style={{ background: '#818cf8', border: 'none', padding: '6px 10px', color: '#fff', borderRadius: 4, cursor: 'pointer' }}><Send size={12} /></button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* MAP CANVAS VIEWPORT */}
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden', display: 'flex' }}>
@@ -1614,6 +1664,148 @@ export default function LiveTracking() {
       </div>
 
       {/* Embedded CSS Animations */}
+      {/* Floating Chat Us Copilot Icon */}
+      {!copilotOpen && (
+        <motion.div
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          whileHover={{ scale: 1.1 }}
+          onClick={() => setCopilotOpen(true)}
+          style={{
+            position: 'absolute',
+            bottom: '76px',
+            right: '24px',
+            width: '56px',
+            height: '56px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+            boxShadow: '0 4px 20px rgba(99, 102, 241, 0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 1000,
+          }}
+          title="Ask Executive AI Copilot"
+        >
+          <Sparkles size={24} color="#fff" />
+          <span style={{
+            position: 'absolute',
+            top: 2,
+            right: 2,
+            width: 10,
+            height: 10,
+            borderRadius: '50%',
+            background: '#FF4D6B',
+            border: '2px solid #070a13',
+            boxShadow: '0 0 8px #FF4D6B'
+          }} />
+        </motion.div>
+      )}
+
+      {/* Floating Executive Copilot Window */}
+      <AnimatePresence>
+        {copilotOpen && (
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0, y: 50 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.8, opacity: 0, y: 50 }}
+            style={{
+              position: 'absolute',
+              bottom: '76px',
+              right: '24px',
+              width: '360px',
+              height: '500px',
+              background: 'rgba(13, 19, 34, 0.85)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(99, 102, 241, 0.15)',
+              borderRadius: '16px',
+              boxShadow: '0 12px 40px rgba(0, 0, 0, 0.6)',
+              display: 'flex',
+              flexDirection: 'column',
+              zIndex: 1000,
+              overflow: 'hidden'
+            }}
+          >
+            <div style={{
+              padding: '16px',
+              borderBottom: '1px solid rgba(255,255,255,0.06)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              background: 'rgba(10, 14, 24, 0.4)'
+            }}>
+              <span style={{ fontWeight: 700, color: '#fff', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Sparkles size={14} color="#818cf8" /> EXECUTIVE AI COPILOT
+              </span>
+              <button onClick={() => setCopilotOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex', alignItems: 'center' }}>
+                <X size={16} color="#64748b" />
+              </button>
+            </div>
+
+            {/* Chat message list area */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {copilotMsgs.map((m, idx) => (
+                <div key={idx} style={{
+                  background: m.sender === 'user' ? 'rgba(99,102,241,0.1)' : 'rgba(255,255,255,0.03)',
+                  border: `1px solid ${m.sender === 'user' ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.05)'}`,
+                  borderRadius: 8, padding: '10px 12px', alignSelf: m.sender === 'user' ? 'flex-end' : 'flex-start',
+                  maxWidth: '85%', fontSize: 11, color: m.sender === 'user' ? '#fff' : '#B0B0B0', lineHeight: 1.4,
+                  boxShadow: m.sender === 'user' ? '0 2px 8px rgba(99, 102, 241, 0.15)' : 'none'
+                }}>
+                  {m.text}
+                  {m.action && (
+                    <button
+                      onClick={() => {
+                        setActiveView(m.action.view);
+                        setCopilotOpen(false);
+                      }}
+                      style={{
+                        display: 'block', width: '100%', marginTop: 8, padding: '6px 8px', fontSize: 10,
+                        background: '#818cf8', border: 'none', color: '#fff', borderRadius: 4, cursor: 'pointer', fontWeight: 600,
+                        boxShadow: '0 2px 4px rgba(99, 102, 241, 0.3)'
+                      }}
+                    >
+                      {m.action.text}
+                    </button>
+                  )}
+                </div>
+              ))}
+              {isTyping && (
+                <div style={{ color: '#64748b', fontSize: 10, alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ display: 'inline-block', width: 4, height: 4, borderRadius: '50%', background: '#64748b', animation: 'gridPulse 1s infinite' }} />
+                  <span>Copilot is typing...</span>
+                </div>
+              )}
+              <div ref={copilotEndRef} />
+            </div>
+
+            {/* Suggestions Chips list */}
+            <div style={{ padding: '8px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <button onClick={() => handleCopilotPrompt("Why is Western India profitability down?")} style={suggestionChipStyle}>Why is Western India profitability down?</button>
+              <button onClick={() => handleCopilotPrompt("Which customers may churn?")} style={suggestionChipStyle}>Which customers may churn?</button>
+              <button onClick={() => handleCopilotPrompt("What caused yesterday's delay spike?")} style={suggestionChipStyle}>What caused yesterday's delay spike?</button>
+            </div>
+
+            {/* Chat Input form */}
+            <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 6, background: 'rgba(10, 14, 24, 0.2)' }}>
+              <input
+                type="text"
+                placeholder="Ask Executive Copilot..."
+                value={copilotInput}
+                onChange={e => setCopilotInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && copilotInput.trim()) { handleCopilotPrompt(copilotInput); setCopilotInput(''); } }}
+                style={{
+                  flex: 1, background: '#131929', border: '1px solid rgba(255,255,255,0.08)', color: '#fff',
+                  borderRadius: 6, padding: '8px 12px', fontSize: 11, outline: 'none', fontFamily: "'Inter', sans-serif"
+                }}
+              />
+              <button onClick={() => { if (copilotInput.trim()) { handleCopilotPrompt(copilotInput); setCopilotInput(''); } }} style={{ background: '#818cf8', border: 'none', padding: '8px 12px', color: '#fff', borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Send size={12} /></button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <style>{`
         @keyframes sosFlashBorder {
           0% { border-color: #FF4D6B; box-shadow: inset 0 0 16px rgba(255, 77, 107, 0.4); }
@@ -1636,6 +1828,10 @@ export default function LiveTracking() {
         }
         .animate-ping {
           animation: mapPulse 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+        @keyframes ecgDraw {
+          0% { stroke-dashoffset: 200; }
+          100% { stroke-dashoffset: 0; }
         }
       `}</style>
     </div>
