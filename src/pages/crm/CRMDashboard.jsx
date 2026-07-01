@@ -11,7 +11,7 @@ import {
   CircleDot, Sparkles, BarChart3, Megaphone, HeartHandshake,
   IndianRupee, BadgeCheck, Gauge, BellRing, RotateCcw, ShieldAlert,
   Check, Play, PlusCircle, Trash, Truck, CircleDollarSign, Percent,
-  History, Brain, Scale, Activity, TrendingDown
+  History, Brain, Scale, Activity, TrendingDown, Network
 } from 'lucide-react';
 import { 
   crmData, 
