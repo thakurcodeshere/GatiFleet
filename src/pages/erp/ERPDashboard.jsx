@@ -1556,6 +1556,90 @@ const ERPDashboard = () => {
               </tbody>
             </table>
           </div>
+
+          {/* Autonomous Financial Intelligence & Treasury (AFITP) */}
+          <div style={styles.card}>
+            <div style={styles.sectionTitle}>
+              <Landmark size={18} color="var(--success-500)" />
+              Autonomous Treasury & Margin Engine (AFITP)
+            </div>
+            
+            {/* Margins */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              <div style={{ padding: '12px', background: 'var(--bg-900)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Contribution Margin</div>
+                <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--success-500)', marginTop: '4px' }}>₹31.6Cr (24.6%)</div>
+                <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>Auto-tracked across 18 operational nodes</div>
+              </div>
+              <div style={{ padding: '12px', background: 'var(--bg-900)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Liquidity Rebalancing</div>
+                <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '4px' }}>ICICI Bank Concentrator: Active</div>
+                <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>Target concentration limits: &lt;= 40%</div>
+              </div>
+            </div>
+
+            {/* Delinquencies */}
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600, marginBottom: '8px' }}>AR Aging Delinquency Forecast</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {[
+                  { name: 'Dabur Distribution', value: '₹1.8Cr', aging: '35 Days', risk: 85 },
+                  { name: 'Wipro Transport', value: '₹4.6Cr', aging: '22 Days', risk: 55 }
+                ].map((ar) => (
+                  <div key={ar.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11.5px', padding: '6px 8px', background: 'var(--bg-900)', borderRadius: '4px', border: '1px solid var(--border-subtle)' }}>
+                    <div>
+                      <span style={{ fontWeight: 700 }}>{ar.name}</span>
+                      <span style={{ color: 'var(--text-muted)', marginLeft: '8px' }}>Aging: {ar.aging}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontFamily: 'var(--font-mono)' }}>{ar.value}</span>
+                      <span style={{ color: ar.risk > 70 ? 'var(--danger-500)' : 'var(--warning-500)', fontWeight: 600 }}>Risk: {ar.risk}%</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Simulation Controls */}
+            <div>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600, marginBottom: '10px' }}>What-If Simulation Controls</div>
+              <div style={{ display: 'flex', gap: '16px' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px' }}>
+                    <span>Diesel Price Spike Simulation</span>
+                    <span style={{ fontWeight: 600 }}>+{engineState.simulationState.dieselIncrease}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="50"
+                    value={engineState.simulationState.dieselIncrease}
+                    onChange={(e) => RealityEngine.setDieselSimulation(parseInt(e.target.value))}
+                    style={{ width: '100%', accentColor: '#8b5cf6' }}
+                  />
+                </div>
+                <div>
+                  <button
+                    onClick={() => RealityEngine.setPortClosed(!engineState.simulationState.portClosed)}
+                    style={{
+                      padding: '8px 12px',
+                      borderRadius: '4px',
+                      border: 'none',
+                      background: engineState.simulationState.portClosed ? 'var(--danger-500)' : 'var(--bg-600)',
+                      color: '#fff',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      height: '34px',
+                      marginTop: '14px'
+                    }}
+                  >
+                    {engineState.simulationState.portClosed ? 'Open JNPT Port' : 'Simulate Port JNPT Closure'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
