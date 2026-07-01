@@ -1894,7 +1894,7 @@ const CRMDashboard = () => {
                 background: 'var(--bg-800)',
                 borderBottom: '1px solid var(--border-subtle)',
                 display: 'grid',
-                gridTemplateColumns: 'repeat(5, 1fr)',
+                gridTemplateColumns: 'repeat(6, 1fr)',
                 gap: '6px'
               }}>
                 {[
@@ -1907,7 +1907,9 @@ const CRMDashboard = () => {
                   { id: 'market', label: 'Market', icon: TrendingUp },
                   { id: 'ai_consensus', label: 'AI Review', icon: Brain },
                   { id: 'prediction', label: 'Simulate', icon: Gauge },
-                  { id: 'timelines', label: 'Timeline', icon: Clock }
+                  { id: 'timelines', label: 'Timeline', icon: Clock },
+                  { id: 'mobilization', label: 'Mobilize', icon: RotateCcw },
+                  { id: 'agreement', label: 'Clause SLA', icon: Scale }
                 ].map(dTab => {
                   const Icon = dTab.icon;
                   const active = drawerTab === dTab.id;
