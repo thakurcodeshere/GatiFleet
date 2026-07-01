@@ -1774,6 +1774,7 @@ const ERPDashboard = () => {
                     )}
                   </td>
                 </tr>
+              ))}
             </tbody>
           </table>
         </div>
