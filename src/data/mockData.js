@@ -467,6 +467,218 @@ export const aiAgents = [
       { action: 'Risk alert: Fuel price hike expected next week', time: '8h ago', status: 'completed' },
     ]
   },
+  {
+    id: 'customer_success',
+    name: 'Customer Success Agent',
+    icon: 'Brain',
+    color: '#10b981',
+    status: 'active',
+    tasksCompleted: 312,
+    tasksInQueue: 11,
+    successRate: 98.1,
+    lastAction: 'Dispatched NPS surveys to key enterprise clients',
+    capabilities: ['Churn Prediction', 'Relationship Health Checks', 'NPS Administration', 'Account Reviews'],
+    recentActions: [
+      { action: 'Initiated recovery plan for Godrej Consumer', time: '1h ago', status: 'completed' },
+      { action: 'Conducted high-value QBR with Tata Motors', time: '4h ago', status: 'completed' }
+    ]
+  },
+  {
+    id: 'procurement',
+    name: 'Procurement Agent',
+    icon: 'IndianRupee',
+    color: '#a855f7',
+    status: 'active',
+    tasksCompleted: 754,
+    tasksInQueue: 18,
+    successRate: 97.4,
+    lastAction: 'Negotiated spare tyres PO with Bridgestone',
+    capabilities: ['Inventory Management', 'Purchase Order Verification', 'Vendor Bidding', 'Supplier Relations'],
+    recentActions: [
+      { action: 'Verified spare parts PO limit threshold compliance', time: '30m ago', status: 'completed' },
+      { action: 'Created bulk radiator coolant procurement orders', time: '2h ago', status: 'completed' }
+    ]
+  },
+  {
+    id: 'sustainability',
+    name: 'Sustainability Agent',
+    icon: 'TrendingUp',
+    color: '#06b6d4',
+    status: 'active',
+    tasksCompleted: 142,
+    tasksInQueue: 4,
+    successRate: 99.1,
+    lastAction: 'Calculated fleet total carbon emission offsets',
+    capabilities: ['Carbon Footprint Tracking', 'EV Deployment Reroutes', 'ESG Compliance reporting'],
+    recentActions: [
+      { action: 'Generated quarterly carbon mitigation blueprint', time: '1d ago', status: 'completed' }
+    ]
+  },
+  {
+    id: 'mobilization',
+    name: 'Mobilization Agent',
+    icon: 'Brain',
+    color: '#6366f1',
+    status: 'active',
+    tasksCompleted: 98,
+    tasksInQueue: 6,
+    successRate: 96.4,
+    lastAction: 'Completed lane commercial setup for BlueDart',
+    capabilities: ['Parallel Setup Orchestration', 'Readiness Score Tracking', 'SSO Provisioning'],
+    recentActions: [
+      { action: 'Completed FASTag & permits compliance audits', time: '1h ago', status: 'completed' }
+    ]
+  },
+  {
+    id: 'agreement',
+    name: 'Agreement Agent',
+    icon: 'Brain',
+    color: '#f59e0b',
+    status: 'active',
+    tasksCompleted: 245,
+    tasksInQueue: 12,
+    successRate: 98.8,
+    lastAction: 'Analyzed Reliance Industries contract renewal limits',
+    capabilities: ['Clause Parsing', 'SLA Penalties Verification', 'Renewal Projections'],
+    recentActions: [
+      { action: 'Compiled rules POL-004 into active agreement ledger', time: '2h ago', status: 'completed' }
+    ]
+  },
+  {
+    id: 'billing',
+    name: 'Billing Agent',
+    icon: 'IndianRupee',
+    color: '#38CE3C',
+    status: 'active',
+    tasksCompleted: 4321,
+    tasksInQueue: 56,
+    successRate: 99.7,
+    lastAction: 'Flagged duplicate toll cards crossing at Vapi plaza',
+    capabilities: ['Invoice Auto-approve', 'Dispute Resolution Routing', 'Accessorials Audits'],
+    recentActions: [
+      { action: 'Auto-approved 142 nominal billing files', time: '15m ago', status: 'completed' }
+    ]
+  },
+  {
+    id: 'operations',
+    name: 'Operations Sentinel',
+    icon: 'Route',
+    color: '#3b82f6',
+    status: 'active',
+    tasksCompleted: 3412,
+    tasksInQueue: 48,
+    successRate: 98.9,
+    lastAction: 'Dispatched rescue trailer for TRK-90482 breakdown',
+    capabilities: ['Telemetry Monitoring', 'Incident Resolution', 'Alternate Routing'],
+    recentActions: [
+      { action: 'Triggered standby driver swap for Delhi run', time: '10m ago', status: 'completed' }
+    ]
+  },
+  {
+    id: 'fleet',
+    name: 'Fleet Asset Agent',
+    icon: 'Route',
+    color: '#ec4899',
+    status: 'active',
+    tasksCompleted: 821,
+    tasksInQueue: 14,
+    successRate: 97.8,
+    lastAction: 'Recomputed radiator RUL for Western trucks',
+    capabilities: ['Remaining Useful Life Prediction', 'Predictive Diagnostics', 'Depot Slots Booking'],
+    recentActions: [
+      { action: 'Flagged low tyre tread warning on TRK-00045', time: '4h ago', status: 'completed' }
+    ]
+  },
+  {
+    id: 'dispatch',
+    name: 'Dispatch Planner',
+    icon: 'Route',
+    color: '#f97316',
+    status: 'active',
+    tasksCompleted: 5120,
+    tasksInQueue: 72,
+    successRate: 99.2,
+    lastAction: 'Solved multi-objective routing for Chennai corridor',
+    capabilities: ['Multi-Objective Solving', 'Load Balancing', 'Empty Km Minimization'],
+    recentActions: [
+      { action: 'Optimized Eastern corridor DFC rail allocations', time: '1h ago', status: 'completed' }
+    ]
+  },
+  {
+    id: 'warehouse',
+    name: 'Warehouse Flow Agent',
+    icon: 'Route',
+    color: '#10b981',
+    status: 'active',
+    tasksCompleted: 1543,
+    tasksInQueue: 29,
+    successRate: 97.6,
+    lastAction: 'Re-allocated gate queue docks in Panvel hub',
+    capabilities: ['Dock Priority Scoring', 'Yard Congestion Prediction', 'Labor Syncing'],
+    recentActions: [
+      { action: 'Resolved temperature alarm in reefer racking zone', time: '3h ago', status: 'completed' }
+    ]
+  },
+  {
+    id: 'network',
+    name: 'Network Coordinator',
+    icon: 'Route',
+    color: '#a855f7',
+    status: 'active',
+    tasksCompleted: 612,
+    tasksInQueue: 15,
+    successRate: 98.4,
+    lastAction: 'Rerouted container segments around JNPT closure',
+    capabilities: ['Multimodal Chain Solving', 'Partner Reliability Auditing', 'Hub Transfer Tracking'],
+    recentActions: [
+      { action: 'Updated BlueDart freight performance index metrics', time: '5h ago', status: 'completed' }
+    ]
+  },
+  {
+    id: 'treasury',
+    name: 'Treasury Controller',
+    icon: 'IndianRupee',
+    color: '#06b6d4',
+    status: 'active',
+    tasksCompleted: 342,
+    tasksInQueue: 9,
+    successRate: 99.8,
+    lastAction: 'Rebalanced short-term cash reserves across concentration channels',
+    capabilities: ['Liquidity Allocation', 'Working Capital Forecasting', 'Bank Account Sync'],
+    recentActions: [
+      { action: 'Swept surplus operating funds to ICICI bank concentrator', time: '2h ago', status: 'completed' }
+    ]
+  },
+  {
+    id: 'security',
+    name: 'Security Fortress Agent',
+    icon: 'Server',
+    color: '#6366f1',
+    status: 'active',
+    tasksCompleted: 9482,
+    tasksInQueue: 3,
+    successRate: 99.99,
+    lastAction: 'Blocked malicious rate-limiting API payload signature',
+    capabilities: ['Zero-Trust Context Authing', 'API Token Decryption', 'Threat Containment'],
+    recentActions: [
+      { action: 'Sanitized input queries in corporate portal sandbox', time: '5m ago', status: 'completed' }
+    ]
+  },
+  {
+    id: 'strategy',
+    name: 'Strategy Simulator Agent',
+    icon: 'Brain',
+    color: '#f59e0b',
+    status: 'active',
+    tasksCompleted: 84,
+    tasksInQueue: 2,
+    successRate: 94.6,
+    lastAction: 'Completed 12,000 scenario simulations for fuel card purchases',
+    capabilities: ['Strategic KPI Debate Ingests', 'Cascade Consequence Modelling', 'Strategy Ranking'],
+    recentActions: [
+      { action: 'Compiled EV corridor expansion portfolio strategic rankings', time: '6h ago', status: 'completed' }
+    ]
+  }
 ];
 
 // ---- KNOWLEDGE GRAPH DATA ----
@@ -1448,6 +1660,263 @@ export const aiAgentsExtendedData = {
       { name: "Generate Board Summary", actionText: "Compiled board-ready report for Q2. Uploaded to PDF server." },
       { name: "Analyze Market Competitors", actionText: "Scraped competitor shipping rates and identified peak corridor discount structures." },
       { name: "Optimize Capital Ratios", actionText: "Simulated capital reserves reallocation to optimize working capital cycles." }
+    ]
+  },
+  customer_success: {
+    thinkingConsole: [
+      "[12:21:01] [CS Dashboard] Reviewing client sentiment alerts...",
+      "[12:21:05] [NPS Survey] Preparing quarterly NPS campaign dispatch schedules...",
+      "[12:21:10] [Retention Action] Analyzing churn risk remediation efficacy metrics..."
+    ],
+    activeTasks: [
+      { task: "Drafting NPS dispatch schedules for July 2026", status: "Active" },
+      { task: "Conducting customer health reviews for VIP accounts", status: "Queued" }
+    ],
+    memoryState: [
+      { key: "VIP Retention Rate", value: "96.8%" },
+      { key: "Average Client Sentiment Score", value: "4.2/5" }
+    ],
+    systemLogs: [
+      "[SYSTEM] NPS response triggers synced (312 surveys processed)."
+    ],
+    tools: [
+      { name: "Launch NPS Campaign", actionText: "Dispatched email survey batch to 1,500 client stakeholders." }
+    ]
+  },
+  procurement: {
+    thinkingConsole: [
+      "[12:22:01] [Sourcing Engine] Auditing auto parts pricing structures...",
+      "[12:22:04] [Supplier PO Check] Checking Bridgestone tyre bulk inventory rates..."
+    ],
+    activeTasks: [
+      { task: "Verifying supplier parts contract threshold rules", status: "Active" },
+      { task: "Generating bulk PO files for Delhi depot", status: "Queued" }
+    ],
+    memoryState: [
+      { key: "Active Supplier Agreements", value: "14 contracts" },
+      { key: "Available Parts Inventory", value: "₹4.2Cr value" }
+    ],
+    systemLogs: [
+      "[SYSTEM] Spare parts inventory records auto-synced."
+    ],
+    tools: [
+      { name: "Verify Vendor Compliance", actionText: "Scanned Bridgestone and Bosch compliance records. Status: Healthy." }
+    ]
+  },
+  sustainability: {
+    thinkingConsole: [
+      "[12:23:01] [Carbon Audit] Auditing diesel fleet emissions footprint...",
+      "[12:23:05] [EV Reroute solver] Evaluating solar hub charging parameters..."
+    ],
+    activeTasks: [
+      { task: "Calculating monthly Scope 3 logistics emissions offset", status: "Active" }
+    ],
+    memoryState: [
+      { key: "Fleet Carbon Intensity Index", value: "11.4 gCO2/ton-km" }
+    ],
+    systemLogs: [
+      "[SYSTEM] EV corridor charging slots synced with NH48 telemetry."
+    ],
+    tools: [
+      { name: "Generate Emissions Graph", actionText: "Compiled complete carbon output records for Q2 audits." }
+    ]
+  },
+  mobilization: {
+    thinkingConsole: [
+      "[12:24:01] [Launcher Command] Launching post-sale client setups...",
+      "[12:24:05] [Readiness Desk] Tracking parallel setup lane scores..."
+    ],
+    activeTasks: [
+      { task: "Orchestrating finance SSO credential setups", status: "Active" }
+    ],
+    memoryState: [
+      { key: "Average Mobilization Readiness Score", value: "87.2%" }
+    ],
+    systemLogs: [
+      "[SYSTEM] Completed FASTag registration audits for BlueDart."
+    ],
+    tools: [
+      { name: "Verify Readiness Score", actionText: "Calculated composite readiness index for active projects." }
+    ]
+  },
+  agreement: {
+    thinkingConsole: [
+      "[12:25:01] [Clause Scan] Scanning commercial contracts SLA penalties...",
+      "[12:25:05] [Renewal Engine] Modeling annual rebate concessions..."
+    ],
+    activeTasks: [
+      { task: "Auditing agreement clause compliance structures", status: "Active" }
+    ],
+    memoryState: [
+      { key: "Active Agreement Versions", value: "342 files" }
+    ],
+    systemLogs: [
+      "[SYSTEM] Uploaded compiled contract rules to billing engine."
+    ],
+    tools: [
+      { name: "Run SLA Penalty Audit", actionText: "Verified compliance with billing clause thresholds." }
+    ]
+  },
+  billing: {
+    thinkingConsole: [
+      "[12:26:01] [Auditor Console] Reconciling accessorial surcharge indexes...",
+      "[12:26:05] [Fraud Scan] Testing GPS coordinate timestamps against toll crossings..."
+    ],
+    activeTasks: [
+      { task: "Running auto-approve script on standard invoices", status: "Active" }
+    ],
+    memoryState: [
+      { key: "Billing Accuracy Average", value: "99.2%" }
+    ],
+    systemLogs: [
+      "[SYSTEM] Swept Accessorial surcharge discrepency logs."
+    ],
+    tools: [
+      { name: "Audits Accessorial Rates", actionText: "Resolved ₹42,000 invoice surcharge variance." }
+    ]
+  },
+  operations: {
+    thinkingConsole: [
+      "[12:27:01] [NOC Sentinel] Ingesting live edge vehicle safety telemetry...",
+      "[12:27:05] [Incident Desk] Triaging mechanical diagnostics alarms..."
+    ],
+    activeTasks: [
+      { task: "Deploying backup trailer to TRK-90482 breakdown location", status: "Active" }
+    ],
+    memoryState: [
+      { key: "Live Shipments Tracked", value: "89,432 shipments" }
+    ],
+    systemLogs: [
+      "[SYSTEM] Triggered safety check notifications on NH27 detour."
+    ],
+    tools: [
+      { name: "Reallocate Fleet Assets", actionText: "Rerouted standby vehicles to cover active corridor delays." }
+    ]
+  },
+  fleet: {
+    thinkingConsole: [
+      "[12:28:01] [Diagnostics Console] Scraping radiator temperature sensors...",
+      "[12:28:05] [RUL Engine] Calculating remaining brake pad life projections..."
+    ],
+    activeTasks: [
+      { task: "Scheduling scheduled maintenance slot at Panvel depot", status: "Active" }
+    ],
+    memoryState: [
+      { key: "Fleet Average Health Score", value: "84.6" }
+    ],
+    systemLogs: [
+      "[SYSTEM] Registered coolant temperature warnings for TRK-90482."
+    ],
+    tools: [
+      { name: "Scan Mechanical Health", actionText: "Predicts remaining useful life for brake systems." }
+    ]
+  },
+  dispatch: {
+    thinkingConsole: [
+      "[12:29:01] [Solver Engine] solvings multi-objective constraints corridors...",
+      "[12:29:05] [Roster Optimizer] Matching driver rest hours to dispatch slots..."
+    ],
+    activeTasks: [
+      { task: "Generating empty kilometer reduction schedules", status: "Active" }
+    ],
+    memoryState: [
+      { key: "Empty Kilometer Ratio", value: "10.8%" }
+    ],
+    systemLogs: [
+      "[SYSTEM] Multi-objective route solver parameters successfully calibrated."
+    ],
+    tools: [
+      { name: "Run Multi-Objective Solver", actionText: "Calculated optimal rail DFC corridor route proposals." }
+    ]
+  },
+  warehouse: {
+    thinkingConsole: [
+      "[12:30:01] [Yard Sentinel] Monitoring dock queue congestion ratios...",
+      "[12:30:05] [Flow Ingestion] Indexing reefer storage temperature feeds..."
+    ],
+    activeTasks: [
+      { task: "Allocating incoming trucks to loading docks", status: "Active" }
+    ],
+    memoryState: [
+      { key: "Yard Congestion Index", value: "22.4%" }
+    ],
+    systemLogs: [
+      "[SYSTEM] Resolved storage alarm in zone B cold-chain racking."
+    ],
+    tools: [
+      { name: "Prioritize Dock Allocation", actionText: "Assigned high-priority loading docks to VIP accounts." }
+    ]
+  },
+  network: {
+    thinkingConsole: [
+      "[12:31:01] [Topology Auditor] Tracking multimodal segments cost limits...",
+      "[12:31:05] [Partner Monitor] Checking carrier transit compliance logs..."
+    ],
+    activeTasks: [
+      { task: "Solving multimodal corridor routing for Chennai port", status: "Active" }
+    ],
+    memoryState: [
+      { key: "Supply Chain Carrier Reliability", value: "96.2%" }
+    ],
+    systemLogs: [
+      "[SYSTEM] JNPT Port closure alert propagated to routing tables."
+    ],
+    tools: [
+      { name: "Audit Carrier Scores", actionText: "Calculated reliability averages for external trucking partners." }
+    ]
+  },
+  treasury: {
+    thinkingConsole: [
+      "[12:32:01] [Cash desk] Sweeping account bank balances...",
+      "[12:32:05] [Working Capital] Forecasting monthly receivables delinquency probabilities..."
+    ],
+    activeTasks: [
+      { task: "Reallocating working capital cash reserves", status: "Active" }
+    ],
+    memoryState: [
+      { key: "Accounts Receivable Aging Average", value: "32.1 days" }
+    ],
+    systemLogs: [
+      "[SYSTEM] Sweep parameters successfully calibrated under POL-015."
+    ],
+    tools: [
+      { name: "Forecast Cash Flows", actionText: "Generated 30-day liquidity projections." }
+    ]
+  },
+  security: {
+    thinkingConsole: [
+      "[12:33:01] [WAF Console] Ingesting edge browser fingerprints...",
+      "[12:33:05] [Threat Radar] Checking compliance profiles GST API keys..."
+    ],
+    activeTasks: [
+      { task: "Quarantining suspicious geolocation sessions", status: "Active" }
+    ],
+    memoryState: [
+      { key: "Access Controller Compliance Rate", value: "99.8%" }
+    ],
+    systemLogs: [
+      "[SYSTEM] Zero-trust access policies successfully enforced."
+    ],
+    tools: [
+      { name: "Sanitize Input Sandbox", actionText: "Tested SQL injection queries. Signature: Blocked." }
+    ]
+  },
+  strategy: {
+    thinkingConsole: [
+      "[12:34:01] [Simulator Desk] Generating future reality states snapshots...",
+      "[12:34:05] [Debate Engine] Logging macro-shocks capital project results..."
+    ],
+    activeTasks: [
+      { task: "Running EV corridor portfolio rankings", status: "Active" }
+    ],
+    memoryState: [
+      { key: "Scenario Simulation Coverage", value: "12,450 scenarios" }
+    ],
+    systemLogs: [
+      "[SYSTEM] Strategical debate consensus parameters compiled."
+    ],
+    tools: [
+      { name: "Rank Strategy Candidates", actionText: "Ranked EV fleet conversion proposals by margin stability." }
     ]
   }
 };
