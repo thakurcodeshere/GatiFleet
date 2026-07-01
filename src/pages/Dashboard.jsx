@@ -14,6 +14,8 @@ import {
   Settings, Server, Check, FileText, CreditCard, Play, Terminal, X, ShieldCheck
 } from 'lucide-react';
 import { Line, Doughnut, Bar } from 'react-chartjs-2';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -103,23 +105,61 @@ const Sparkline = ({ data, color = '#6366f1', width = 80, height = 28 }) => {
   );
 };
 
-// ---- INDIA SVG MAP COMPONENT ----
-const CITY_POSITIONS = {
-  Delhi:     { x: 185, y: 110 },
-  Jaipur:    { x: 160, y: 138 },
-  Lucknow:   { x: 225, y: 125 },
-  Ahmedabad: { x: 130, y: 185 },
-  Mumbai:    { x: 130, y: 240 },
-  Pune:      { x: 148, y: 258 },
-  Kolkata:   { x: 290, y: 195 },
-  Hyderabad: { x: 195, y: 285 },
-  Bangalore: { x: 170, y: 330 },
-  Chennai:   { x: 210, y: 330 },
+const getCityCoordinates = (cityName) => {
+  const fallbacks = {
+    Delhi: [28.6139, 77.2090],
+    Mumbai: [19.0760, 72.8777],
+    Bangalore: [12.9716, 77.5946],
+    Chennai: [13.0827, 80.2707],
+    Kolkata: [22.5726, 88.3639],
+    Hyderabad: [17.3850, 78.4867],
+    Ahmedabad: [23.0225, 72.5714],
+    Pune: [18.5204, 73.8567],
+    Jaipur: [26.9124, 75.7873],
+    Lucknow: [26.8467, 80.9462]
+  };
+  return fallbacks[cityName] || [20.5937, 78.9629];
+};
+
+const getBezierPoints = (fromLatLng, toLatLng, steps = 20) => {
+  const [lat1, lng1] = fromLatLng;
+  const [lat2, lng2] = toLatLng;
+
+  // Calculate mid-point and add perpendicular offset for curvature
+  const midLat = (lat1 + lat2) / 2;
+  const midLng = (lng1 + lng2) / 2;
+
+  // Offset depends on distance
+  const dx = lat2 - lat1;
+  const dy = lng2 - lng1;
+  const len = Math.sqrt(dx * dx + dy * dy);
+
+  // Perpendicular vector
+  const px = -dy / (len || 1);
+  const py = dx / (len || 1);
+
+  // Offset scale (e.g., 12% of distance)
+  const offset = len * 0.12;
+  const controlLat = midLat + px * offset;
+  const controlLng = midLng + py * offset;
+
+  const points = [];
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const lat = (1 - t) * (1 - t) * lat1 + 2 * (1 - t) * t * controlLat + t * t * lat2;
+    const lng = (1 - t) * (1 - t) * lng1 + 2 * (1 - t) * t * controlLng + t * t * lng2;
+    points.push([lat, lng]);
+  }
+  return points;
 };
 
 const IndiaMap = ({ dispatched }) => {
-  const [hoveredCity, setHoveredCity] = useState(null);
-  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+  const mapRef = useRef(null);
+  const leafletMap = useRef(null);
+  const markersRef = useRef({});
+  const polylinesRef = useRef([]);
+  const [mapReady, setMapReady] = useState(false);
+  const [activeViewMode, setActiveViewMode] = useState('all'); // all | hubs | lanes
 
   const getCityTrucksCount = (city) => {
     const base = city === 'Delhi' ? 68420 :
@@ -139,145 +179,303 @@ const IndiaMap = ({ dispatched }) => {
     return base;
   };
 
+  useEffect(() => {
+    if (mapRef.current && !leafletMap.current) {
+      leafletMap.current = L.map(mapRef.current, {
+        center: [21.8, 79.5],
+        zoom: 4,
+        zoomControl: false,
+        attributionControl: false
+      });
+
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 20
+      }).addTo(leafletMap.current);
+
+      setMapReady(true);
+
+      // Force a layout recalculation for Leaflet size bounds
+      setTimeout(() => {
+        if (leafletMap.current) {
+          leafletMap.current.invalidateSize();
+        }
+      }, 250);
+    }
+
+    return () => {
+      if (leafletMap.current) {
+        leafletMap.current.remove();
+        leafletMap.current = null;
+        setMapReady(false);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!leafletMap.current || !mapReady) return;
+
+    // 1. Clear existing polylines
+    polylinesRef.current.forEach(p => p.remove());
+    polylinesRef.current = [];
+
+    // 2. Clear existing markers
+    Object.keys(markersRef.current).forEach(key => {
+      markersRef.current[key].remove();
+    });
+    markersRef.current = {};
+
+    // 3. Draw Lanes (Routes) if view mode supports them
+    if (activeViewMode === 'all' || activeViewMode === 'lanes') {
+      popularRoutes.forEach((route, idx) => {
+        const coordsFrom = getCityCoordinates(route.from);
+        const coordsTo = getCityCoordinates(route.to);
+        
+        if (coordsFrom && coordsTo) {
+          const curvedPath = getBezierPoints(coordsFrom, coordsTo);
+          const p = L.polyline(curvedPath, {
+            color: idx % 2 === 0 ? 'rgba(99, 102, 241, 0.45)' : 'rgba(56, 206, 60, 0.45)', // alternate indigo and green
+            weight: 2,
+            className: 'route-path-flow'
+          }).addTo(leafletMap.current);
+          
+          polylinesRef.current.push(p);
+        }
+      });
+    }
+
+    // 4. Draw Hubs if view mode supports them
+    if (activeViewMode === 'all' || activeViewMode === 'hubs') {
+      const citiesToMap = ['Delhi', 'Mumbai', 'Bangalore', 'Chennai', 'Kolkata', 'Hyderabad', 'Ahmedabad', 'Pune', 'Jaipur', 'Lucknow'];
+      
+      citiesToMap.forEach(cityName => {
+        const trucks = getCityTrucksCount(cityName);
+        const coords = getCityCoordinates(cityName);
+        const size = Math.max(8, Math.min(18, trucks / 5000));
+        
+        const markerIcon = L.divIcon({
+          html: `
+            <div style="position: relative; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">
+              <div style="position: absolute; width: ${size + 12}px; height: ${size + 12}px; border-radius: 50%; background: #6366f1; opacity: 0.25; animation: mapPulse 2s infinite;"></div>
+              <div style="width: ${size}px; height: ${size}px; border-radius: 50%; background: #818cf8; border: 1.5px solid #fff; box-shadow: 0 0 10px #6366f1;"></div>
+            </div>
+          `,
+          className: 'custom-fleet-marker',
+          iconSize: [30, 30],
+          iconAnchor: [15, 15]
+        });
+
+        const m = L.marker(coords, { icon: markerIcon })
+          .addTo(leafletMap.current)
+          .bindTooltip(`
+            <div style="background: rgba(15, 23, 42, 0.95); border: 1px solid var(--surface-border); border-radius: var(--radius-sm); padding: 8px 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); backdrop-filter: blur(12px); color: var(--text-primary); min-width: 120px;">
+              <div style="font-size: 12px; font-weight: 700; margin-bottom: 2px;">${cityName}</div>
+              <div style="font-size: 10px; color: var(--primary-400); font-weight: 600;">
+                🚚 ${trucks.toLocaleString('en-IN')} trucks
+              </div>
+            </div>
+          `, {
+            permanent: false,
+            direction: 'top',
+            className: 'custom-map-tooltip',
+            opacity: 0.95
+          });
+        markersRef.current[cityName] = m;
+      });
+    }
+
+  }, [mapReady, activeViewMode, dispatched]);
+
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 340 }}>
-      <svg viewBox="0 0 400 420" style={{ width: '100%', height: '100%' }}>
-        <defs>
-          <radialGradient id="mapBg" cx="50%" cy="50%" r="60%">
-            <stop offset="0%" stopColor="var(--primary-500)" stopOpacity="0.06" />
-            <stop offset="100%" stopColor="transparent" stopOpacity="0" />
-          </radialGradient>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
+    <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 360 }}>
+      <style>{`
+        @keyframes mapPulse {
+          0% { transform: scale(0.5); opacity: 0.5; }
+          100% { transform: scale(2.2); opacity: 0; }
+        }
+        .custom-map-tooltip {
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+        }
+        .custom-map-tooltip::before {
+          display: none !important;
+        }
+        @keyframes dashOffset {
+          to { stroke-dashoffset: -20; }
+        }
+        .route-path-flow {
+          stroke-dasharray: 6, 6;
+          animation: dashOffset 1.5s linear infinite;
+        }
+        .map-float-btn {
+          width: 28px;
+          height: 28px;
+          border-radius: var(--radius-xs);
+          background: rgba(15, 23, 42, 0.8) !important;
+          border: 1px solid rgba(255,255,255,0.08) !important;
+          color: var(--text-primary) !important;
+          font-size: 14px;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          backdrop-filter: blur(8px);
+          transition: all 0.2s ease;
+          outline: none;
+        }
+        .map-float-btn:hover {
+          background: var(--surface-hover) !important;
+          border-color: var(--primary-500) !important;
+          color: #fff !important;
+          transform: translateY(-1px);
+        }
+        .map-float-btn:active {
+          background: var(--surface-active) !important;
+          transform: translateY(0);
+        }
+      `}</style>
 
-        <ellipse cx="200" cy="220" rx="160" ry="190" fill="url(#mapBg)" />
+      {/* 1. HUD Telemetry Bar */}
+      <div style={{
+        position: 'absolute',
+        top: 12,
+        left: 12,
+        right: 12,
+        height: 38,
+        background: 'rgba(15, 23, 42, 0.8)',
+        backdropFilter: 'blur(8px)',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        borderRadius: 'var(--radius-sm)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 12px',
+        zIndex: 10,
+        pointerEvents: 'none'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Activity size={12} style={{ color: 'var(--success-500)' }} />
+          <span style={{ fontSize: 10, color: 'var(--text-secondary)', fontWeight: 500 }}>Live Telemetry HUD</span>
+        </div>
+        <div style={{ display: 'flex', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>Hubs:</span>
+            <span style={{ fontSize: 10, color: '#818cf8', fontWeight: 600 }}>10 Active</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>Flow:</span>
+            <span style={{ fontSize: 10, color: 'var(--success-500)', fontWeight: 600 }}>Optimal</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>Lanes:</span>
+            <span style={{ fontSize: 10, color: 'var(--primary-300)', fontWeight: 600 }}>10 Corridors</span>
+          </div>
+        </div>
+      </div>
 
-        {/* Simplified India outline */}
-        <path
-          d="M185,28 C175,30 155,38 148,52 C140,68 128,82 125,95 C120,112 108,118 105,135
-             C102,152 95,165 93,180 C90,198 88,210 92,225 C95,238 100,248 105,260
-             C110,272 118,285 125,298 C132,310 140,322 148,335 C155,348 165,358 172,368
-             C178,375 185,382 192,388 C198,392 205,395 210,390 C218,382 225,370 230,358
-             C235,345 238,332 240,318 C242,305 245,292 248,280 C252,268 258,255 262,242
-             C265,230 270,218 272,205 C275,192 280,178 282,165 C284,150 288,138 290,125
-             C292,112 295,100 290,88 C285,75 278,65 268,55 C258,45 248,38 238,32
-             C228,28 218,25 208,25 C198,25 192,26 185,28Z"
-          fill="none"
-          stroke="var(--primary-500)"
-          strokeWidth="1"
-          strokeOpacity="0.2"
-          strokeDasharray="4,3"
-        />
-
-        {/* Route lines between cities */}
-        {[
-          ['Delhi', 'Mumbai'], ['Delhi', 'Kolkata'], ['Mumbai', 'Bangalore'],
-          ['Chennai', 'Hyderabad'], ['Delhi', 'Jaipur'], ['Mumbai', 'Pune'],
-          ['Bangalore', 'Chennai'], ['Ahmedabad', 'Mumbai'],
-        ].map(([from, to], i) => (
-          <line
-            key={i}
-            x1={CITY_POSITIONS[from].x}
-            y1={CITY_POSITIONS[from].y}
-            x2={CITY_POSITIONS[to].x}
-            y2={CITY_POSITIONS[to].y}
-            stroke="var(--primary-500)"
-            strokeWidth="0.6"
-            strokeOpacity="0.15"
-            strokeDasharray="3,4"
-          />
-        ))}
-
-        {/* City dots with pulse animation */}
-        {Object.entries(CITY_POSITIONS).map(([city, pos]) => {
-          const trucks = getCityTrucksCount(city);
-          const size = Math.max(3, Math.min(8, trucks / 12000));
-          const isHovered = hoveredCity === city;
-          return (
-            <g
-              key={city}
-              onMouseEnter={(e) => {
-                setHoveredCity(city);
-                setTooltipPos({ x: pos.x, y: pos.y });
-              }}
-              onMouseLeave={() => setHoveredCity(null)}
-              style={{ cursor: 'pointer' }}
-            >
-              {/* Outer pulse ring */}
-              <circle cx={pos.x} cy={pos.y} r={size + 6} fill="var(--primary-500)" opacity="0.08">
-                <animate attributeName="r" values={`${size + 4};${size + 12};${size + 4}`} dur="3s" repeatCount="indefinite" />
-                <animate attributeName="opacity" values="0.12;0.02;0.12" dur="3s" repeatCount="indefinite" />
-              </circle>
-              {/* Inner pulse */}
-              <circle cx={pos.x} cy={pos.y} r={size + 2} fill="var(--primary-400)" opacity="0.15">
-                <animate attributeName="r" values={`${size + 2};${size + 7};${size + 2}`} dur="2.5s" repeatCount="indefinite" />
-                <animate attributeName="opacity" values="0.2;0.05;0.2" dur="2.5s" repeatCount="indefinite" />
-              </circle>
-              {/* Core dot */}
-              <circle
-                cx={pos.x}
-                cy={pos.y}
-                r={isHovered ? size + 1 : size}
-                fill="var(--primary-400)"
-                filter={isHovered ? 'url(#glow)' : undefined}
-                style={{ transition: 'r 0.2s ease' }}
-              />
-              {/* City label */}
-              <text
-                x={pos.x}
-                y={pos.y - size - 6}
-                textAnchor="middle"
-                fill="var(--text-secondary)"
-                fontSize="8"
-                fontFamily="var(--font-sans)"
-                fontWeight="500"
-              >
-                {city}
-              </text>
-            </g>
-          );
-        })}
-      </svg>
-
-      {/* Tooltip */}
-      <AnimatePresence>
-        {hoveredCity && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.85, y: 4 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.85 }}
-            transition={{ duration: 0.15 }}
+      {/* 2. Interactive View Mode Control */}
+      <div style={{
+        position: 'absolute',
+        top: 62,
+        left: 12,
+        display: 'flex',
+        gap: 6,
+        zIndex: 10,
+      }}>
+        {['all', 'hubs', 'lanes'].map((mode) => (
+          <button
+            key={mode}
+            onClick={() => setActiveViewMode(mode)}
             style={{
-              position: 'absolute',
-              left: `${(tooltipPos.x / 400) * 100}%`,
-              top: `${(tooltipPos.y / 420) * 100 - 12}%`,
-              transform: 'translate(-50%, -100%)',
-              background: 'var(--bg-700)',
-              border: '1px solid var(--surface-border)',
-              borderRadius: 'var(--radius-sm)',
-              padding: '8px 12px',
-              pointerEvents: 'none',
-              zIndex: 20,
-              boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-              backdropFilter: 'blur(12px)',
+              padding: '4px 8px',
+              borderRadius: 'var(--radius-xs)',
+              background: activeViewMode === mode ? 'var(--primary-600)' : 'rgba(15, 23, 42, 0.8)',
+              border: `1px solid ${activeViewMode === mode ? 'var(--primary-500)' : 'rgba(255,255,255,0.08)'}`,
+              color: activeViewMode === mode ? '#fff' : 'var(--text-secondary)',
+              fontSize: 9,
+              fontWeight: 600,
+              cursor: 'pointer',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              transition: 'all 0.2s ease',
+              backdropFilter: 'blur(8px)'
             }}
           >
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>
-              {hoveredCity}
-            </div>
-            <div style={{ fontSize: 10, color: 'var(--primary-400)', fontWeight: 500 }}>
-              <Truck size={10} style={{ marginRight: 3, verticalAlign: 'middle' }} />
-              {getCityTrucksCount(hoveredCity).toLocaleString('en-IN')} trucks
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            {mode === 'all' ? 'Hybrid View' : mode === 'hubs' ? 'Hubs Only' : 'Lanes Only'}
+          </button>
+        ))}
+      </div>
+
+      {/* 3. Floating Zoom & Recenter Controls */}
+      <div style={{
+        position: 'absolute',
+        top: 62,
+        right: 12,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 6,
+        zIndex: 10,
+      }}>
+        <button
+          onClick={() => {
+            if (leafletMap.current) leafletMap.current.zoomIn();
+          }}
+          className="map-float-btn"
+          title="Zoom In"
+        >
+          +
+        </button>
+        <button
+          onClick={() => {
+            if (leafletMap.current) leafletMap.current.zoomOut();
+          }}
+          className="map-float-btn"
+          title="Zoom Out"
+        >
+          -
+        </button>
+        <button
+          onClick={() => {
+            if (leafletMap.current) {
+              leafletMap.current.setView([21.8, 79.5], 4);
+            }
+          }}
+          className="map-float-btn"
+          title="Recenter Map"
+        >
+          ⛶
+        </button>
+      </div>
+
+      {/* 4. Map Legend */}
+      <div style={{
+        position: 'absolute',
+        bottom: 12,
+        left: 12,
+        background: 'rgba(15, 23, 42, 0.8)',
+        backdropFilter: 'blur(8px)',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        borderRadius: 'var(--radius-sm)',
+        padding: '8px 10px',
+        zIndex: 10,
+        pointerEvents: 'none',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 4
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#818cf8', border: '1px solid #fff' }} />
+          <span style={{ fontSize: 9, color: 'var(--text-secondary)' }}>Logistics Hub (Size = Volume)</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ width: 14, height: 2, background: 'rgba(99, 102, 241, 0.7)', borderTop: '2px dashed rgba(255, 255, 255, 0.3)' }} />
+          <span style={{ fontSize: 9, color: 'var(--text-secondary)' }}>Active Transit Lane (Flowing)</span>
+        </div>
+      </div>
+
+      {/* Map Container */}
+      <div ref={mapRef} style={{ width: '100%', height: '360px', borderRadius: 'var(--radius-md)', border: '1px solid var(--surface-border)', overflow: 'hidden', zIndex: 1 }} />
     </div>
   );
 };

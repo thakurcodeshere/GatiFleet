@@ -3,7 +3,7 @@ import { useTheme } from '../../context/ThemeContext';
 import {
   LayoutDashboard, Truck, MapPin, Network, Users,
   Bot, BarChart3, ChevronLeft, ChevronRight, Sparkles,
-  IndianRupee, UserCircle, Building2
+  IndianRupee, UserCircle, Building2, ShieldCheck
 } from 'lucide-react';
 
 const navItems = [
@@ -26,6 +26,9 @@ const navItems = [
   { section: 'INTELLIGENCE' },
   { path: '/copilot', label: 'AI Copilot', icon: Sparkles, badge: 'AI' },
   { path: '/agents', label: 'AI Agents', icon: Bot },
+
+  { section: 'SECURITY & RISK' },
+  { path: '/security', label: 'Security Fortress', icon: ShieldCheck, badge: 'SOC' },
 ];
 
 export default function Sidebar() {
@@ -159,15 +162,17 @@ export default function Sidebar() {
       transition: 'all var(--transition-fast)',
     },
     stats: {
-      padding: sidebarCollapsed ? '12px 8px' : '12px 20px',
+      padding: sidebarCollapsed ? '12px 8px' : '10px 16px',
       borderTop: '1px solid var(--border-subtle)',
-      display: sidebarCollapsed ? 'none' : 'block',
+      display: sidebarCollapsed ? 'none' : 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: '8px',
     },
     statRow: {
       display: 'flex',
-      justifyContent: 'space-between',
       alignItems: 'center',
-      padding: '4px 0',
+      gap: '4px',
       fontSize: '11px',
     },
     statLabel: {
@@ -234,11 +239,12 @@ export default function Sidebar() {
       {!sidebarCollapsed && (
         <div style={styles.stats}>
           <div style={styles.statRow}>
-            <span style={styles.statLabel}>System Status</span>
+            <span style={styles.statLabel}>Status:</span>
             <span style={styles.statValue}>● Operational</span>
           </div>
+          <div style={{ width: '1px', height: '12px', background: 'var(--border-subtle)' }} />
           <div style={styles.statRow}>
-            <span style={styles.statLabel}>Uptime</span>
+            <span style={styles.statLabel}>Uptime:</span>
             <span style={{ ...styles.statValue, color: 'var(--text-secondary)' }}>99.97%</span>
           </div>
         </div>

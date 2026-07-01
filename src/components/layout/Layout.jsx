@@ -1,10 +1,9 @@
 import { useTheme } from '../../context/ThemeContext';
-import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import CopilotPanel from '../shared/CopilotPanel';
 
 export default function Layout({ children }) {
-  const { sidebarCollapsed, copilotOpen, toggleCopilot } = useTheme();
+  const { copilotOpen, toggleCopilot } = useTheme();
 
   const styles = {
     container: {
@@ -14,12 +13,13 @@ export default function Layout({ children }) {
     },
     main: {
       flex: 1,
-      marginLeft: sidebarCollapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)',
-      transition: 'margin-left var(--transition-base)',
+      marginLeft: 0,
+      width: '100%',
       display: 'flex',
       flexDirection: 'column',
       minHeight: '100vh',
       position: 'relative',
+      overflow: 'hidden',
     },
     content: {
       flex: 1,
@@ -49,13 +49,13 @@ export default function Layout({ children }) {
 
   return (
     <div style={styles.container}>
-      <Sidebar />
       <div style={styles.main}>
         <Topbar />
         <main style={styles.content}>
           {children}
         </main>
       </div>
+
 
       {/* AI Copilot Side Panel */}
       <div
