@@ -521,12 +521,21 @@ const itemVariants = {
 
 const HCMDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [engineState, setEngineState] = useState(RealityEngine.getState());
   const [drivers, setDrivers] = useState(hcmDrivers);
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [safetyFilter, setSafetyFilter] = useState('all'); // all, high-fatigue, low-safety, bonus-eligible
   const [rosterShiftFilter, setRosterShiftFilter] = useState('all'); // all, morning, evening, night
   const [toast, setToast] = useState(null);
+
+  // Sync state with RealityEngine singleton
+  useEffect(() => {
+    const unsubscribe = RealityEngine.subscribe((state) => {
+      setEngineState(state);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
