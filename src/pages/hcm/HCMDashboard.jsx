@@ -18,6 +18,7 @@ import {
   Legend
 } from 'chart.js';
 import { hcmDrivers, formatCurrency, formatNumber } from '../../data/mockData';
+import { RealityEngine } from '../../data/RealityEngine';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
