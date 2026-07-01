@@ -589,6 +589,7 @@ const itemVariants = {
 
 const ERPDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [engineState, setEngineState] = useState(RealityEngine.getState());
 
   // STATE-DRIVEN COMPLIANCE WIDGETS
   const [fastags, setFastags] = useState(fastagAccounts);
@@ -606,6 +607,14 @@ const ERPDashboard = () => {
   const [rechargeVal, setRechargeVal] = useState(5000);
   const [showNewInvoice, setShowNewInvoice] = useState(false);
   const [newInvoiceData, setNewInvoiceData] = useState({ customer: '', amount: '', cargo: '', route: '' });
+
+  // Sync state with RealityEngine singleton
+  useEffect(() => {
+    const unsubscribe = RealityEngine.subscribe((state) => {
+      setEngineState(state);
+    });
+    return () => unsubscribe();
+  }, []);
 
   // AUTO-TRIGGER TOAST TIMEOUT
   useEffect(() => {
