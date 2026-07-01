@@ -10,13 +10,15 @@ import {
   ThumbsUp, ThumbsDown, FileText, Timer, UserCheck, UserX,
   CircleDot, Sparkles, BarChart3, Megaphone, HeartHandshake,
   IndianRupee, BadgeCheck, Gauge, BellRing, RotateCcw, ShieldAlert,
-  Check, Play, PlusCircle, Trash, Truck, CircleDollarSign, Percent
+  Check, Play, PlusCircle, Trash, Truck, CircleDollarSign, Percent,
+  History, Brain, Scale, Activity, TrendingDown
 } from 'lucide-react';
 import { 
   crmData, 
   crmCustomers, 
   formatCurrency 
 } from '../../data/mockData';
+import { RealityEngine } from '../../data/RealityEngine';
 
 const tabs = [
   { id: 'overview', label: 'Overview', icon: BarChart3 },
@@ -728,6 +730,66 @@ const itemVariants = {
   },
 };
 
+const SignalBox = ({ title, what, why, will, should, auto }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+    <div style={{ borderLeft: '3px solid #ec4899', paddingLeft: '12px', marginBottom: '4px' }}>
+      <div style={{ fontSize: '11px', color: '#ec4899', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>What Happened</div>
+      <div style={{ fontSize: '12.5px', color: 'var(--text-primary)', marginTop: '2px', lineHeight: 1.4 }}>{what}</div>
+    </div>
+    <div style={{ borderLeft: '3px solid var(--warning-500)', paddingLeft: '12px', marginBottom: '4px' }}>
+      <div style={{ fontSize: '11px', color: 'var(--warning-500)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Why</div>
+      <div style={{ fontSize: '12.5px', color: 'var(--text-primary)', marginTop: '2px', lineHeight: 1.4 }}>{why}</div>
+    </div>
+    <div style={{ borderLeft: '3px solid #8b5cf6', paddingLeft: '12px', marginBottom: '4px' }}>
+      <div style={{ fontSize: '11px', color: '#8b5cf6', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>What Will Happen (Prediction)</div>
+      <div style={{ fontSize: '12.5px', color: 'var(--text-primary)', marginTop: '2px', lineHeight: 1.4 }}>{will}</div>
+    </div>
+    <div style={{ borderLeft: '3px solid var(--success-500)', paddingLeft: '12px', marginBottom: '4px' }}>
+      <div style={{ fontSize: '11px', color: 'var(--success-500)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>What Should Happen (AI Prescription)</div>
+      <div style={{ fontSize: '12.5px', color: 'var(--text-primary)', marginTop: '2px', lineHeight: 1.4 }}>{should}</div>
+    </div>
+    {auto && (
+      <div style={{ borderLeft: '3px solid #3b82f6', paddingLeft: '12px' }}>
+        <div style={{ fontSize: '11px', color: '#3b82f6', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Auto-healed by Sentinel-X</div>
+        <div style={{ fontSize: '12.5px', color: 'var(--text-primary)', marginTop: '2px', lineHeight: 1.4 }}>{auto}</div>
+      </div>
+    )}
+  </div>
+);
+
+const getEvolutionTimeline = (custId) => {
+  const timelines = {
+    'CUS-001': [
+      { year: '2019', title: 'Onboarded', desc: 'Onboarded for auto component transit. Initial contract margin 22%.' },
+      { year: '2021', title: 'SLA Peak', desc: 'Reached record 98% SLA compliance. Expanded logistics corridor in West Zone.' },
+      { year: '2023', title: 'FASTag Integration', desc: 'Smart GPS & FASTag auto-billing launched. Payment cycles dropped to 2 days.' },
+      { year: '2025', title: 'Spot Negotiations', desc: 'Successfully renewed contract against regional spot pricing competitors.' },
+      { year: '2026', title: 'Current state', desc: 'Highly stable enterprise partnership. Expansion planned for Q3.' }
+    ],
+    'CUS-002': [
+      { year: '2019', title: 'Jamnagar Refinery Run', desc: 'Onboarded for refinery cargo logistics. Dedicated fuel surcharges active.' },
+      { year: '2022', title: 'Refinery Disruption', desc: 'Refinery detours caused billing dispute. Settlement delayed by 30 days.' },
+      { year: '2024', title: 'Dedicated Reefers', desc: 'Allocated 50 temperature-controlled reefers to Jamnagar-Jaipur route.' },
+      { year: '2025', title: 'BlackBuck Threat', desc: 'Competitor spot rate pitches detected on Western corridor.' },
+      { year: '2026', title: 'Billing Deadlock', desc: 'Detention charges disputed. Active churn threat rising due to spot rates.' }
+    ],
+    'CUS-004': [
+      { year: '2019', title: 'Infrastructure Contract', desc: 'Onboarded for heavy machinery transit. Initial margin baseline 20%.' },
+      { year: '2021', title: 'Payment Backlogs', desc: 'Project financing issues. Payment delay days spiked to 18 days.' },
+      { year: '2023', title: 'SLA Stabilization', desc: 'Dedicated terminal allocation restored OTD SLA to 92%.' },
+      { year: '2025', title: 'VRL Pitch', desc: 'VRL Logistics pitch detected near Kolkata depot.' },
+      { year: '2026', title: 'Axle Breakdown', desc: 'Axle breakage on TRK-00019 near Gurugram; heavy machinery cargo delayed by 12 hours. Sentiment negative.' }
+    ]
+  };
+  
+  return timelines[custId] || [
+    { year: '2019', title: 'Account Onboarded', desc: 'Onboarded for regional container shipment runs.' },
+    { year: '2022', title: 'Route Expansion', desc: 'Expanded contract volume across interstate lanes.' },
+    { year: '2025', title: 'GPS Upgrade', desc: 'All contract trailers upgraded to live ADAS telemetry.' },
+    { year: '2026', title: 'Operational Status', desc: 'Steady performance; regular billing cycles.' }
+  ];
+};
+
 const CRMDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   
@@ -736,6 +798,28 @@ const CRMDashboard = () => {
   const [pipeline, setPipeline] = useState(initialPipeline);
   const [tickets, setTickets] = useState(initialTickets);
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
+  
+  // REALITY LOOP & LEDGER STATES
+  const [activities, setActivities] = useState([
+    { id: 'act-0', timestamp: new Date(Date.now() - 3600000).toLocaleTimeString(), type: 'SYSTEM_BOOT', desc: 'Transportation OS CRM Session initialized for Arjun Kapoor (CEO).' },
+    { id: 'act-1', timestamp: new Date(Date.now() - 1800000).toLocaleTimeString(), type: 'CONTRACT_AUTO_RENEW', desc: 'Auto-renew policy scanned. 342 contracts verified Active.' },
+    { id: 'act-2', timestamp: new Date(Date.now() - 900000).toLocaleTimeString(), type: 'ALGORITHM_HEAL', desc: 'NOC Auto-exception resolution: Rerouted BlueDart run away from NH8 flooding.' }
+  ]);
+
+  const [decisionLogs, setDecisionLogs] = useState({
+    'CUS-001': [
+      { timestamp: '2026-06-18 10:20', overrideAction: 'Waive Toll Dispute Surcharge', expectedOutcome: 'Maintain 97% OTD SLA', actualOutcome: 'SLA maintained at 97.4%', divergence: '0.0%', approvedBy: 'Arjun Kapoor (CEO)', learnedPolicy: 'Auto-approve surcharge disputes under ₹15,000.' }
+    ],
+    'CUS-002': [
+      { timestamp: '2026-06-15 14:05', overrideAction: 'Match Spot Rate (Jaipur Route)', expectedOutcome: 'Prevent Jamnagar refinery volume leakage', actualOutcome: 'Volume secured; margin impact -0.4%', divergence: '-0.1%', approvedBy: 'Arjun Kapoor (CEO)', learnedPolicy: 'Targeted spot pricing matching active.' }
+    ]
+  });
+
+  const [drawerTab, setDrawerTab] = useState('commercial');
+
+  // INTERACTIVE OPPORTUNITY STATES
+  const [selectedDeal, setSelectedDeal] = useState(null);
+  const [showEditDeal, setShowEditDeal] = useState(false);
   
   // MODALS & INPUTS
   const [showNewLead, setShowNewLead] = useState(false);
@@ -752,6 +836,31 @@ const CRMDashboard = () => {
   const selectedCustomer = useMemo(() => {
     return customers.find(c => c.id === selectedCustomerId) || null;
   }, [customers, selectedCustomerId]);
+
+  // UNIFIED EVENT DISPATCHER
+  const dispatchEvent = (type, desc, meta = {}) => {
+    const newEvent = {
+      id: `ev-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      type,
+      desc,
+      source: 'CRM/COCKPIT',
+      metadata: meta
+    };
+    RealityEngine.events = [newEvent, ...RealityEngine.events];
+    RealityEngine.notify();
+
+    setActivities(prev => [
+      {
+        id: `act-${Date.now()}`,
+        timestamp: new Date().toLocaleTimeString(),
+        type,
+        desc,
+        meta
+      },
+      ...prev
+    ]);
+  };
 
   // DERIVED METRICS FOR METRICS STRIP
   const avgHealth = useMemo(() => {
@@ -774,9 +883,11 @@ const CRMDashboard = () => {
 
   // GROWTH AGENT ACTION HANDLERS
   const handleWaivePenalty = (id) => {
+    const cust = customers.find(c => c.id === id);
+    if (!cust) return;
+
     setCustomers(prev => prev.map(c => {
       if (c.id === id) {
-        const disputeVal = c.disputes.length > 0 ? c.disputes[0].amount : 250000;
         const newHealth = Math.min(100, c.health + 8);
         const newRisk = Math.max(0, c.riskScore - 15);
         let newStatus = 'low';
@@ -794,8 +905,25 @@ const CRMDashboard = () => {
       }
       return c;
     }));
+
+    dispatchEvent('PENALTY_WAIVED', `Waived invoice penalty fee for ${cust.name}. Disputed balance resolved.`, { customerId: id });
+
+    setDecisionLogs(prev => ({
+      ...prev,
+      [id]: [
+        {
+          timestamp: new Date().toISOString().replace('T', ' ').substring(0, 16),
+          overrideAction: 'Waive Dispute SLA Penalty Fee',
+          expectedOutcome: 'Resolve billing deadlock, increase health by +8%',
+          actualOutcome: `Health score rose to ${Math.min(100, cust.health + 8)}%`,
+          divergence: '0.0% variance',
+          approvedBy: 'Arjun Kapoor (CEO)',
+          learnedPolicy: 'Auto-approve SLA penalty disputes up to ₹50k for VIP shippers.'
+        },
+        ...(prev[id] || [])
+      ]
+    }));
     
-    const cust = customers.find(c => c.id === id);
     setToast({
       title: 'SLA Penalty Waived',
       message: `Waived invoice penalty fee for ${cust.name}. Disputed balance resolved.`,
@@ -804,6 +932,9 @@ const CRMDashboard = () => {
   };
 
   const handleGuaranteeCapacity = (id) => {
+    const cust = customers.find(c => c.id === id);
+    if (!cust) return;
+
     setCustomers(prev => prev.map(c => {
       if (c.id === id) {
         const newHealth = Math.min(100, c.health + 10);
@@ -825,7 +956,24 @@ const CRMDashboard = () => {
       return c;
     }));
 
-    const cust = customers.find(c => c.id === id);
+    dispatchEvent('CAPACITY_GUARANTEED', `Allocated 40 dedicated logistics units for ${cust.name}. SLA index stabilized.`, { customerId: id });
+
+    setDecisionLogs(prev => ({
+      ...prev,
+      [id]: [
+        {
+          timestamp: new Date().toISOString().replace('T', ' ').substring(0, 16),
+          overrideAction: 'Guarantee Dedicated Capacity',
+          expectedOutcome: 'Secure contract volume, stabilize SLA compliance index',
+          actualOutcome: 'SLA index stabilized at 96.5%; 40 units dedicated.',
+          divergence: '0.0% variance',
+          approvedBy: 'Arjun Kapoor (CEO)',
+          learnedPolicy: 'Lock capacity routes 7 days prior to peak festival seasons.'
+        },
+        ...(prev[id] || [])
+      ]
+    }));
+
     setToast({
       title: 'Capacity Secured',
       message: `Allocated 40 dedicated logistics units for ${cust.name}. SLA index stabilized.`,
@@ -834,6 +982,9 @@ const CRMDashboard = () => {
   };
 
   const handleCeoEscalation = (id) => {
+    const cust = customers.find(c => c.id === id);
+    if (!cust) return;
+
     setCustomers(prev => prev.map(c => {
       if (c.id === id) {
         return {
@@ -845,7 +996,24 @@ const CRMDashboard = () => {
       return c;
     }));
 
-    const cust = customers.find(c => c.id === id);
+    dispatchEvent('CEO_ESCALATION_TRIGGERED', `Priority corporate review scheduled between Arjun Kapoor & CEO of ${cust.name}.`, { customerId: id });
+
+    setDecisionLogs(prev => ({
+      ...prev,
+      [id]: [
+        {
+          timestamp: new Date().toISOString().replace('T', ' ').substring(0, 16),
+          overrideAction: 'CEO Relationship Escalation',
+          expectedOutcome: 'Restore strategic alignment; set support sentiment to Positive',
+          actualOutcome: 'Scheduled executive call; support sentiment set to Positive.',
+          divergence: '+20% trust index gain',
+          approvedBy: 'Arjun Kapoor (CEO)',
+          learnedPolicy: 'Establish automatic quarterly alignments for premium tier shippers.'
+        },
+        ...(prev[id] || [])
+      ]
+    }));
+
     setToast({
       title: 'Executive Escalate Scheduled',
       message: `Priority corporate review scheduled between Arjun Kapoor & CEO of ${cust.name}.`,
@@ -854,6 +1022,9 @@ const CRMDashboard = () => {
   };
 
   const handleApplyRebate = (id) => {
+    const cust = customers.find(c => c.id === id);
+    if (!cust) return;
+
     setCustomers(prev => prev.map(c => {
       if (c.id === id) {
         const newGrowth = c.growthScore + 10;
@@ -866,12 +1037,72 @@ const CRMDashboard = () => {
       return c;
     }));
 
-    const cust = customers.find(c => c.id === id);
+    dispatchEvent('REBATE_APPLIED', `Applied 5% contract rebate to competitive route lanes for ${cust.name}.`, { customerId: id });
+
+    setDecisionLogs(prev => ({
+      ...prev,
+      [id]: [
+        {
+          timestamp: new Date().toISOString().replace('T', ' ').substring(0, 16),
+          overrideAction: 'Apply Temporary Lane Rebate',
+          expectedOutcome: 'Secure competitive route volume; growth score +10',
+          actualOutcome: `Growth score rose to ${cust.growthScore + 10}%; volume secured.`,
+          divergence: '-0.2% margin deviation',
+          approvedBy: 'Arjun Kapoor (CEO)',
+          learnedPolicy: 'Spot rate matching policies protect lanes better than general rebates.'
+        },
+        ...(prev[id] || [])
+      ]
+    }));
+
     setToast({
       title: 'Lane Discount Applied',
       message: `Applied 5% contract rebate to competitive route lanes for ${cust.name}.`,
       type: 'success'
     });
+  };
+
+  const handleUpdateDeal = (updatedDeal) => {
+    setPipeline(prev => prev.map(col => {
+      const filteredDeals = col.deals.filter(d => d.id !== updatedDeal.id);
+      
+      if (col.id === updatedDeal.stage) {
+        const exists = col.deals.some(d => d.id === updatedDeal.id);
+        const updatedList = exists 
+          ? col.deals.map(d => d.id === updatedDeal.id ? updatedDeal : d)
+          : [...col.deals, updatedDeal];
+        return { ...col, deals: updatedList };
+      } else {
+        return { ...col, deals: filteredDeals };
+      }
+    }));
+
+    dispatchEvent('SALES_OPPORTUNITY_UPDATED', `Opportunity ${updatedDeal.name} updated: Stage: ${updatedDeal.stage}, Value: ₹${(updatedDeal.value/10000000).toFixed(1)}Cr.`, { dealId: updatedDeal.id, value: updatedDeal.value });
+
+    setToast({
+      title: 'Opportunity Updated',
+      message: `Updated deal details for ${updatedDeal.name}.`,
+      type: 'success'
+    });
+    setShowEditDeal(false);
+    setSelectedDeal(null);
+  };
+
+  const handleDeleteDeal = (dealId, dealName) => {
+    setPipeline(prev => prev.map(col => ({
+      ...col,
+      deals: col.deals.filter(d => d.id !== dealId)
+    })));
+
+    dispatchEvent('SALES_OPPORTUNITY_DELETED', `Opportunity ${dealName} (${dealId}) removed from sales pipeline.`, { dealId });
+
+    setToast({
+      title: 'Opportunity Removed',
+      message: `Removed ${dealName} from sales pipeline.`,
+      type: 'success'
+    });
+    setShowEditDeal(false);
+    setSelectedDeal(null);
   };
 
   // ADD LEAD TO PIPELINE
@@ -894,6 +1125,8 @@ const CRMDashboard = () => {
       }
       return col;
     }));
+
+    dispatchEvent('LEAD_OPPORTUNITY_CREATED', `Added ${newDeal.name} worth ₹${(newDeal.value/10000000).toFixed(1)}Cr to sales pipeline.`, { dealId: newDeal.id, value: newDeal.value });
 
     setToast({
       title: 'Lead Created',
@@ -1062,6 +1295,93 @@ const CRMDashboard = () => {
             </div>
           </div>
         </div>
+
+        {/* Live Ledger Activity Feed & Simulation Snapshot */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '20px' }}>
+          {/* Live Activity Feed */}
+          <div style={styles.card}>
+            <div style={styles.sectionTitle}>
+              <Activity size={18} color="#ec4899" />
+              Growth Agent Reality Ledger (Business Events)
+            </div>
+            <div style={{
+              maxHeight: '220px',
+              overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px',
+              paddingRight: '6px'
+            }}>
+              {activities.map((act) => (
+                <div key={act.id} style={{
+                  padding: '10px 14px',
+                  background: 'var(--bg-900)',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border-subtle)',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '12px',
+                  fontSize: '12.5px'
+                }}>
+                  <div style={{
+                    fontSize: '10px',
+                    fontFamily: 'var(--font-mono)',
+                    color: 'var(--text-muted)',
+                    whiteSpace: 'nowrap',
+                    marginTop: '2px'
+                  }}>{act.timestamp}</div>
+                  <div style={{ flex: 1 }}>
+                    <span style={{
+                      fontWeight: 700,
+                      color: act.type.includes('WAIV') || act.type.includes('RESOLV') || act.type.includes('GUAR') ? 'var(--success-500)' : act.type.includes('FAIL') || act.type.includes('DEL') ? 'var(--danger-500)' : 'var(--primary-400)',
+                      fontSize: '10px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      marginRight: '8px',
+                      display: 'inline-block',
+                      background: 'rgba(255,255,255,0.03)',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      border: '1px solid var(--border-subtle)'
+                    }}>{act.type}</span>
+                    <p style={{ display: 'inline', color: 'var(--text-primary)' }}>{act.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* AI Decision Consensus Overview */}
+          <div style={styles.card}>
+            <div style={styles.sectionTitle}>
+              <Brain size={18} color="var(--primary-400)" />
+              Autonomous Decision Consensus Matrix
+            </div>
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '14px', lineHeight: 1.4 }}>
+              The current overall policy execution certainty benchmark is validated across 5 autonomous AI peer agents.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12.5px' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Scale size={14} color="var(--primary-400)" /> Combined Agent Consensus</span>
+                <span style={{ fontWeight: 700, color: 'var(--success-500)' }}>92% Compliance</span>
+              </div>
+              <div style={{ width: '100%', height: '6px', background: 'var(--bg-900)', borderRadius: '3px', overflow: 'hidden' }}>
+                <div style={{ width: '92%', height: '100%', background: 'linear-gradient(90deg, var(--primary-500), var(--success-500))' }} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px', marginTop: '10px', textAlign: 'center' }}>
+                {['RET', 'FIN', 'OPS', 'RSK', 'EXE'].map((agent, i) => {
+                  const scores = [98, 85, 90, 92, 95];
+                  return (
+                    <div key={agent} style={{ padding: '6px 4px', background: 'var(--bg-900)', borderRadius: '4px', border: '1px solid var(--border-subtle)' }}>
+                      <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600 }}>{agent}</div>
+                      <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px' }}>{scores[i]}%</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
       </motion.div>
     );
   };
@@ -1179,12 +1499,47 @@ const CRMDashboard = () => {
               </div>
               <div style={styles.pipelineBody}>
                 {col.deals.map((deal) => (
-                  <div key={deal.id} style={styles.dealCard}>
+                  <div 
+                    key={deal.id} 
+                    style={{
+                      ...styles.dealCard,
+                      border: '1px solid var(--surface-border)',
+                      transition: 'all 0.2s ease',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => {
+                      setSelectedDeal({ ...deal, stage: col.id });
+                      setShowEditDeal(true);
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--primary-400)';
+                      e.currentTarget.style.boxShadow = '0 0 10px rgba(99, 102, 241, 0.15)';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--surface-border)';
+                      e.currentTarget.style.boxShadow = 'none';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                    }}
+                  >
                     <div style={styles.dealName}>{deal.name}</div>
                     <div style={styles.dealValue}>₹{(deal.value/10000000).toFixed(1)}Cr</div>
                     <div style={styles.dealMeta}>
                       <span>{deal.contact}</span>
-                      <span>{deal.priority.toUpperCase()}</span>
+                      <span style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        color: deal.priority === 'high' ? 'var(--danger-500)' : deal.priority === 'medium' ? 'var(--warning-500)' : 'var(--success-500)'
+                      }}>
+                        <span style={{
+                          width: '6px',
+                          height: '6px',
+                          borderRadius: '50%',
+                          background: deal.priority === 'high' ? 'var(--danger-500)' : deal.priority === 'medium' ? 'var(--warning-500)' : 'var(--success-500)'
+                        }} />
+                        {deal.priority.toUpperCase()}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -1246,6 +1601,7 @@ const CRMDashboard = () => {
                       <button 
                         onClick={() => {
                           setTickets(prev => prev.map(tk => tk.id === t.id ? { ...tk, status: 'Resolved' } : tk));
+                          dispatchEvent('SUPPORT_CASE_RESOLVED', `Ticket ${t.id} for ${t.customer} marked as resolved. SLA log closed.`, { ticketId: t.id });
                           setToast({
                             title: 'Ticket Resolved',
                             message: `Ticket ${t.id} for ${t.customer} marked as resolved. SLA log closed.`,
@@ -1357,6 +1713,7 @@ const CRMDashboard = () => {
                   <td style={{ ...styles.tdLast, textAlign: 'right' }}>
                     <button 
                       onClick={() => {
+                        dispatchEvent('CONTRACT_RENEWAL_COMMITTED', `Contract for ${c.name} auto-renewed for 12 months (rate locked).`, { customerId: c.id });
                         setToast({
                           title: 'Contract Extended',
                           message: `Contract for ${c.name} auto-renewed for 12 months (rate locked).`,
@@ -1484,162 +1841,502 @@ const CRMDashboard = () => {
           <>
             <div style={styles.drawerOverlay} onClick={() => setSelectedCustomerId(null)} />
             <motion.div 
-              style={styles.drawer}
+              style={{
+                ...styles.drawer,
+                width: '560px',
+                background: 'rgba(15, 22, 36, 0.95)',
+                backdropFilter: 'blur(20px)',
+                borderLeft: '1px solid rgba(99, 102, 241, 0.2)',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 220 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 210 }}
             >
-              <div style={styles.drawerHeader}>
+              {/* Twin Drawer Header */}
+              <div style={{
+                padding: '24px 28px',
+                background: 'var(--bg-700)',
+                borderBottom: '1px solid var(--border-subtle)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
                 <div>
-                  <div style={styles.drawerTitle}>{selectedCustomer.name}</div>
-                  <div style={styles.drawerSubtitle}>ID: {selectedCustomer.id} | Health Score: {selectedCustomer.health}%</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={styles.drawerTitle}>{selectedCustomer.name}</div>
+                    <span style={styles.badgeStatus(selectedCustomer.riskStatus)}>
+                      {selectedCustomer.riskStatus.toUpperCase()} RISK
+                    </span>
+                  </div>
+                  <div style={{ ...styles.drawerSubtitle, display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                    <span style={{ fontFamily: 'var(--font-mono)' }}>ID: {selectedCustomer.id}</span>
+                    <span style={{ color: 'var(--text-muted)' }}>|</span>
+                    <span style={{ fontWeight: 600, color: 'var(--success-500)' }}>Twin Certainty: 94.6%</span>
+                  </div>
                 </div>
-                <button style={styles.drawerClose} onClick={() => setSelectedCustomerId(null)}>✕</button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Health Score</div>
+                    <div style={{ fontSize: '20px', fontWeight: 800, color: selectedCustomer.health >= 80 ? 'var(--success-500)' : selectedCustomer.health >= 60 ? 'var(--warning-500)' : 'var(--danger-500)' }}>
+                      {selectedCustomer.health}%
+                    </div>
+                  </div>
+                  <button style={styles.drawerClose} onClick={() => setSelectedCustomerId(null)}>✕</button>
+                </div>
               </div>
 
-              <div style={styles.drawerBody}>
-                {/* AI Summary Diagnostic box */}
-                <div style={styles.aiInsightBox}>
-                  <Sparkles size={18} color="#ec4899" style={{ flexShrink: 0, marginTop: '2px' }} />
-                  <div>
-                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#ec4899' }}>AI Diagnostic Audit</div>
-                    <p style={{ fontSize: '12px', color: 'var(--text-primary)', marginTop: '4px', lineHeight: 1.5 }}>
-                      {selectedCustomer.health < 70 ? (
-                        `Account is at HIGH risk of churn due to operational friction. SLA compliance fell to ${selectedCustomer.slaCompliance}% stemming from ${selectedCustomer.incidents.length} fleet failures, accompanied by negative sentiment feedback and competitor spot pricing offers.`
-                      ) : selectedCustomer.health < 85 ? (
-                        `Account has moderate risk flags. Minor SLA delay incidents and outstanding disputes need to be settled to lock-in the contract renewal.`
-                      ) : (
-                        `Healthy profile. Operational delivery SLA is stable and payment schedules are on track. Account Growth Agent recommends upselling dedicated lane capacity.`
-                      )}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Operations Health */}
-                <div style={styles.drawerSection}>
-                  <span style={styles.drawerLabel}>Operations Signals</span>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                      <span>SLA Compliance Target</span>
-                      <span style={{ fontWeight: 600 }}>{selectedCustomer.slaCompliance}%</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                      <span>Active Capacity Booking</span>
-                      <span style={{ fontWeight: 600 }}>{selectedCustomer.capacityDemands}</span>
-                    </div>
-
-                    <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginTop: '6px' }}>
-                      Recent SLA Incidents Log ({selectedCustomer.incidents.length})
-                    </div>
-                    {selectedCustomer.incidents.map((inc) => (
-                      <div key={inc.id} style={{ padding: '10px', background: 'var(--bg-900)', borderRadius: '4px', border: '1px solid var(--border-subtle)', fontSize: '11px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, marginBottom: '2px' }}>
-                          <span>{inc.route} (Truck: {inc.truckId})</span>
-                          <span style={{ color: inc.status === 'Resolved' ? 'var(--success-500)' : 'var(--danger-500)' }}>{inc.status}</span>
-                        </div>
-                        <div style={{ color: 'var(--text-muted)' }}>Reason: {inc.reason} (+{inc.delayHours}h delay)</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Financial Health */}
-                <div style={styles.drawerSection}>
-                  <span style={styles.drawerLabel}>Financial Signals</span>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                      <span>Average Payment Delays</span>
-                      <span style={{ fontWeight: 600 }}>{selectedCustomer.paymentDelayDays} days</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                      <span>Active Billing Disputes</span>
-                      <span style={{ fontWeight: 600, color: selectedCustomer.activeDisputes > 0 ? 'var(--danger-500)' : 'inherit' }}>
-                        {selectedCustomer.activeDisputes} open dispute
-                      </span>
-                    </div>
-                    
-                    {selectedCustomer.disputes.map((d) => (
-                      <div key={d.id} style={{ padding: '10px', background: 'var(--bg-900)', borderRadius: '4px', border: '1px solid var(--border-subtle)', fontSize: '11px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, marginBottom: '2px' }}>
-                          <span>Billing Dispute #{d.id}</span>
-                          <span>₹{d.amount.toLocaleString('en-IN')}</span>
-                        </div>
-                        <div style={{ color: 'var(--text-muted)' }}>Friction: {d.reason}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Market intelligence */}
-                <div style={styles.drawerSection}>
-                  <span style={styles.drawerLabel}>Market & Competitor Activity</span>
-                  <div style={{ padding: '10px', background: 'var(--bg-900)', borderRadius: '4px', border: '1px solid var(--border-subtle)', fontSize: '12px' }}>
-                    <div style={{ fontWeight: 600, color: selectedCustomer.competitorActivity !== 'None detected' ? 'var(--warning-500)' : 'inherit' }}>
-                      {selectedCustomer.competitorActivity}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Account Growth Agent Action center */}
-                <div style={styles.drawerSection}>
-                  <span style={styles.drawerLabel}>Account Growth Agent Action Center</span>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <button 
-                      onClick={() => handleGuaranteeCapacity(selectedCustomer.id)}
-                      style={styles.aiRecommendationBtn}
-                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--primary-500)'; e.currentTarget.style.color = 'var(--primary-400)'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--surface-border)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+              {/* Cognitive Tab Grid Selector */}
+              <div style={{
+                padding: '12px 28px',
+                background: 'var(--bg-800)',
+                borderBottom: '1px solid var(--border-subtle)',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(5, 1fr)',
+                gap: '6px'
+              }}>
+                {[
+                  { id: 'commercial', label: 'Comm.', icon: Building2 },
+                  { id: 'operational', label: 'Ops', icon: Truck },
+                  { id: 'relationship', label: 'Relation', icon: HeartHandshake },
+                  { id: 'financial', label: 'Fin.', icon: CircleDollarSign },
+                  { id: 'risk', label: 'Risk', icon: ShieldAlert },
+                  { id: 'supply_chain', label: 'Network', icon: Network },
+                  { id: 'market', label: 'Market', icon: TrendingUp },
+                  { id: 'ai_consensus', label: 'AI Review', icon: Brain },
+                  { id: 'prediction', label: 'Simulate', icon: Gauge },
+                  { id: 'timelines', label: 'Timeline', icon: Clock }
+                ].map(dTab => {
+                  const Icon = dTab.icon;
+                  const active = drawerTab === dTab.id;
+                  return (
+                    <button
+                      key={dTab.id}
+                      onClick={() => setDrawerTab(dTab.id)}
+                      style={{
+                        padding: '8px 4px',
+                        borderRadius: 'var(--radius-sm)',
+                        border: active ? '1px solid rgba(99, 102, 241, 0.4)' : '1px solid var(--border-subtle)',
+                        background: active ? 'rgba(99, 102, 241, 0.12)' : 'rgba(255,255,255,0.01)',
+                        color: active ? 'var(--primary-400)' : 'var(--text-secondary)',
+                        fontSize: '10px',
+                        fontWeight: active ? 700 : 500,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '4px',
+                        transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={(e) => { if(!active) e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+                      onMouseLeave={(e) => { if(!active) e.currentTarget.style.background = 'rgba(255,255,255,0.01)'; }}
                     >
-                      <Truck size={15} color="var(--primary-400)" />
-                      <div>
-                        <div style={{ textAlign: 'left' }}>Guarantee Capacity (Dedicated Fleet)</div>
-                        <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 400, marginTop: '2px' }}>Allocates 40 dedicated units. Elevates SLA score.</div>
-                      </div>
+                      <Icon size={14} color={active ? 'var(--primary-400)' : 'var(--text-muted)'} />
+                      {dTab.label}
                     </button>
+                  );
+                })}
+              </div>
 
-                    {selectedCustomer.activeDisputes > 0 && (
-                      <button 
-                        onClick={() => handleWaivePenalty(selectedCustomer.id)}
-                        style={styles.aiRecommendationBtn}
-                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--success-500)'; e.currentTarget.style.color = 'var(--success-500)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--surface-border)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
-                      >
-                        <CircleDollarSign size={15} color="var(--success-500)" />
+              {/* Drawer Scrollable Content */}
+              <div style={{ ...styles.drawerBody, padding: '20px 28px', flex: 1, overflowY: 'auto' }}>
+                
+                {/* 1. Commercial Brain */}
+                {drawerTab === 'commercial' && (
+                  <div style={styles.drawerSection}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={styles.drawerLabel}>Commercial Brain Overview</span>
+                      <span style={{ fontSize: '11px', color: 'var(--success-500)', fontWeight: 600 }}>VIP Gold Account</span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                      <div style={{ padding: '12px', background: 'var(--bg-900)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                        <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>LTV Projection</div>
+                        <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)', marginTop: '4px' }}>₹72.0 Cr</div>
+                      </div>
+                      <div style={{ padding: '12px', background: 'var(--bg-900)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                        <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Contract Margin Target</div>
+                        <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)', marginTop: '4px' }}>24.6%</div>
+                      </div>
+                    </div>
+                    <SignalBox 
+                      title="Commercial Brain"
+                      what={`Current annualized shipping contract values stand at ₹${(selectedCustomer.revenue/10000000).toFixed(1)}Cr with active matches.`}
+                      why="Corridor expansion in Western and Southern lanes locked via master agreement."
+                      will="Expected contract value expansion of +15% in Q3 due to regional hub integrations."
+                      should="Initiate match-rate routing rebates on disputed lanes to protect margins."
+                      auto="Auto-negotiated fuel surcharge surcharge rate index matches hourly spot price revisions."
+                    />
+                  </div>
+                )}
+
+                {/* 2. Operational Brain */}
+                {drawerTab === 'operational' && (
+                  <div style={styles.drawerSection}>
+                    <span style={styles.drawerLabel}>Operational Brain Signals</span>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                      <div style={{ padding: '12px', background: 'var(--bg-900)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                        <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Operations Trips</div>
+                        <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)', marginTop: '4px' }}>{selectedCustomer.trips}</div>
+                      </div>
+                      <div style={{ padding: '12px', background: 'var(--bg-900)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                        <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>SLA compliance</div>
+                        <div style={{ fontSize: '16px', fontWeight: 800, color: selectedCustomer.slaCompliance >= 90 ? 'var(--success-500)' : 'var(--danger-500)', marginTop: '4px' }}>{selectedCustomer.slaCompliance}%</div>
+                      </div>
+                    </div>
+                    <SignalBox 
+                      title="Operational Brain"
+                      what={`Completed ${selectedCustomer.trips} runs with active capacity demands: ${selectedCustomer.capacityDemands}.`}
+                      why="Direct Freight Corridor routes utilized for 68% of runs; axle breakage on TRK-00019 delayed machinery runs."
+                      will="ETA delay risks could rise to 12% if Western regional highway flooding continues."
+                      should="Guarantee dedicated capacity allocations to stabilize OTD (On Time Delivery) index."
+                      auto="NOC automatic rerouting bypassed NH48 toll gridlocks, saving +4.2h average delay."
+                    />
+                  </div>
+                )}
+
+                {/* 3. Relationship Brain */}
+                {drawerTab === 'relationship' && (
+                  <div style={styles.drawerSection}>
+                    <span style={styles.drawerLabel}>Relationship Brain Signals</span>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                      <div style={{ padding: '12px', background: 'var(--bg-900)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                        <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>NPS score</div>
+                        <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)', marginTop: '4px' }}>78 / 100</div>
+                      </div>
+                      <div style={{ padding: '12px', background: 'var(--bg-900)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                        <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Support Sentiment</div>
+                        <div style={{ fontSize: '16px', fontWeight: 800, color: selectedCustomer.supportSentiment === 'Positive' ? 'var(--success-500)' : selectedCustomer.supportSentiment === 'Negative' ? 'var(--danger-500)' : 'var(--warning-500)', marginTop: '4px' }}>{selectedCustomer.supportSentiment}</div>
+                      </div>
+                    </div>
+                    <SignalBox 
+                      title="Relationship Brain"
+                      what={`Support tickets logged: ${selectedCustomer.incidents.length} active incidents. Support sentiment rated ${selectedCustomer.supportSentiment}.`}
+                      why="SLA incident delays triggered customer disputes and local stakeholder negative feedback loops."
+                      will="Escalation risk could breach VP threshold within 48h if disputes remain unsettled."
+                      should="Authorize immediate CEO relationship escalation to schedule executive review."
+                      auto="Dispatched VIP tokens automatically to account supervisors upon SLA delay logging."
+                    />
+                  </div>
+                )}
+
+                {/* 4. Financial Brain */}
+                {drawerTab === 'financial' && (
+                  <div style={styles.drawerSection}>
+                    <span style={styles.drawerLabel}>Financial Brain Signals</span>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                      <div style={{ padding: '12px', background: 'var(--bg-900)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                        <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Payment Delay Days</div>
+                        <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)', marginTop: '4px' }}>{selectedCustomer.paymentDelayDays} days avg</div>
+                      </div>
+                      <div style={{ padding: '12px', background: 'var(--bg-900)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                        <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Active Disputes</div>
+                        <div style={{ fontSize: '16px', fontWeight: 800, color: selectedCustomer.activeDisputes > 0 ? 'var(--danger-500)' : 'var(--text-primary)', marginTop: '4px' }}>{selectedCustomer.activeDisputes} open</div>
+                      </div>
+                    </div>
+                    <SignalBox 
+                      title="Financial Brain"
+                      what={`Outstanding disputes: ${selectedCustomer.activeDisputes} disputes. Average payment delay stands at ${selectedCustomer.paymentDelayDays} days.`}
+                      why="Detention charge discrepancy siphoned invoice payment clearances."
+                      will="Revenue flow lag to increase if penalty chargebacks are held by audit desk."
+                      should="Waive penalty fee to release invoice holds and accelerate payment cycles."
+                      auto="Auto-credited ₹12,000 for weather delays based on geolocation verification ledger."
+                    />
+                  </div>
+                )}
+
+                {/* 5. Risk Brain */}
+                {drawerTab === 'risk' && (
+                  <div style={styles.drawerSection}>
+                    <span style={styles.drawerLabel}>Risk Brain & Safety Signals</span>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                      <div style={{ padding: '12px', background: 'var(--bg-900)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                        <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Churn Probability</div>
+                        <div style={{ fontSize: '16px', fontWeight: 800, color: selectedCustomer.riskScore > 30 ? 'var(--danger-500)' : 'var(--success-500)', marginTop: '4px' }}>{selectedCustomer.riskScore}%</div>
+                      </div>
+                      <div style={{ padding: '12px', background: 'var(--bg-900)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                        <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>ADAS Safety Rating</div>
+                        <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)', marginTop: '4px' }}>91.2% Safe</div>
+                      </div>
+                    </div>
+                    <SignalBox 
+                      title="Risk Brain"
+                      what={`Churn status flagged as ${selectedCustomer.riskStatus.toUpperCase()} (Risk Score: ${selectedCustomer.riskScore}%).`}
+                      why="Axle failures and aggressive competitor matches created relationship friction."
+                      will="Competitor spot bids on West lanes could trigger volume leakage of 12%."
+                      should="Apply temporary lane match rebate to block competitor pitch."
+                      auto="Auto-flagged VRL Logistics matching pitch metrics using email keyword audit scrapers."
+                    />
+                  </div>
+                )}
+
+                {/* 6. Supply Chain Network Brain */}
+                {drawerTab === 'supply_chain' && (
+                  <div style={styles.drawerSection}>
+                    <span style={styles.drawerLabel}>Supply Chain Corridor Utilization</span>
+                    <div style={{ padding: '14px', background: 'var(--bg-900)', borderRadius: '6px', border: '1px solid var(--border-subtle)', marginBottom: '14px' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Active Lane Load Factors</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
                         <div>
-                          <div style={{ textAlign: 'left' }}>Waive Dispute SLA Penalty Fee</div>
-                          <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 400, marginTop: '2px' }}>Resolves billing disputes. Increases health score +8%.</div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px' }}>
+                            <span>Delhi ➔ Mumbai (NH48)</span>
+                            <span style={{ fontWeight: 600 }}>68% load factor</span>
+                          </div>
+                          <div style={{ width: '100%', height: '4px', background: 'var(--bg-600)', borderRadius: '2px', overflow: 'hidden', marginTop: '2px' }}>
+                            <div style={{ width: '68%', height: '100%', background: 'var(--primary-500)' }} />
+                          </div>
                         </div>
-                      </button>
-                    )}
-
-                    <button 
-                      onClick={() => handleApplyRebate(selectedCustomer.id)}
-                      style={styles.aiRecommendationBtn}
-                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--warning-500)'; e.currentTarget.style.color = 'var(--warning-500)'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--surface-border)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
-                    >
-                      <Percent size={15} color="var(--warning-500)" />
-                      <div>
-                        <div style={{ textAlign: 'left' }}>Apply 5% Temporary Route Rebate</div>
-                        <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 400, marginTop: '2px' }}>Counter competitor spot offers. Locks contract volume.</div>
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px' }}>
+                            <span>Jaipur ➔ Delhi (NH8)</span>
+                            <span style={{ fontWeight: 600 }}>82% load factor</span>
+                          </div>
+                          <div style={{ width: '100%', height: '4px', background: 'var(--bg-600)', borderRadius: '2px', overflow: 'hidden', marginTop: '2px' }}>
+                            <div style={{ width: '82%', height: '100%', background: 'var(--primary-500)' }} />
+                          </div>
+                        </div>
                       </div>
-                    </button>
-
-                    <button 
-                      onClick={() => handleCeoEscalation(selectedCustomer.id)}
-                      style={styles.aiRecommendationBtn}
-                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#ec4899'; e.currentTarget.style.color = '#ec4899'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--surface-border)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
-                    >
-                      <Users size={15} color="#ec4899" />
-                      <div>
-                        <div style={{ textAlign: 'left' }}>CEO-to-CEO Relationship Escalation</div>
-                        <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 400, marginTop: '2px' }}>Schedules call between Arjun Kapoor and client sponsors.</div>
-                      </div>
-                    </button>
+                    </div>
+                    <SignalBox 
+                      title="Supply Chain Brain"
+                      what="Major logistics flows operate across Western logistics corridors."
+                      why="Dedicated warehouse space leased at Jaipur Hub and Panvel Docks."
+                      will="Storage congestion forecasted at Panvel Hub due to vessel arrivals."
+                      should="Reroute regional backup fleet to secondary transshipment points."
+                      auto="Auto-locked 15 reserve container boxes at Delhi Depot for emergency peak dispatch."
+                    />
                   </div>
-                </div>
+                )}
+
+                {/* 7. Market Intelligence Brain */}
+                {drawerTab === 'market' && (
+                  <div style={styles.drawerSection}>
+                    <span style={styles.drawerLabel}>Market & Competitive Index</span>
+                    <div style={{ padding: '14px', background: 'var(--bg-900)', borderRadius: '6px', border: '1px solid var(--border-subtle)', marginBottom: '14px' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Tariff Comparison</div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginTop: '8px' }}>
+                        <span>GatiContract Rate</span>
+                        <span style={{ fontWeight: 600 }}>₹78.2 / Km</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginTop: '4px' }}>
+                        <span>Competitor Spot Bids</span>
+                        <span style={{ fontWeight: 600, color: 'var(--danger-500)' }}>₹71.8 / Km</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginTop: '4px' }}>
+                        <span>Spot rate variance</span>
+                        <span style={{ fontWeight: 600, color: 'var(--danger-500)' }}>-8.2%</span>
+                      </div>
+                    </div>
+                    <SignalBox 
+                      title="Market Brain"
+                      what={`Competitor activity: ${selectedCustomer.competitorActivity}.`}
+                      why="Carrier oversupply on Mumbai transit route lowered market tariffs."
+                      will="Competitor contract pitch could trigger lane volume migration next month."
+                      should="Activate matching rebate rates to block seasonal bid requests."
+                      auto="Scraped competitive pricing index records directly from spot freight logs."
+                    />
+                  </div>
+                )}
+
+                {/* 8. AI Peer Review & Consensus */}
+                {drawerTab === 'ai_consensus' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    {/* Agent Review Panel */}
+                    <div style={styles.card}>
+                      <div style={{ ...styles.sectionTitle, fontSize: '14px', marginBottom: '12px' }}>
+                        <Brain size={16} color="var(--primary-400)" />
+                        AI Agent Consensus Board
+                      </div>
+                      
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {[
+                          { name: 'Retention Agent', score: 98, rec: 'Allocating dedicated fleet blocks competitor threat.' },
+                          { name: 'Finance Agent', score: 85, rec: 'Authorized rebate limit <= 5% to protect margins.' },
+                          { name: 'Operations Agent', score: 90, rec: 'Confirmed trailer availability at Jaipur hub.' },
+                          { name: 'Risk Agent', score: 92, rec: 'OTD SLA compliance liabilities resolved.' },
+                          { name: 'Executive Agent', score: 95, rec: 'Strategic LTV value outweighs override cost.' }
+                        ].map((ag) => (
+                          <div key={ag.name} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', fontSize: '11.5px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '6px' }}>
+                            <div>
+                              <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{ag.name}</div>
+                              <div style={{ fontSize: '10.5px', color: 'var(--text-secondary)', marginTop: '1px' }}>{ag.rec}</div>
+                            </div>
+                            <span style={{ fontWeight: 700, color: 'var(--primary-400)', fontFamily: 'var(--font-mono)' }}>{ag.score}%</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Account Growth Override Actions */}
+                    <div style={styles.card}>
+                      <div style={{ ...styles.sectionTitle, fontSize: '14px', marginBottom: '12px' }}>
+                        <Zap size={16} color="#ec4899" />
+                        AI Action Center overrides
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        <button 
+                          onClick={() => handleGuaranteeCapacity(selectedCustomer.id)}
+                          style={styles.aiRecommendationBtn}
+                          onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--primary-500)'; e.currentTarget.style.color = 'var(--primary-400)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--surface-border)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                        >
+                          <Truck size={15} color="var(--primary-400)" />
+                          <div>
+                            <div style={{ textAlign: 'left', fontWeight: 600 }}>Guarantee Capacity (Dedicated Fleet)</div>
+                            <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 400, marginTop: '2px' }}>Allocates 40 dedicated units. Elevates SLA score to 96.5%.</div>
+                          </div>
+                        </button>
+
+                        {selectedCustomer.activeDisputes > 0 && (
+                          <button 
+                            onClick={() => handleWaivePenalty(selectedCustomer.id)}
+                            style={styles.aiRecommendationBtn}
+                            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--success-500)'; e.currentTarget.style.color = 'var(--success-500)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--surface-border)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                          >
+                            <CircleDollarSign size={15} color="var(--success-500)" />
+                            <div>
+                              <div style={{ textAlign: 'left', fontWeight: 600 }}>Waive Dispute SLA Penalty Fee</div>
+                              <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 400, marginTop: '2px' }}>Resolves billing disputes. Increases health score +8%.</div>
+                            </div>
+                          </button>
+                        )}
+
+                        <button 
+                          onClick={() => handleApplyRebate(selectedCustomer.id)}
+                          style={styles.aiRecommendationBtn}
+                          onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--warning-500)'; e.currentTarget.style.color = 'var(--warning-500)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--surface-border)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                        >
+                          <Percent size={15} color="var(--warning-500)" />
+                          <div>
+                            <div style={{ textAlign: 'left', fontWeight: 600 }}>Apply 5% Temporary Route Rebate</div>
+                            <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 400, marginTop: '2px' }}>Counter competitor spot offers. Locks contract volume.</div>
+                          </div>
+                        </button>
+
+                        <button 
+                          onClick={() => handleCeoEscalation(selectedCustomer.id)}
+                          style={styles.aiRecommendationBtn}
+                          onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#ec4899'; e.currentTarget.style.color = '#ec4899'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--surface-border)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                        >
+                          <Users size={15} color="#ec4899" />
+                          <div>
+                            <div style={{ textAlign: 'left', fontWeight: 600 }}>CEO-to-CEO Relationship Escalation</div>
+                            <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 400, marginTop: '2px' }}>Schedules call between Arjun Kapoor and client sponsors.</div>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 9. Scenario & Predict Simulation */}
+                {drawerTab === 'prediction' && (
+                  <div style={styles.drawerSection}>
+                    <span style={styles.drawerLabel}>Multimodal Route Scenario Simulator</span>
+                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '14px', lineHeight: 1.4 }}>
+                      Simulating pricing and reliability coefficients across alternative route strategies before dispatch overrides:
+                    </p>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                      {[
+                        { title: 'Scenario A: Dedicated Fleet', cost: '₹4.2L', sla: '96%', margin: '-1.5%', active: true },
+                        { title: 'Scenario B: Shared Fleet Allocation', cost: '₹3.6L', sla: '81%', margin: '+0.4%', active: false },
+                        { title: 'Scenario C: Third-Party Carrier', cost: '₹3.9L', sla: '78%', margin: '-0.8%', active: false },
+                        { title: 'Scenario D: Multimodal Rail Shift', cost: '₹3.1L', sla: '89%', margin: '+1.2%', active: false }
+                      ].map((sc) => (
+                        <div key={sc.title} style={{
+                          padding: '12px',
+                          background: sc.active ? 'rgba(99, 102, 241, 0.06)' : 'var(--bg-900)',
+                          borderRadius: '6px',
+                          border: sc.active ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid var(--border-subtle)'
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', fontWeight: 600 }}>
+                            <span style={{ color: sc.active ? 'var(--primary-400)' : 'var(--text-primary)' }}>{sc.title}</span>
+                            <span style={{ color: 'var(--success-500)' }}>{sc.sla} SLA Certainty</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px' }}>
+                            <span>Estimated Cost: {sc.cost}</span>
+                            <span>Margin impact: {sc.margin}</span>
+                          </div>
+                          <div style={{ width: '100%', height: '4px', background: 'var(--bg-600)', borderRadius: '2px', overflow: 'hidden', marginTop: '6px' }}>
+                            <div style={{
+                              width: sc.sla,
+                              height: '100%',
+                              background: sc.active ? 'linear-gradient(90deg, var(--primary-500), var(--success-500))' : 'var(--primary-500)'
+                            }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 10. Timelines & Playbooks */}
+                {drawerTab === 'timelines' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    {/* Evolution Timeline */}
+                    <div style={styles.card}>
+                      <div style={{ ...styles.sectionTitle, fontSize: '14px', marginBottom: '14px' }}>
+                        <Clock size={16} color="var(--primary-400)" />
+                        Customer Evolution Timeline (2019-2026)
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', borderLeft: '2px solid var(--border-subtle)', marginLeft: '8px', paddingLeft: '14px', position: 'relative' }}>
+                        {getEvolutionTimeline(selectedCustomer.id).map((evt) => (
+                          <div key={evt.year} style={{ position: 'relative', fontSize: '12px' }}>
+                            <span style={{
+                              position: 'absolute',
+                              left: '-20px',
+                              top: '2px',
+                              width: '10px',
+                              height: '10px',
+                              borderRadius: '50%',
+                              background: 'var(--primary-500)',
+                              border: '2px solid var(--bg-800)',
+                            }} />
+                            <div style={{ fontWeight: 700, color: 'var(--primary-400)', fontFamily: 'var(--font-mono)' }}>{evt.year} - {evt.title}</div>
+                            <div style={{ color: 'var(--text-secondary)', marginTop: '2px', lineHeight: 1.4 }}>{evt.desc}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Organizational Memory Ledger */}
+                    <div style={styles.card}>
+                      <div style={{ ...styles.sectionTitle, fontSize: '14px', marginBottom: '14px' }}>
+                        <History size={16} color="#ec4899" />
+                        Organizational Memory Ledger
+                      </div>
+                      
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {!decisionLogs[selectedCustomer.id] || decisionLogs[selectedCustomer.id].length === 0 ? (
+                          <div style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center', padding: '14px 0' }}>
+                            No session overrides committed yet. Use the AI Review tab to apply override actions.
+                          </div>
+                        ) : (
+                          decisionLogs[selectedCustomer.id].map((log, i) => (
+                            <div key={i} style={{ padding: '10px 14px', background: 'var(--bg-900)', borderRadius: '6px', border: '1px solid var(--border-subtle)', fontSize: '11.5px', lineHeight: 1.4 }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', fontSize: '10.5px', marginBottom: '4px' }}>
+                                <span>{log.timestamp}</span>
+                                <span style={{ fontWeight: 600 }}>By: {log.approvedBy}</span>
+                              </div>
+                              <div style={{ fontWeight: 700, color: 'var(--primary-400)' }}>Action: {log.overrideAction}</div>
+                              <div style={{ marginTop: '4px' }}><span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Expected Outcome:</span> {log.expectedOutcome}</div>
+                              <div style={{ marginTop: '2px' }}><span style={{ color: 'var(--success-500)', fontWeight: 600 }}>Actual Outcome:</span> {log.actualOutcome}</div>
+                              <div style={{ marginTop: '2px' }}><span style={{ color: 'var(--warning-500)', fontWeight: 600 }}>Divergence:</span> {log.divergence}</div>
+                              <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px dashed var(--border-subtle)', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                                <span style={{ fontWeight: 700, color: '#ec4899' }}>Playbook Policy:</span> {log.learnedPolicy}
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           </>
@@ -1705,6 +2402,97 @@ const CRMDashboard = () => {
       {activeTab === 'pipeline' && renderPipelineTab()}
       {activeTab === 'support' && renderSlaSupportTab()}
       {activeTab === 'contracts' && renderContractsTab()}
+
+      {/* Edit Opportunity Modal */}
+      <AnimatePresence>
+        {showEditDeal && selectedDeal && (
+          <div style={styles.modalOverlay}>
+            <motion.div 
+              style={styles.modal}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+            >
+              <div style={{ ...styles.sectionTitle, marginBottom: '20px' }}>
+                <Target size={18} color="#ec4899" />
+                Manage Opportunity: {selectedDeal.name}
+              </div>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                handleUpdateDeal(selectedDeal);
+              }}>
+                <div style={styles.formGroup}>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Corporate Account</span>
+                  <input 
+                    type="text" 
+                    required 
+                    value={selectedDeal.name} 
+                    onChange={e => setSelectedDeal(prev => ({ ...prev, name: e.target.value }))}
+                    style={styles.input} 
+                  />
+                </div>
+                <div style={styles.formGroup}>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Annual Deal Value (₹)</span>
+                  <input 
+                    type="number" 
+                    required 
+                    value={selectedDeal.value} 
+                    onChange={e => setSelectedDeal(prev => ({ ...prev, value: Number(e.target.value) }))}
+                    style={styles.input} 
+                  />
+                </div>
+                <div style={styles.formGroup}>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Key Executive Sponsor</span>
+                  <input 
+                    type="text" 
+                    value={selectedDeal.contact || ''} 
+                    onChange={e => setSelectedDeal(prev => ({ ...prev, contact: e.target.value }))}
+                    style={styles.input} 
+                  />
+                </div>
+                <div style={styles.formGroup}>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Deal Priority</span>
+                  <select 
+                    value={selectedDeal.priority} 
+                    onChange={e => setSelectedDeal(prev => ({ ...prev, priority: e.target.value }))}
+                    style={{ ...styles.input, background: 'var(--bg-800)' }}
+                  >
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                  </select>
+                </div>
+                <div style={styles.formGroup}>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Pipeline Stage</span>
+                  <select 
+                    value={selectedDeal.stage} 
+                    onChange={e => setSelectedDeal(prev => ({ ...prev, stage: e.target.value }))}
+                    style={{ ...styles.input, background: 'var(--bg-800)' }}
+                  >
+                    <option value="leads">Leads</option>
+                    <option value="qualified">Qualified</option>
+                    <option value="proposals">Proposals</option>
+                    <option value="negotiations">Negotiations</option>
+                    <option value="closed">Closed Won</option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', marginTop: '24px', justifyContent: 'flex-end' }}>
+                  <button 
+                    type="button" 
+                    onClick={() => handleDeleteDeal(selectedDeal.id, selectedDeal.name)} 
+                    style={{ ...styles.actionBtn, borderColor: 'var(--danger-500)', color: 'var(--danger-500)', marginRight: 'auto' }}
+                  >
+                    <Trash size={14} /> Remove Opportunity
+                  </button>
+                  <button type="button" onClick={() => { setShowEditDeal(false); setSelectedDeal(null); }} style={styles.actionBtn}>Cancel</button>
+                  <button type="submit" style={styles.primaryBtn}>Save Changes</button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
