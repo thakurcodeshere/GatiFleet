@@ -3,6 +3,25 @@
 // The single model of reality for the transportation ecosystem
 // ============================================================
 
+// ============================================================
+// GatiFleet — Transportation Reality Engine (TRE) Core
+// Integrated with the Unified Neural Network Engine (Modules 1-18)
+// ============================================================
+
+import { 
+  UnifiedNeuralNetworkEngine,
+  ENTITY_TYPES,
+  STATE_MACHINES,
+  TWIN_SCHEMAS,
+  KG_ONTOLOGY,
+  CALCULATION_ENGINES,
+  POLICY_REGISTRY,
+  KPI_REGISTRY,
+  AI_AGENT_REGISTRY,
+  DEP_MATRIX,
+  CLOSED_LOOPS
+} from './neuralNetwork';
+
 class TransportationRealityEngine {
   constructor() {
     this.subscribers = new Set();
@@ -172,6 +191,21 @@ class TransportationRealityEngine {
       globalCertainty: 93.4
     };
 
+    // --- INTEGRATED UNIFIED NEURAL ENGINE ---
+    this.neuralEngine = new UnifiedNeuralNetworkEngine(this);
+
+    // Registries
+    this.entityRegistry = ENTITY_TYPES;
+    this.stateMachines = STATE_MACHINES;
+    this.twinSchemas = TWIN_SCHEMAS;
+    this.kgOntology = KG_ONTOLOGY;
+    this.calculationEngines = CALCULATION_ENGINES;
+    this.policyRegistry = POLICY_REGISTRY;
+    this.kpiRegistry = KPI_REGISTRY;
+    this.agentRegistry = AI_AGENT_REGISTRY;
+    this.dependencyMatrix = DEP_MATRIX;
+    this.closedLoops = CLOSED_LOOPS;
+
     // Start background simulation ticker
     this.startTicker();
   }
@@ -184,6 +218,13 @@ class TransportationRealityEngine {
 
   notify() {
     this.subscribers.forEach(cb => cb(this.getState()));
+  }
+
+  // Hook to allow event dispatches to propagate downstream
+  dispatchEvent(eventType, payload, operatorId = 'AI-SYSTEM') {
+    const res = this.neuralEngine.dispatchEvent(eventType, payload, operatorId);
+    this.notify();
+    return res;
   }
 
   getState() {
@@ -199,7 +240,20 @@ class TransportationRealityEngine {
       executionAgentStatus: this.executionAgentStatus,
       learningStats: this.learningStats,
       evolutionMatrix: this.evolutionMatrix,
-      oci: this.oci
+      oci: this.oci,
+
+      // Neural registries & engines
+      entityRegistry: this.entityRegistry,
+      stateMachines: this.stateMachines,
+      twinSchemas: this.twinSchemas,
+      kgOntology: this.kgOntology,
+      calculationEngines: this.calculationEngines,
+      policyRegistry: this.policyRegistry,
+      kpiRegistry: this.kpiRegistry,
+      agentRegistry: this.agentRegistry,
+      dependencyMatrix: this.dependencyMatrix,
+      closedLoops: this.closedLoops,
+      auditLog: this.neuralEngine.getAuditLog()
     };
   }
 
@@ -219,6 +273,7 @@ class TransportationRealityEngine {
 
       this.events = [newEvent, ...this.events.slice(0, 19)];
 
+      // Jitter OCI certainties
       this.oci = {
         ...this.oci,
         etaCertainty: +(this.oci.etaCertainty + (Math.random() - 0.5) * 0.2).toFixed(2),
@@ -236,6 +291,13 @@ class TransportationRealityEngine {
           this.oci.revenueCertainty) /
         8
       ).toFixed(2);
+
+      // Run continuous logic trigger
+      this.neuralEngine.dispatchEvent('TELEMETRY_SYNC', {
+        desc: 'Live edge sensors telemetry sync',
+        fatigueIndex: 22,
+        module: 'M7'
+      });
 
       this.notify();
     }, 5000);
@@ -272,15 +334,11 @@ class TransportationRealityEngine {
       8
     ).toFixed(2);
 
-    this.events = [{
-      id: `ev-${Date.now()}`,
-      timestamp: new Date().toISOString(),
-      type: 'SimulationParameterChanged',
+    this.dispatchEvent('SimulationParameterChanged', {
       desc: `Simulation: Diesel price spike modifier adjusted to +${pct}%. margins calculated: Scenario A active.`,
+      module: 'M18',
       source: 'SIMULATION/ENGINE'
-    }, ...this.events];
-
-    this.notify();
+    });
   }
 
   setPortClosed(closed) {
@@ -290,13 +348,11 @@ class TransportationRealityEngine {
       this.predictions.delays.probability = '98%';
       this.oci.networkCertainty = 68.4;
 
-      this.events = [{
-        id: `ev-${Date.now()}`,
-        timestamp: new Date().toISOString(),
-        type: 'AutonomousActionDispatched',
+      this.dispatchEvent('AutonomousActionDispatched', {
         desc: 'JNPT Port Closure detected. Autonomous Agent rerouted 8 container shipments to Panvel hub.',
+        module: 'M11',
         source: 'AUTONOMY/BROKER'
-      }, ...this.events];
+      });
     } else {
       this.entities.route.state = 'nominal';
       this.predictions.delays.probability = '12%';
@@ -336,15 +392,11 @@ class TransportationRealityEngine {
       8
     ).toFixed(2);
 
-    this.events = [{
-      id: `ev-${Date.now()}`,
-      timestamp: new Date().toISOString(),
-      type: 'TruckBrokenDown',
+    this.dispatchEvent('TruckBrokenDown', {
       desc: 'TRK-90482 engine coolant breach detected. Safety score degraded, fatigue flagged.',
+      module: 'M7',
       source: 'TRK-90482/OBD'
-    }, ...this.events];
-
-    this.notify();
+    });
   }
 
   resolveIncidentBreakdown() {
@@ -377,17 +429,14 @@ class TransportationRealityEngine {
     };
     this.lessons = [newLesson, ...this.lessons];
 
-    this.events = [{
-      id: `ev-${Date.now()}`,
-      timestamp: new Date().toISOString(),
-      type: 'SentinelResolutionComplete',
+    this.dispatchEvent('SentinelResolutionComplete', {
       desc: 'Auto-exception resolution complete. Driver rest trigger dispatched. SLA Protected.',
+      module: 'M6',
       source: 'SENTINEL/AUTONOMY'
-    }, ...this.events];
-
-    this.notify();
+    });
   }
 }
 
 // Export singleton instance representing GatiFleet's unified reality
 export const RealityEngine = new TransportationRealityEngine();
+
