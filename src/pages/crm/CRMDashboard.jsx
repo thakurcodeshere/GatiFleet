@@ -2339,6 +2339,97 @@ const CRMDashboard = () => {
                     </div>
                   </div>
                 )}
+
+                {/* 11. Customer Mobilization (ACMS) */}
+                {drawerTab === 'mobilization' && (
+                  <div style={styles.drawerSection}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                      <span style={styles.drawerLabel}>Customer Onboard Mobilization Lanes</span>
+                      <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--success-500)' }}>Readiness: 87%</span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px' }}>
+                      {[
+                        { name: 'Customer Setup', score: 100, status: 'Verified' },
+                        { name: 'Commercial Setup', score: 100, status: 'Verified' },
+                        { name: 'Finance Setup', score: 90, status: 'Active' },
+                        { name: 'Fleet Allocation', score: 95, status: 'Active' },
+                        { name: 'Driver Roster', score: 85, status: 'Active' },
+                        { name: 'Technology (EDI)', score: 70, status: 'Setup' },
+                        { name: 'Support Routing', score: 90, status: 'Active' },
+                        { name: 'Executive CAD', score: 100, status: 'Verified' },
+                        { name: 'FASTag/Compliance', score: 55, status: 'Pending' }
+                      ].map((lane) => (
+                        <div key={lane.name} style={{ padding: '8px 12px', background: 'var(--bg-900)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 600 }}>
+                            <span style={{ color: 'var(--text-primary)' }}>{lane.name}</span>
+                            <span style={{ color: lane.score >= 90 ? 'var(--success-500)' : lane.score >= 70 ? 'var(--warning-500)' : 'var(--danger-500)' }}>{lane.score}%</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                            <span>Status: {lane.status}</span>
+                          </div>
+                          <div style={{ width: '100%', height: '3px', background: 'var(--bg-600)', borderRadius: '1.5px', overflow: 'hidden', marginTop: '4px' }}>
+                            <div style={{ width: `${lane.score}%`, height: '100%', background: lane.score >= 90 ? 'var(--success-500)' : lane.score >= 70 ? 'var(--warning-500)' : 'var(--danger-500)' }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => {
+                        RealityEngine.dispatchEvent('CUSTOMER_FULLY_OPERATIONAL', {
+                          desc: `Client ${selectedCustomer.name} fully operational readiness verified. Go-live dispatched.`,
+                          module: 'M3'
+                        });
+                        setToast({
+                          title: 'Go-Live Successful',
+                          message: `Client ${selectedCustomer.name} readiness score certified at 100%. Dispatched fully operational status to network ledger.`,
+                          type: 'success'
+                        });
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '10px 0',
+                        border: 'none',
+                        borderRadius: '4px',
+                        background: 'linear-gradient(135deg, var(--primary-500), var(--primary-600))',
+                        color: '#fff',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 10px rgba(99, 102, 241, 0.2)'
+                      }}
+                    >
+                      Authorize Go-Live & First Shipment Dispatch
+                    </button>
+                  </div>
+                )}
+
+                {/* 12. Agreement Clause & SLA (ACAIS) */}
+                {drawerTab === 'agreement' && (
+                  <div style={styles.drawerSection}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                      <span style={styles.drawerLabel}>SLA Executable Rules & Exposure</span>
+                      <span style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--danger-500)', background: 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>Risk Index: 24.6</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
+                      {[
+                        { code: 'RULE-SLA-01', text: 'IF Transit_Time > 24 Hours THEN Deduct_Freight(10% penalty)', type: 'Transit Delay Penalty' },
+                        { code: 'RULE-TEMP-02', text: 'IF Reefer_Temp > 8.0°C FOR > 60 Minutes THEN Void_Invoice', type: 'Cold Chain SLA' },
+                        { code: 'RULE-DET-03', text: 'IF Loading_Dwell_Time > 4.0 Hours THEN Billing_Rate(₹1500 / Hour)', type: 'Accessorial Detention Recovery' },
+                        { code: 'RULE-FUEL-04', text: 'IF Diesel_Price_Index changes > 5% THEN Recalculate_Fuel_Surcharge', type: 'Fuel Index Escalator' }
+                      ].map((rule) => (
+                        <div key={rule.code} style={{ padding: '12px', background: 'var(--bg-900)', borderRadius: '6px', border: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', fontWeight: 600 }}>
+                            <span style={{ color: 'var(--primary-400)' }}>{rule.code}</span>
+                            <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>{rule.type}</span>
+                          </div>
+                          <div style={{ fontSize: '11.5px', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)', whiteSpace: 'pre-wrap', background: 'var(--bg-950)', padding: '6px 8px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.02)', marginTop: '4px' }}>
+                            {rule.text}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           </>
