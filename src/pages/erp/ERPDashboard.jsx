@@ -1690,9 +1690,66 @@ const ERPDashboard = () => {
                     )}
                   </td>
                 </tr>
-              ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Billing Assurance Panel */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '24px' }}>
+          {/* Fraud Radar */}
+          <div style={styles.card}>
+            <div style={styles.sectionTitle}>
+              <ShieldAlert size={18} color="#FF4D6B" />
+              Revenue Assurance & Fraud Radar (RABIP)
+            </div>
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '14px' }}>
+              Real-time audit matching IoT GPS logs against FASTag gate traversals to flag discrepancies:
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {[
+                { id: 'INV-2026-1044', score: 85, reason: 'GPS coordinate siphoning alert near Jaipur bypass.' },
+                { id: 'INV-2026-1047', score: 14, reason: 'Nominal matching verified. FASTag Vapi crossing validated.' }
+              ].map((radar) => (
+                <div key={radar.id} style={{ padding: '12px', background: 'var(--bg-900)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', fontWeight: 600 }}>
+                    <span style={{ fontFamily: 'var(--font-mono)' }}>{radar.id}</span>
+                    <span style={{ color: radar.score > 30 ? 'var(--danger-500)' : 'var(--success-500)' }}>Fraud Score: {radar.score}%</span>
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                    {radar.reason}
+                  </div>
+                  <div style={{ width: '100%', height: '3px', background: 'var(--bg-600)', borderRadius: '1.5px', overflow: 'hidden', marginTop: '6px' }}>
+                    <div style={{ width: `${radar.score}%`, height: '100%', background: radar.score > 30 ? 'var(--danger-500)' : 'var(--success-500)' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Surcharges & Accessorials */}
+          <div style={styles.card}>
+            <div style={styles.sectionTitle}>
+              <Fuel size={18} color="var(--primary-500)" />
+              Dynamic Accessorial & Fuel Adjustments
+            </div>
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '14px' }}>
+              Dynamic fuel surcharge recalculations and SLA late penalties auto-adjusted from telemetry:
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '6px' }}>
+                <span>Fuel Surcharge Index (West)</span>
+                <span style={{ fontWeight: 600, fontFamily: 'var(--font-mono)' }}>+14.2%</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '6px' }}>
+                <span>SLA Delay penalty adjustment</span>
+                <span style={{ fontWeight: 600, color: 'var(--danger-500)', fontFamily: 'var(--font-mono)' }}>-₹9,600 (Tata Motors)</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', paddingBottom: '4px' }}>
+                <span>FASTag automatic toll refilling</span>
+                <span style={{ fontWeight: 600, color: 'var(--success-500)' }}>Active (Threshold: ₹1,500)</span>
+              </div>
+            </div>
+          </div>
         </div>
       </motion.div>
     );
