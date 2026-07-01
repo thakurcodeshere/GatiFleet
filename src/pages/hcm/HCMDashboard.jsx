@@ -560,6 +560,15 @@ const HCMDashboard = () => {
     }));
     const d = drivers.find(x => x.id === drvId);
     showToast(`AI Performance Agent assigned Defensive Driving Training to ${d.name}`);
+    
+    // Dispatch training compliance event
+    RealityEngine.dispatchEvent('DRIVER_CHECK_IN', {
+      desc: `Defensive Driving Training assigned to driver ${d.name} (${d.id}). Safety limits reset.`,
+      module: 'M9',
+      entityType: 'DRIVER',
+      entityId: drvId
+    });
+
     // Update active drawer if open
     setSelectedDriver(prev => {
       if (prev && prev.id === drvId) {
@@ -590,6 +599,15 @@ const HCMDashboard = () => {
     }));
     const d = drivers.find(x => x.id === drvId);
     showToast(`AI Performance Agent approved ₹5,000 Safety Bonus for ${d.name}`);
+
+    // Dispatch bonus payroll event
+    RealityEngine.dispatchEvent('DRIVER_PAYROLL_CALCULATED', {
+      desc: `Approved safety compliance bonus for driver ${d.name} (${d.id}). Settle ledger active.`,
+      module: 'M9',
+      entityType: 'DRIVER',
+      entityId: drvId
+    });
+
     setSelectedDriver(prev => {
       if (prev && prev.id === drvId) {
         return { ...prev, bonusStatus: 'Paid', recommendation: 'None' };
@@ -612,6 +630,15 @@ const HCMDashboard = () => {
     }));
     const d = drivers.find(x => x.id === drvId);
     showToast(`Mandatory 24h rest period triggered for ${d.name}. Vehicle locked.`);
+
+    // Dispatch fatigue swap event
+    RealityEngine.dispatchEvent('DRIVER_FATIGUE_ALERT', {
+      desc: `Mandatory 24h HOS rest swap triggered for driver ${d.name} (${d.id}). Shift roster updated, vehicle locked.`,
+      module: 'M9',
+      entityType: 'DRIVER',
+      entityId: drvId
+    });
+
     setSelectedDriver(prev => {
       if (prev && prev.id === drvId) {
         return { ...prev, status: 'rest', fatigue: 5, recommendation: 'None' };
