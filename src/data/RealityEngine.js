@@ -8,6 +8,7 @@
 // Integrated with the Unified Neural Network Engine (Modules 1-18)
 // ============================================================
 
+import { io } from 'socket.io-client';
 import { 
   UnifiedNeuralNetworkEngine,
   ENTITY_TYPES,
@@ -28,28 +29,10 @@ class TransportationRealityEngine {
     this.isSimulationRunning = true;
 
     // Layer 1: Event Capture Layer (L1 Event)
-    this.events = [
-      { id: 'ev-0', timestamp: new Date(Date.now() - 30000).toISOString(), type: 'SHIPMENT_CREATED', desc: 'New shipment order initialized for Delhi Depot.', source: 'SYS/CLIENT' },
-      { id: 'ev-1', timestamp: new Date(Date.now() - 25000).toISOString(), type: 'ROUTE_CHANGED', desc: 'Detour set to bypass NH48 due to flooding.', source: 'SYS/NOC' },
-      { id: 'ev-2', timestamp: new Date(Date.now() - 20000).toISOString(), type: 'HARSH_BRAKE', desc: 'ADAS Warning: Harsh brake detected for TRK-90482 on NH27. G-Force: 0.85G.', source: 'TRK-90482/ADAS' },
-      { id: 'ev-3', timestamp: new Date(Date.now() - 15000).toISOString(), type: 'INVOICE_APPROVED', desc: 'Invoice INV-90481 approved by consignee. Settle ledger active.', source: 'ERP/LEDGER' }
-    ];
+    this.events = [];
 
     // Layer 2: Universal Entity Layer (L2 Entity)
-    this.entities = {
-      customer: { id: 'cust-102', label: 'Tata Motors', state: 'active', relations: ['ord-481'], riskScore: 12, performance: 98.4 },
-      order: { id: 'ord-481', label: 'PO-928410', state: 'processing', relations: ['shp-90481'], riskScore: 8, performance: 100 },
-      shipment: { id: 'shp-90481', label: 'SHP-CT-90481', state: 'in_transit', relations: ['trk-90482', 'wh-12'], riskScore: 15, performance: 94.2 },
-      truck: { id: 'trk-90482', label: 'TRK-90482', state: 'active', relations: ['drv-1209', 'car-01'], riskScore: 10, performance: 96.8 },
-      driver: { id: 'drv-1209', label: 'Rajesh Kumar', state: 'driving', relations: ['rt-nh48'], riskScore: 18, performance: 91.2 },
-      route: { id: 'rt-nh48', label: 'Delhi-Mumbai NH48', state: 'nominal', relations: ['fuel-22', 'toll-98'], riskScore: 22, performance: 88.5 },
-      fuel: { id: 'fuel-22', label: 'IOCL Jaipur Refuel', state: 'active', relations: [], riskScore: 5, performance: 100 },
-      toll: { id: 'toll-98', label: 'FASTag FT8248', state: 'active', relations: [], riskScore: 8, performance: 99.1 },
-      warehouse: { id: 'wh-12', label: 'Panvel Dock Hub', state: 'nominal', relations: [], riskScore: 14, performance: 95.0 },
-      carrier: { id: 'car-01', label: 'BlueDart Trans', state: 'active', relations: [], riskScore: 11, performance: 96.2 },
-      invoice: { id: 'inv-904', label: 'INV-90481', state: 'generated', relations: ['pay-42'], riskScore: 4, performance: 100 },
-      payment: { id: 'pay-42', label: 'ZKP Ledger Settle', state: 'pending', relations: [], riskScore: 3, performance: 100 }
-    };
+    this.entities = {};
 
     // Layer 3: Digital Twin Layer (L3 Digital Twin)
     // Every entity gets Physical, Operational, Financial, Behavioral, and Risk twins
@@ -206,8 +189,61 @@ class TransportationRealityEngine {
     this.dependencyMatrix = DEP_MATRIX;
     this.closedLoops = CLOSED_LOOPS;
 
+    // Fetch initial state from the API server
+    this.fetchData();
+
     // Start background simulation ticker
     this.startTicker();
+  }
+
+  async fetchData() {
+    try {
+      // 1. Authenticate with backend using seeded Admin credentials
+      const authRes = await fetch('http://localhost:3000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'admin@gatifleet.com', password: 'admin123' })
+      });
+      
+      if (authRes.ok) {
+        const authData = await authRes.json();
+        this.token = authData.token;
+        this.user = authData.user;
+        console.log(`Successfully authenticated as ${this.user.role}`);
+      } else {
+        console.error('Authentication failed.');
+      }
+
+      // 2. Fetch cached data
+      const [eventsRes, entitiesRes] = await Promise.all([
+        fetch('http://localhost:3000/api/events'),
+        fetch('http://localhost:3000/api/entities')
+      ]);
+
+      if (eventsRes.ok) {
+        this.events = await eventsRes.json();
+      }
+      if (entitiesRes.ok) {
+        this.entities = await entitiesRes.json();
+      }
+      this.notify();
+
+      // Initialize Socket.io connection
+      this.socket = io('http://localhost:3000');
+      
+      this.socket.on('new_event', (dbEvent) => {
+        this.events = [dbEvent, ...this.events.slice(0, 49)];
+        this.notify();
+      });
+
+      this.socket.on('telemetry_update', (dbEvent) => {
+        this.events = [dbEvent, ...this.events.slice(0, 49)];
+        this.notify();
+      });
+
+    } catch (err) {
+      console.error('Failed to fetch data from backend API:', err);
+    }
   }
 
   // Subscribe to changes (UI triggers redraws)
@@ -261,17 +297,6 @@ class TransportationRealityEngine {
   startTicker() {
     setInterval(() => {
       if (!this.isSimulationRunning) return;
-
-      const chosen = { type: 'TELEMETRY_SYNC', desc: 'GPS pin synced for SHP-CT-90481. Speed: 62 km/h.', tag: 'IOT' };
-      const newEvent = {
-        id: `ev-${Date.now()}`,
-        timestamp: new Date().toISOString(),
-        type: chosen.type,
-        desc: chosen.desc,
-        source: 'Edge/IoT'
-      };
-
-      this.events = [newEvent, ...this.events.slice(0, 19)];
 
       // Jitter OCI certainties
       this.oci = {

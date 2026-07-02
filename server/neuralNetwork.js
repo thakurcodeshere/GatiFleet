@@ -7,7 +7,7 @@
 const generateId = (prefix) => `${prefix}-${Math.floor(100000 + Math.random() * 900000)}`;
 
 // --- LAYER 1: UNIVERSAL ENTITY REGISTER & SCHEMAS ---
-export const ENTITY_TYPES = {
+const ENTITY_TYPES = {
   CUSTOMER: 'CUSTOMER',
   CONTACT: 'CONTACT',
   LEAD: 'LEAD',
@@ -71,7 +71,7 @@ export const ENTITY_TYPES = {
 };
 
 // --- LAYER 2: STATE MACHINES ---
-export const STATE_MACHINES = {
+const STATE_MACHINES = {
   CUSTOMER: {
     states: ['Prospect', 'Qualified', 'Opportunity', 'Negotiation', 'Contracted', 'Active', 'Expanding', 'Strategic', 'At Risk', 'Recovering', 'Dormant', 'Lost'],
     transitions: {
@@ -254,7 +254,7 @@ export const STATE_MACHINES = {
 };
 
 // Validate transition helper
-export const validateTransition = (machineType, fromState, toState) => {
+const validateTransition = (machineType, fromState, toState) => {
   const machine = STATE_MACHINES[machineType];
   if (!machine) return false;
   if (fromState === toState) return true;
@@ -262,7 +262,7 @@ export const validateTransition = (machineType, fromState, toState) => {
 };
 
 // --- LAYER 3: COGNITIVE DIGITAL TWIN BRAINS ---
-export const TWIN_SCHEMAS = {
+const TWIN_SCHEMAS = {
   CUSTOMER: ['Commercial', 'Operational', 'Financial', 'Relationship', 'Strategic', 'Learning'],
   OPPORTUNITY: ['Commercial', 'Customer', 'Logistics', 'Financial', 'Competitive', 'Executive', 'AI'],
   VEHICLE: ['Physical', 'Operational', 'Financial', 'Maintenance', 'Safety', 'Environmental'],
@@ -277,7 +277,7 @@ export const TWIN_SCHEMAS = {
 };
 
 // --- LAYER 4: KNOWLEDGE GRAPH ONTOLOGY ---
-export const KG_ONTOLOGY = {
+const KG_ONTOLOGY = {
   nodeTypes: Object.keys(ENTITY_TYPES),
   edgeTypes: [
     { from: 'CUSTOMER', to: 'AGREEMENT', label: 'owns', cardinality: '1:N' },
@@ -319,7 +319,7 @@ export const KG_ONTOLOGY = {
 };
 
 // --- LAYER 5: CALCULATION ENGINES (RUNNABLE JAVASCRIPT CODES) ---
-export const CALCULATION_ENGINES = {
+const CALCULATION_ENGINES = {
   // M1: Customer Health
   calculateHealthScore: (customer) => {
     const commercial = customer.acv > 10000000 ? 95 : 80;
@@ -479,7 +479,7 @@ export const CALCULATION_ENGINES = {
 };
 
 // --- LAYER 6: POLICY REGISTRY (BUSINESS RULE GUARDRAILS) ---
-export const POLICY_REGISTRY = [
+const POLICY_REGISTRY = [
   {
     id: 'POL-001',
     domain: 'Credit Limit Exposure',
@@ -546,7 +546,7 @@ export const POLICY_REGISTRY = [
 ];
 
 // --- LAYER 7: KPI REGISTRY (49 CRITICAL METRICS) ---
-export const KPI_REGISTRY = {
+const KPI_REGISTRY = {
   M1_CIC: [
     { name: 'Customer Health Score', unit: '0-100', target: 80, current: 82.4 },
     { name: 'Customer Churn Rate', unit: '%', target: 5.0, current: 3.2 },
@@ -636,7 +636,7 @@ export const KPI_REGISTRY = {
 };
 
 // --- LAYER 8: AI AGENT REGISTRY (20 specialized agents) ---
-export const AI_AGENT_REGISTRY = [
+const AI_AGENT_REGISTRY = [
   { id: 'agt-cic', name: 'Customer Intelligence Agent', department: 'Sales', autonomyLevel: 'L2', primaryGoal: 'Grow LTV and predict churn risks' },
   { id: 'agt-arie', name: 'Revenue Optimization Agent', department: 'Sales', autonomyLevel: 'L3', primaryGoal: 'Dynamic margin protection bidding' },
   { id: 'agt-acms', name: 'Mobilization Coordinator Agent', department: 'Operations', autonomyLevel: 'L3', primaryGoal: 'Orchestrate 9 setup lanes concurrently' },
@@ -661,7 +661,7 @@ export const AI_AGENT_REGISTRY = [
 
 // --- LAYER 9: CROSS-MODULE RELATIONSHIP MATRIX (18x18) ---
 // Represented as a look-up registry of connection types
-export const DEP_MATRIX = {
+const DEP_MATRIX = {
   getConnection: (fromModule, toModule) => {
     const connections = {
       'M1_M2': 'Customer contract boundaries propagate to Opportunities',
@@ -691,7 +691,7 @@ export const DEP_MATRIX = {
 };
 
 // --- LAYER 10: CLOSED COGNITIVE INTELLIGENCE LOOPS ---
-export const CLOSED_LOOPS = {
+const CLOSED_LOOPS = {
   LOOP_A_OPERATIONAL: {
     name: 'Real-Time Operational Security Loop',
     path: ['Telemetry Sync', 'Vehicle Health Update', 'Fatigue Monitoring', 'Incident Resolution', 'Dispatch Re-optimization'],
@@ -754,7 +754,7 @@ export const CLOSED_LOOPS = {
 };
 
 // --- CORE NEURAL STATE WRAPPER CLASS ---
-export class UnifiedNeuralNetworkEngine {
+class UnifiedNeuralNetworkEngine {
   constructor(initialRealityState) {
     this.state = initialRealityState || {};
     this.eventsCount = 0;
@@ -871,3 +871,5 @@ export class UnifiedNeuralNetworkEngine {
     return this.auditLedger;
   }
 }
+
+module.exports = { ENTITY_TYPES, STATE_MACHINES, TWIN_SCHEMAS, KG_ONTOLOGY, CALCULATION_ENGINES, POLICY_REGISTRY, KPI_REGISTRY, AI_AGENT_REGISTRY, DEP_MATRIX, CLOSED_LOOPS, UnifiedNeuralNetworkEngine };
