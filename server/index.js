@@ -42,7 +42,7 @@ const apiLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
-app.use('/api/', apiLimiter);
+app.use(apiLimiter); // Apply globally to all routes so CodeQL definitively resolves it
 
 // Serve static uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
