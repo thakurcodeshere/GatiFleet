@@ -14,17 +14,19 @@ First off, thank you for considering contributing to GatiFleet! It's people like
 
 ### Pull Requests
 1. Fork the repository and create your branch from `main`.
-2. Run `npm install` to install dependencies.
-3. Make your changes and ensure they adhere to the project's codebase patterns.
-4. Verify code quality by running the linter:
+2. **Install Frontend Dependencies:** Run `npm install` in the root directory.
+3. **Install Backend Dependencies:** Run `cd server && npm install` in the server directory.
+4. Make your changes in the appropriate directory (`src/` for React UI, `server/` for Express APIs).
+5. Verify code quality on the frontend by running the linter:
    ```bash
    npm run lint
    ```
-5. Build the application locally to verify it compiles:
+6. Build the frontend locally to verify it compiles:
    ```bash
    npm run build
    ```
-6. Submit a Pull Request targeting the `main` branch of this repository, following the PR template guidelines.
+7. Start the backend (`npx pm2 start ecosystem.config.js`) to test API integrations.
+8. Submit a Pull Request targeting the `main` branch of this repository, following the PR template guidelines.
 
 ## Code Style Guide
 - We use ESLint for code style verification.

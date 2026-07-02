@@ -21,35 +21,39 @@
 
 ---
 
-## 🏗️ System Architecture
+## 🏗️ System Architecture (11-Tier Enterprise Monolith)
 
-GatiFleet separates stateful simulation, context coordination, and views to deliver smooth, sub-second telemetry updates.
+GatiFleet was originally a frontend-only prototype but has now been upgraded to a robust **11-Tier Zero-Cost Full-Stack Architecture**:
 
-```mermaid
-graph TD
-    RE[RealityEngine.js / Mock Telemetry Simulator] -->|Updates Coordinates & States| AppCtx[App State / Contexts]
-    AppCtx -->|Provides Real-time Data & Theme| Layout[Layout & Navigation]
-    Layout --> Dashboard[Dashboard.jsx]
-    Layout --> LiveTracking[LiveTracking.jsx]
-    Layout --> AICopilot[AICopilot.jsx]
-    Layout --> ERP[ERPDashboard.jsx]
-    Layout --> CRM[CRMDashboard.jsx]
-    Layout --> HCM[HCMDashboard.jsx]
-    Layout --> Knowledge[KnowledgeGraph.jsx]
-    Layout --> Agents[AgentsDashboard.jsx]
-    Layout --> Analytics[Analytics.jsx]
-```
+1. **Frontend Tier (React + Vite)**: Fluid, animated UI with stateful dashboards.
+2. **Gateway Tier (Express API)**: Centralized entry point (`server/index.js`).
+3. **Database Tier (SQLite + Prisma)**: Local, zero-cost relational database.
+4. **Caching Tier (Node-Cache)**: In-memory KV store for fast entity lookups.
+5. **Real-time Tier (Socket.io)**: Live bidirectional WebSocket telemetry.
+6. **Authentication Tier (JWT + bcrypt)**: Secure token-based access control.
+7. **Storage Tier (Multer)**: Local disk storage for document uploads.
+8. **Job Queue Tier (FastQ)**: Background worker thread queue for async tasks.
+9. **Intelligence Tier (Neural Engine)**: The core AI and business logic engine.
+10. **Monitoring Tier (Winston + Morgan)**: Comprehensive rotating file logs.
+11. **Process Management Tier (PM2)**: Daemonized, self-healing cluster management.
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Core Framework**: React 19 (Hooks & Context API) + Vite (Superfast dev bundling)
+### Frontend
+- **Core Framework**: React 19 + Vite
 - **Mapping & Geospatial**: Leaflet & React-Leaflet
 - **Charts & Visualizations**: Chart.js & React-Chartjs-2
-- **Aesthetics & Animations**: Framer Motion + custom CSS system with CSS variables (light/dark mode toggle support)
-- **Icons**: Lucide React
-- **Code Quality**: ESLint + Prettier configurations
+- **Aesthetics & Animations**: Framer Motion + Custom CSS system
+
+### Backend
+- **Server**: Node.js + Express.js
+- **Database ORM**: Prisma Client
+- **Database**: SQLite (Zero-cost, local storage)
+- **Real-time**: Socket.io
+- **Process Manager**: PM2 Ecosystem
+- **Security**: express-rate-limit, cors, helmet
 
 ---
 
@@ -101,21 +105,34 @@ Make sure you have Node.js (version 20+ recommended) and npm installed.
    npm install
    ```
 
-### Running Locally
+### Running Locally (Full Stack)
 
-To spin up the local hot-reloading development server, run:
+To run the complete 11-Tier architecture locally:
+
+**1. Start the Backend API (PM2 Daemon)**
 ```bash
+cd server
+npm install
+npx pm2 start ecosystem.config.js
+```
+The backend will run securely on `http://localhost:3000`.
+
+**2. Start the Frontend Dev Server**
+Open a new terminal window:
+```bash
+cd GatiFleet
+npm install
 npm run dev
 ```
 Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ### Building for Production
 
-Compile and bundle the project for production distribution:
+Compile and bundle the React frontend for production distribution:
 ```bash
 npm run build
 ```
-The output files will be compiled into the `dist/` directory, ready to serve.
+Deploy the `dist/` directory to your static host (e.g., Vercel or Netlify) and keep the Node.js backend running on a VPS.
 
 ### Code Verification
 
