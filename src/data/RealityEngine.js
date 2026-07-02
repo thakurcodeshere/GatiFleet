@@ -9,19 +9,6 @@
 // ============================================================
 
 import { io } from 'socket.io-client';
-import { 
-  UnifiedNeuralNetworkEngine,
-  ENTITY_TYPES,
-  STATE_MACHINES,
-  TWIN_SCHEMAS,
-  KG_ONTOLOGY,
-  CALCULATION_ENGINES,
-  POLICY_REGISTRY,
-  KPI_REGISTRY,
-  AI_AGENT_REGISTRY,
-  DEP_MATRIX,
-  CLOSED_LOOPS
-} from './neuralNetwork';
 
 class TransportationRealityEngine {
   constructor() {
@@ -174,20 +161,17 @@ class TransportationRealityEngine {
       globalCertainty: 93.4
     };
 
-    // --- INTEGRATED UNIFIED NEURAL ENGINE ---
-    this.neuralEngine = new UnifiedNeuralNetworkEngine(this);
-
-    // Registries
-    this.entityRegistry = ENTITY_TYPES;
-    this.stateMachines = STATE_MACHINES;
-    this.twinSchemas = TWIN_SCHEMAS;
-    this.kgOntology = KG_ONTOLOGY;
-    this.calculationEngines = CALCULATION_ENGINES;
-    this.policyRegistry = POLICY_REGISTRY;
-    this.kpiRegistry = KPI_REGISTRY;
-    this.agentRegistry = AI_AGENT_REGISTRY;
-    this.dependencyMatrix = DEP_MATRIX;
-    this.closedLoops = CLOSED_LOOPS;
+    // Registries (Now managed by the backend Intelligence Tier)
+    this.entityRegistry = {};
+    this.stateMachines = {};
+    this.twinSchemas = {};
+    this.kgOntology = {};
+    this.calculationEngines = {};
+    this.policyRegistry = {};
+    this.kpiRegistry = {};
+    this.agentRegistry = {};
+    this.dependencyMatrix = {};
+    this.closedLoops = {};
 
     // Fetch initial state from the API server
     this.fetchData();
@@ -258,9 +242,10 @@ class TransportationRealityEngine {
 
   // Hook to allow event dispatches to propagate downstream
   dispatchEvent(eventType, payload, operatorId = 'AI-SYSTEM') {
-    const res = this.neuralEngine.dispatchEvent(eventType, payload, operatorId);
+    // In the new architecture, events should be pushed to the backend API
+    // and processed by the UnifiedNeuralNetworkEngine there.
     this.notify();
-    return res;
+    return { status: 'DELEGATED_TO_BACKEND' };
   }
 
   getState() {
@@ -289,7 +274,7 @@ class TransportationRealityEngine {
       agentRegistry: this.agentRegistry,
       dependencyMatrix: this.dependencyMatrix,
       closedLoops: this.closedLoops,
-      auditLog: this.neuralEngine.getAuditLog()
+      auditLog: []
     };
   }
 
@@ -317,12 +302,8 @@ class TransportationRealityEngine {
         8
       ).toFixed(2);
 
-      // Run continuous logic trigger
-      this.neuralEngine.dispatchEvent('TELEMETRY_SYNC', {
-        desc: 'Live edge sensors telemetry sync',
-        fatigueIndex: 22,
-        module: 'M7'
-      });
+      // Live edge sensors telemetry sync should now be handled by WebSocket events
+      // The backend will process and emit these.
 
       this.notify();
     }, 5000);
