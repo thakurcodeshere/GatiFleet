@@ -11,6 +11,7 @@ const path = require('path');
 const morgan = require('morgan');
 const logger = require('./logger');
 const fs = require('fs');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const { UnifiedNeuralNetworkEngine } = require('./neuralNetwork');
@@ -32,6 +33,16 @@ const JWT_SECRET = process.env.JWT_SECRET || 'gatisecret_super_safe_zero_cost';
 app.use(cors());
 app.use(express.json());
 app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
+
+// Global Rate Limiter to prevent abuse (GitHub Code Scanning Alert Fix)
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: { error: 'Too many requests from this IP, please try again after 15 minutes' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/', apiLimiter);
 
 // Serve static uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
