@@ -1389,6 +1389,9 @@ function AddVehicleModal({ onClose, onAdd }) {
       gap: '6px',
       paddingBottom: '4px',
       borderBottom: active ? '2px solid var(--primary-500)' : 'none',
+      cursor: 'pointer',
+      transition: 'all 0.2s',
+      userSelect: 'none',
     }),
     form: {
       display: 'flex',
@@ -1398,12 +1401,15 @@ function AddVehicleModal({ onClose, onAdd }) {
     row: {
       display: 'flex',
       gap: '16px',
+      width: '100%',
+      boxSizing: 'border-box',
     },
     col: (span) => ({
       flex: span,
       display: 'flex',
       flexDirection: 'column',
       gap: '6px',
+      minWidth: 0,
     }),
     label: {
       fontSize: '11px',
@@ -1422,6 +1428,9 @@ function AddVehicleModal({ onClose, onAdd }) {
       outline: 'none',
       transition: 'border-color 0.2s',
       fontFamily: 'var(--font-sans)',
+      width: '100%',
+      boxSizing: 'border-box',
+      minWidth: 0,
     },
     select: {
       background: '#161d30',
@@ -1433,6 +1442,9 @@ function AddVehicleModal({ onClose, onAdd }) {
       outline: 'none',
       fontFamily: 'var(--font-sans)',
       cursor: 'pointer',
+      width: '100%',
+      boxSizing: 'border-box',
+      minWidth: 0,
     },
     actions: {
       display: 'flex',
@@ -1479,10 +1491,10 @@ function AddVehicleModal({ onClose, onAdd }) {
 
         {/* Wizard Steps */}
         <div style={modalStyles.wizardBar}>
-          <span style={modalStyles.stepIndicator(step === 1)}>1. RTO & Maker</span>
-          <span style={modalStyles.stepIndicator(step === 2)}>2. Engine & Weights</span>
-          <span style={modalStyles.stepIndicator(step === 3)}>3. Permits & FASTag</span>
-          <span style={modalStyles.stepIndicator(step === 4)}>4. Hub Assignment</span>
+          <span style={modalStyles.stepIndicator(step === 1)} onClick={() => setStep(1)}>1. RTO & Maker</span>
+          <span style={modalStyles.stepIndicator(step === 2)} onClick={() => setStep(2)}>2. Engine & Weights</span>
+          <span style={modalStyles.stepIndicator(step === 3)} onClick={() => setStep(3)}>3. Permits & FASTag</span>
+          <span style={modalStyles.stepIndicator(step === 4)} onClick={() => setStep(4)}>4. Hub Assignment</span>
         </div>
 
         <form onSubmit={handleSubmit} style={modalStyles.form}>
