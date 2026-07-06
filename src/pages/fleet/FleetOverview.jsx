@@ -10,7 +10,8 @@ import {
   Truck, Search, Filter, Plus, Download, ChevronUp, ChevronDown,
   Activity, PauseCircle, Wrench, WifiOff, Fuel, Heart,
   Clock, MapPin, Gauge, ArrowUpRight, ArrowDownRight,
-  AlertTriangle, BarChart3, Route, Calendar, ChevronLeft, ChevronRight, X
+  AlertTriangle, BarChart3, Route, Calendar, ChevronLeft, ChevronRight, X,
+  FileText
 } from 'lucide-react';
 import { generateTrucks, formatCurrency } from '../../data/mockData';
 import { RealityEngine } from '../../data/RealityEngine';
