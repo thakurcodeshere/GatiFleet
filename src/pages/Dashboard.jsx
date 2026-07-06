@@ -4,6 +4,7 @@
 // CEO-Level Command Center (Refactored with Multi-Tab Strategic Cockpit)
 // ============================================================
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useTheme } from '../context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   TrendingUp, TrendingDown, Truck, Gauge, Clock, Users, Fuel,
@@ -692,12 +693,12 @@ const insightColors = {
   route: '#8b5cf6',
 };
 
-const AIInsightsPanel = ({ insights, onAction }) => (
+const AIInsightsPanel = ({ insights, onAction, span = 4 }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5, delay: 0.55 }}
-    style={{ ...styles.card, gridColumn: 'span 4', display: 'flex', flexDirection: 'column' }}
+    style={{ ...styles.card, gridColumn: `span ${span}`, display: 'flex', flexDirection: 'column' }}
   >
     <SectionHeader
       icon={Brain}
@@ -977,13 +978,13 @@ const alertTypeColors = {
   info: 'var(--info-500)',
 };
 
-const AlertsFeed = ({ alerts, onResolveClick }) => {
+const AlertsFeed = ({ alerts, onResolveClick, span = 4 }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.85 }}
-      style={{ ...styles.card, gridColumn: 'span 4', display: 'flex', flexDirection: 'column' }}
+      style={{ ...styles.card, gridColumn: `span ${span}`, display: 'flex', flexDirection: 'column' }}
     >
       <SectionHeader
         icon={AlertTriangle}
@@ -1054,8 +1055,156 @@ const AlertsFeed = ({ alerts, onResolveClick }) => {
   );
 };
 
+// ---- HR WORKFORCE PANEL ----
+const HRWorkforcePanel = () => {
+  const styles = {
+    card: {
+      gridColumn: 'span 8',
+      background: 'var(--surface)',
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
+      border: '1px solid var(--surface-border)',
+      borderRadius: 'var(--radius-lg)',
+      padding: '24px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 16
+    },
+    grid: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 16
+    },
+    list: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 10
+    },
+    listItem: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      padding: '10px 12px',
+      background: 'rgba(255,255,255,0.02)',
+      border: '1px solid var(--border-subtle)',
+      borderRadius: 'var(--radius-md)'
+    }
+  };
+
+  return (
+    <div style={styles.card}>
+      <SectionHeader icon={Users} title="HR & Workforce Operations" subtitle="Roster tracking, safe-driving metrics, and active shifts" />
+      <div style={styles.grid}>
+        <div>
+          <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 12 }}>Active Driver Shift Logs</h4>
+          <div style={styles.list}>
+            <div style={styles.listItem}>
+              <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>DRV-8821 (Amit Kumar)</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--success-500)' }}>In Transit (NH48)</span>
+            </div>
+            <div style={styles.listItem}>
+              <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>DRV-9021 (Rajesh Singh)</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--warning-500)' }}>Resting (Siliguri)</span>
+            </div>
+            <div style={styles.listItem}>
+              <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>DRV-1928 (Vikramaditya)</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--primary-400)' }}>Standby</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 12 }}>Compliance & Safety Scores</h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 4 }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Hours-of-Service (HOS) Compliance</span>
+                <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>98.2%</span>
+              </div>
+              <div style={{ height: 6, background: 'var(--bg-600)', borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: '98.2%', background: 'var(--success-500)' }} />
+              </div>
+            </div>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 4 }}>
+                <span style={{ color: 'var(--text-secondary)' }}>ADAS Lane-Safety Score</span>
+                <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>94.8%</span>
+              </div>
+              <div style={{ height: 6, background: 'var(--bg-600)', borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: '94.8%', background: 'var(--primary-500)' }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ---- TECH SECURITY PANEL ----
+const TechSecurityPanel = () => {
+  const styles = {
+    card: {
+      gridColumn: 'span 8',
+      background: 'var(--surface)',
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
+      border: '1px solid var(--surface-border)',
+      borderRadius: 'var(--radius-lg)',
+      padding: '24px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 16
+    },
+    terminal: {
+      background: 'rgba(0,0,0,0.3)',
+      border: '1px solid var(--border-subtle)',
+      borderRadius: 'var(--radius-md)',
+      padding: '12px',
+      fontFamily: 'var(--font-mono)',
+      fontSize: '11px',
+      color: '#38ce3c',
+      height: '110px',
+      overflowY: 'auto'
+    }
+  };
+
+  return (
+    <div style={styles.card}>
+      <SectionHeader icon={Server} title="DevOps Infrastructure & Security SOC" subtitle="API gateway nodes status and Sentinel-X security logs" />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div>
+          <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8 }}>API Gateway Telemetry Latency</h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 11 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: 'var(--text-secondary)' }}>Gateway node-1:</span>
+              <span style={{ color: 'var(--success-500)' }}>12ms</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: 'var(--text-secondary)' }}>Gateway node-2:</span>
+              <span style={{ color: 'var(--success-500)' }}>14ms</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: 'var(--text-secondary)' }}>Gateway node-3:</span>
+              <span style={{ color: 'var(--warning-500)' }}>84ms (high load)</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8 }}>Sentinel-X Policy Enforcement</h4>
+          <div style={styles.terminal}>
+            <div>[12:15:10] POL-403 check passed for operator Arjun.</div>
+            <div>[12:18:24] Telemetry check verified for VEH-MH12-9028.</div>
+            <div>[12:28:40] Active connection synced with JNPT RFID gate.</div>
+            <div>[12:45:00] Database auto-backup complete (SQLite ledger).</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ---- MAIN DASHBOARD ----
 const Dashboard = () => {
+  const { userRole } = useTheme();
   const now = new Date();
   const greeting = now.getHours() < 12 ? 'Good Morning' : now.getHours() < 17 ? 'Good Afternoon' : 'Good Evening';
 
@@ -1368,78 +1517,154 @@ const Dashboard = () => {
     }
   }, [isAutonomyEnabled]);
 
-  // --- Dynamic KPI configuration creation ---
-  const kpiConfigs = useMemo(() => [
-    {
-      label: 'Revenue Today',
-      value: kpis.revenueToday,
-      format: 'currency',
-      trend: platformKPIs.revenue.growth,
-      trendUp: true,
-      icon: IndianRupee,
-      gradient: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-      sparkData: [38.2, 41.5, 39.8, 42.1, 40.3, 43.7, 45.2, 42.8, 46.3, 42.9],
-      sparkColor: '#818cf8',
-    },
-    {
-      label: 'Fleet Utilization',
-      value: kpis.fleetUtilization,
-      format: 'percent',
-      trend: 2.1,
-      trendUp: true,
-      icon: Gauge,
-      gradient: 'linear-gradient(135deg, #38CE3C, #10b981)',
-      sparkData: [82, 84, 85, 83, 86, 87, 88, 87.4],
-      sparkColor: '#38CE3C',
-    },
-    {
-      label: 'On-Time Delivery',
-      value: kpis.onTimeDelivery,
-      format: 'percent',
-      trend: 1.8,
-      trendUp: true,
-      icon: Clock,
-      gradient: 'linear-gradient(135deg, #3b82f6, #06b6d4)',
-      sparkData: [91, 92, 93, 92.5, 93, 94, 94.5, 94.2],
-      sparkColor: '#3b82f6',
-    },
-    {
-      label: 'Active Trucks',
-      value: kpis.activeTrucks,
-      format: 'number',
-      trend: 3.4,
-      trendUp: true,
-      icon: Truck,
-      gradient: 'linear-gradient(135deg, #f59e0b, #f97316)',
-      sparkData: [450, 458, 462, 470, 475, 480, 485, 487.6],
-      sparkColor: '#f59e0b',
-    },
-    {
-      label: 'Fuel Efficiency',
-      value: kpis.fuelEfficiency,
-      format: 'kmpl',
-      trend: 4.3,
-      trendUp: true,
-      icon: Fuel,
-      gradient: 'linear-gradient(135deg, #ec4899, #f43f5e)',
-      sparkData: [4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.8],
-      sparkColor: '#ec4899',
-    },
-    {
-      label: 'Customer Growth',
-      value: kpis.customerGrowth,
-      format: 'growth',
-      trend: 12.6,
-      trendUp: true,
-      icon: Users,
-      gradient: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
-      sparkData: [6.2, 7.1, 8.4, 9.2, 10.1, 11.0, 11.8, 12.6],
-      sparkColor: '#a78bfa',
-    },
-  ], [kpis]);
+  // --- Dynamic KPI configuration creation based on User Role ---
+  const kpiConfigs = useMemo(() => {
+    const allConfigs = [
+      {
+        label: 'Revenue Today',
+        value: kpis.revenueToday,
+        format: 'currency',
+        trend: platformKPIs.revenue.growth,
+        trendUp: true,
+        icon: IndianRupee,
+        gradient: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+        sparkData: [38.2, 41.5, 39.8, 42.1, 40.3, 43.7, 45.2, 42.8, 46.3, 42.9],
+        sparkColor: '#818cf8',
+        roles: ['ADMIN', 'CEO', 'FINANCE', 'CFO', 'ADVISOR', 'CRO']
+      },
+      {
+        label: 'Fleet Utilization',
+        value: kpis.fleetUtilization,
+        format: 'percent',
+        trend: 2.1,
+        trendUp: true,
+        icon: Gauge,
+        gradient: 'linear-gradient(135deg, #38CE3C, #10b981)',
+        sparkData: [82, 84, 85, 83, 86, 87, 88, 87.4],
+        sparkColor: '#38CE3C',
+        roles: ['ADMIN', 'CEO', 'OPERATIONS']
+      },
+      {
+        label: 'On-Time Delivery',
+        value: kpis.onTimeDelivery,
+        format: 'percent',
+        trend: 1.8,
+        trendUp: true,
+        icon: Clock,
+        gradient: 'linear-gradient(135deg, #3b82f6, #06b6d4)',
+        sparkData: [91, 92, 93, 92.5, 93, 94, 94.5, 94.2],
+        sparkColor: '#3b82f6',
+        roles: ['ADMIN', 'CEO', 'OPERATIONS']
+      },
+      {
+        label: 'Active Trucks',
+        value: kpis.activeTrucks,
+        format: 'number',
+        trend: 3.4,
+        trendUp: true,
+        icon: Truck,
+        gradient: 'linear-gradient(135deg, #f59e0b, #f97316)',
+        sparkData: [450, 458, 462, 470, 475, 480, 485, 487.6],
+        sparkColor: '#f59e0b',
+        roles: ['ADMIN', 'CEO', 'OPERATIONS']
+      },
+      {
+        label: 'Fuel Efficiency',
+        value: kpis.fuelEfficiency,
+        format: 'kmpl',
+        trend: 4.3,
+        trendUp: true,
+        icon: Fuel,
+        gradient: 'linear-gradient(135deg, #ec4899, #f43f5e)',
+        sparkData: [4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.8],
+        sparkColor: '#ec4899',
+        roles: ['ADMIN', 'CEO', 'OPERATIONS', 'FINANCE', 'CFO']
+      },
+      {
+        label: 'Customer Growth',
+        value: kpis.customerGrowth,
+        format: 'growth',
+        trend: 12.6,
+        trendUp: true,
+        icon: Users,
+        gradient: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
+        sparkData: [6.2, 7.1, 8.4, 9.2, 10.1, 11.0, 11.8, 12.6],
+        sparkColor: '#a78bfa',
+        roles: ['ADMIN', 'CEO', 'FINANCE', 'CFO', 'ADVISOR', 'CRO']
+      },
+      {
+        label: 'Active Drivers',
+        value: 384,
+        format: 'number',
+        trend: 1.5,
+        trendUp: true,
+        icon: Users,
+        gradient: 'linear-gradient(135deg, #ec4899, #f43f5e)',
+        sparkData: [370, 372, 375, 378, 380, 382, 384],
+        sparkColor: '#ec4899',
+        roles: ['HR']
+      },
+      {
+        label: 'Safety Compliance',
+        value: 94.8,
+        format: 'percent',
+        trend: 0.8,
+        trendUp: true,
+        icon: ShieldCheck,
+        gradient: 'linear-gradient(135deg, #38CE3C, #10b981)',
+        sparkData: [93, 93.5, 94, 94.2, 94.5, 94.8],
+        sparkColor: '#38CE3C',
+        roles: ['HR']
+      },
+      {
+        label: 'System Uptime',
+        value: 99.97,
+        format: 'percent',
+        trend: 0.01,
+        trendUp: true,
+        icon: Server,
+        gradient: 'linear-gradient(135deg, #3b82f6, #06b6d4)',
+        sparkData: [99.95, 99.96, 99.97, 99.97],
+        sparkColor: '#3b82f6',
+        roles: ['CTO', 'SECURITY']
+      },
+      {
+        label: 'Active API Gateways',
+        value: apiGatewaysCount,
+        format: 'number',
+        trend: 0,
+        trendUp: true,
+        icon: Server,
+        gradient: 'linear-gradient(135deg, #a78bfa, #8b5cf6)',
+        sparkData: [3, 3, 3, 3],
+        sparkColor: '#a78bfa',
+        roles: ['CTO', 'SECURITY']
+      }
+    ];
+    return allConfigs.filter(c => !c.roles || c.roles.includes(userRole));
+  }, [kpis, userRole, apiGatewaysCount]);
 
   const hasPendingBacklog = cases.find(c => c.id === 2)?.status === 'pending';
   const dispatchedActive = !hasPendingBacklog;
+
+  const filteredCases = useMemo(() => {
+    return cases.filter(c => {
+      if (userRole === 'ADMIN' || userRole === 'CEO') return true;
+      if (userRole === 'OPERATIONS') {
+        return c.department.includes('Operations') || c.department.includes('Supply Chain');
+      }
+      if (userRole === 'FINANCE' || userRole === 'CFO' || userRole === 'ADVISOR' || userRole === 'CRO') {
+        return c.department.includes('Finance') || c.department.includes('Compliance') || c.department.includes('Sales') || c.department.includes('CRM');
+      }
+      if (userRole === 'HR') {
+        return c.department.includes('HR') || c.department.includes('Safety');
+      }
+      if (userRole === 'CTO' || userRole === 'SECURITY') {
+        return c.department.includes('Infrastructure') || c.department.includes('Agent Configuration') || c.department.includes('DevOps') || c.department.includes('Systems');
+      }
+      return true;
+    });
+  }, [cases, userRole]);
 
   // --- Inline action trigger ---
   const handleInlineActionTrigger = (caseId) => {
@@ -1542,17 +1767,29 @@ const Dashboard = () => {
             </div>
           ))}
 
-          {/* Row 2: Revenue Chart + AI Insights */}
-          <RevenueChart />
-          <AIInsightsPanel insights={insights} onAction={handleInlineActionTrigger} />
+          {/* Row 2: Operations Section (Only for Ops, CEO, Admin) */}
+          {(userRole === 'ADMIN' || userRole === 'CEO' || userRole === 'OPERATIONS') && <FleetMapSection dispatched={dispatchedActive} />}
+          {(userRole === 'ADMIN' || userRole === 'CEO' || userRole === 'OPERATIONS') && <TopRoutes routes={routes} />}
 
-          {/* Row 3: Fleet Map + Top Routes */}
-          <FleetMapSection dispatched={dispatchedActive} />
-          <TopRoutes routes={routes} />
+          {/* Row 3: Finance Chart (Only for Finance/CEO/Admin) or Customized Panels (HR, Security) */}
+          {(userRole === 'ADMIN' || userRole === 'CEO' || userRole === 'FINANCE' || userRole === 'CFO' || userRole === 'ADVISOR' || userRole === 'CRO') && <RevenueChart />}
+          {userRole === 'HR' && <HRWorkforcePanel />}
+          {(userRole === 'CTO' || userRole === 'SECURITY') && <TechSecurityPanel />}
+          
+          <AIInsightsPanel 
+            insights={insights} 
+            onAction={handleInlineActionTrigger} 
+            span={userRole === 'OPERATIONS' ? 6 : 4}
+          />
 
-          {/* Row 4: Revenue Streams + Alerts */}
-          <RevenueStreamsChart />
-          <AlertsFeed alerts={alerts} onResolveClick={handleInlineActionTrigger} />
+          {/* Row 4: Revenue Streams or full-width Alerts */}
+          {(userRole === 'ADMIN' || userRole === 'CEO' || userRole === 'FINANCE' || userRole === 'CFO' || userRole === 'ADVISOR' || userRole === 'CRO') && <RevenueStreamsChart />}
+          
+          <AlertsFeed 
+            alerts={alerts} 
+            onResolveClick={handleInlineActionTrigger} 
+            span={(userRole === 'ADMIN' || userRole === 'CEO' || userRole === 'FINANCE' || userRole === 'CFO' || userRole === 'ADVISOR' || userRole === 'CRO') ? 4 : (userRole === 'OPERATIONS' ? 6 : 12)}
+          />
         </div>
       )}
 
@@ -1656,7 +1893,7 @@ const Dashboard = () => {
 
           {/* Right panel: 10 Collapsible Strategic Cases */}
           <div style={{ gridColumn: 'span 7', display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {cases.map((c) => {
+            {filteredCases.map((c) => {
               const CaseIcon = c.icon;
               const isSelected = activeCaseId === c.id;
               return (
