@@ -13,6 +13,7 @@ import {
   AlertTriangle, BarChart3, Route, Calendar, ChevronLeft, ChevronRight, X
 } from 'lucide-react';
 import { generateTrucks, formatCurrency } from '../../data/mockData';
+import { RealityEngine } from '../../data/RealityEngine';
 
 // ---- Generate stable data at module level ----
 const ALL_TRUCKS = generateTrucks(50);
@@ -433,6 +434,8 @@ const styles = {
 
 // ---- Component ----
 export default function FleetOverview() {
+  const [trucks, setTrucks] = useState(() => ALL_TRUCKS);
+  const [addModalOpen, setAddModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'asc' });
@@ -443,12 +446,16 @@ export default function FleetOverview() {
   // ---- Derived data ----
   const statusCounts = useMemo(() => {
     const counts = { active: 0, idle: 0, maintenance: 0, offline: 0 };
-    ALL_TRUCKS.forEach(t => counts[t.status]++);
+    trucks.forEach(t => {
+      if (counts[t.status] !== undefined) {
+        counts[t.status]++;
+      }
+    });
     return counts;
-  }, []);
+  }, [trucks]);
 
   const filteredTrucks = useMemo(() => {
-    let result = ALL_TRUCKS;
+    let result = trucks;
 
     if (statusFilter !== 'all') {
       result = result.filter(t => t.status === statusFilter);
@@ -467,7 +474,7 @@ export default function FleetOverview() {
     }
 
     return result;
-  }, [searchQuery, statusFilter]);
+  }, [searchQuery, statusFilter, trucks]);
 
   const sortedTrucks = useMemo(() => {
     const sorted = [...filteredTrucks];
@@ -505,12 +512,13 @@ export default function FleetOverview() {
 
   // ---- Quick Stats ----
   const quickStats = useMemo(() => {
-    const avgAge = (ALL_TRUCKS.reduce((s, t) => s + t.mileage, 0) / ALL_TRUCKS.length / 100000).toFixed(1);
-    const totalDistToday = ALL_TRUCKS.filter(t => t.status === 'active').reduce((s, t) => s + t.speed * 4, 0);
-    const fuelConsumption = ALL_TRUCKS.filter(t => t.status === 'active').length * 38;
-    const maintenanceAlerts = ALL_TRUCKS.filter(t => t.healthScore < 75).length;
+    const totalCount = trucks.length || 1;
+    const avgAge = (trucks.reduce((s, t) => s + (t.mileage || 0), 0) / totalCount / 100000).toFixed(1);
+    const totalDistToday = trucks.filter(t => t.status === 'active').reduce((s, t) => s + (t.speed || 0) * 4, 0);
+    const fuelConsumption = trucks.filter(t => t.status === 'active').length * 38;
+    const maintenanceAlerts = trucks.filter(t => (t.healthScore || 0) < 75).length;
     return { avgAge, totalDistToday, fuelConsumption, maintenanceAlerts };
-  }, []);
+  }, [trucks]);
 
   // ---- Helpers ----
   const getFuelColor = (level) => {
@@ -578,7 +586,7 @@ export default function FleetOverview() {
             Fleet Management
           </h1>
           <p style={styles.subtitle}>
-            {statusCounts.active} active of {ALL_TRUCKS.length} total vehicles &nbsp;•&nbsp; Last synced 2 min ago
+            {statusCounts.active} active of {trucks.length} total vehicles &nbsp;•&nbsp; Last synced 2 min ago
           </p>
         </div>
         <div style={styles.headerActions}>
@@ -586,6 +594,7 @@ export default function FleetOverview() {
             style={styles.btnPrimary}
             whileHover={{ scale: 1.03, boxShadow: '0 4px 16px rgba(99, 102, 241, 0.4)' }}
             whileTap={{ scale: 0.97 }}
+            onClick={() => setAddModalOpen(true)}
           >
             <Plus size={16} /> Add Vehicle
           </motion.button>
@@ -613,7 +622,7 @@ export default function FleetOverview() {
           <div style={styles.statusCardsRow}>
             {Object.entries(STATUS_CONFIG).map(([key, cfg], i) => {
               const count = statusCounts[key];
-              const percent = ((count / ALL_TRUCKS.length) * 100).toFixed(1);
+              const percent = ((count / trucks.length) * 100).toFixed(1);
               const isActive = statusFilter === key;
               const Icon = cfg.icon;
               return (
@@ -986,7 +995,7 @@ export default function FleetOverview() {
               Fleet Utilization
             </h3>
             {Object.entries(STATUS_CONFIG).map(([key, cfg]) => {
-              const pct = ((statusCounts[key] / ALL_TRUCKS.length) * 100).toFixed(1);
+              const pct = ((statusCounts[key] / trucks.length) * 100).toFixed(1);
               return (
                 <div key={key} style={{ marginBottom: '14px' }}>
                   <div style={{
@@ -1086,6 +1095,705 @@ export default function FleetOverview() {
           50% { opacity: 0.5; transform: scale(1.5); }
         }
       `}</style>
+
+      <AnimatePresence>
+        {addModalOpen && (
+          <AddVehicleModal
+            onClose={() => setAddModalOpen(false)}
+            onAdd={(newTruck) => {
+              setTrucks(prev => [newTruck, ...prev]);
+              setAddModalOpen(false);
+            }}
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ---- REGISTRATION HELPER / MODAL COMPONENT ----
+function AddVehicleModal({ onClose, onAdd }) {
+  const [step, setStep] = useState(1);
+  const [formData, setFormData] = useState({
+    stateCode: 'MH',
+    rtoCode: '12',
+    series: 'QE',
+    regNum: '4592',
+    maker: 'Tata Motors',
+    model: 'Tata Signa 4825.T',
+    type: 'Heavy Goods Vehicle (HGV)',
+    fuelType: 'Diesel',
+    chassisNumber: '',
+    engineNumber: '',
+    gvw: '35000',
+    unladenWeight: '12000',
+    nationalPermit: '',
+    fastagId: '',
+    pucNumber: '',
+    fitnessValidity: '2027-07-06',
+    insurancePolicy: '',
+    driver: 'Rajesh Kumar',
+    origin: 'Mumbai',
+    destination: 'Delhi',
+    business: 'Tata Motors Logistics'
+  });
+
+  const [errors, setErrors] = useState({});
+
+  // Autogenerate compliant details to help the user/tester bypass writing Vin/fastag manually
+  const autogenerateDetails = () => {
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    const randomChassis = 'MAT' + Array.from({ length: 14 }, () => Math.random().toString(36).charAt(2).toUpperCase()).join('');
+    const randomEngine = 'ENG' + Math.floor(10000000 + Math.random() * 90000000);
+    const randomPermit = 'NP/' + new Date().getFullYear() + '/' + formData.stateCode + '/' + Math.floor(10000 + Math.random() * 90000);
+    const randomFastag = 'FT-' + Math.floor(1000000000000000 + Math.random() * 9000000000000000);
+    const randomPuc = 'PUC/' + formData.stateCode + '/' + Math.floor(1000000 + Math.random() * 900000);
+    const randomInsurance = 'INS/CR-' + Math.floor(100000 + Math.random() * 900000);
+
+    setFormData(prev => ({
+      ...prev,
+      regNum: String(randomNum),
+      chassisNumber: randomChassis,
+      engineNumber: randomEngine,
+      nationalPermit: randomPermit,
+      fastagId: randomFastag,
+      pucNumber: randomPuc,
+      insurancePolicy: randomInsurance
+    }));
+    setErrors({});
+  };
+
+  const handleInputChange = (field, val) => {
+    setFormData(prev => ({ ...prev, [field]: val }));
+    if (errors[field]) {
+      setErrors(prev => {
+        const newErrs = { ...prev };
+        delete newErrs[field];
+        return newErrs;
+      });
+    }
+  };
+
+  const validateStep = () => {
+    const newErrs = {};
+    if (step === 1) {
+      if (!formData.regNum || !/^\d{4}$/.test(formData.regNum)) {
+        newErrs.regNum = 'Must be exactly 4 digits';
+      }
+      if (!formData.rtoCode || !/^\d{2}$/.test(formData.rtoCode)) {
+        newErrs.rtoCode = 'Must be 2 digits';
+      }
+      if (!formData.series || !/^[A-Z]{1,2}$/i.test(formData.series)) {
+        newErrs.series = '1-2 Letters';
+      }
+    } else if (step === 2) {
+      if (!formData.chassisNumber || formData.chassisNumber.length !== 17) {
+        newErrs.chassisNumber = 'VIN / Chassis must be exactly 17 characters';
+      }
+      if (!formData.engineNumber || formData.engineNumber.length < 6) {
+        newErrs.engineNumber = 'Engine number is required (min 6 chars)';
+      }
+      if (!formData.gvw || isNaN(formData.gvw) || Number(formData.gvw) <= 0) {
+        newErrs.gvw = 'Must be positive weight';
+      }
+      if (!formData.unladenWeight || isNaN(formData.unladenWeight) || Number(formData.unladenWeight) >= Number(formData.gvw)) {
+        newErrs.unladenWeight = 'Must be less than GVW';
+      }
+    } else if (step === 3) {
+      if (!formData.nationalPermit) {
+        newErrs.nationalPermit = 'National Permit number is mandatory';
+      }
+      if (!formData.fastagId || !/^FT-\d{16}$/.test(formData.fastagId)) {
+        newErrs.fastagId = 'FASTag ID format: FT- followed by 16 digits';
+      }
+      if (!formData.pucNumber) {
+        newErrs.pucNumber = 'PUC details required';
+      }
+    }
+    setErrors(newErrs);
+    return Object.keys(newErrs).length === 0;
+  };
+
+  const handleNext = () => {
+    if (validateStep()) {
+      setStep(prev => prev + 1);
+    }
+  };
+
+  const handleBack = () => {
+    setStep(prev => prev - 1);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!validateStep()) return;
+
+    const fullRegNo = `${formData.stateCode}-${formData.rtoCode}-${formData.series.toUpperCase()}-${formData.regNum}`;
+
+    // Assemble new truck object
+    const newTruck = {
+      id: `TRK-${String(Math.floor(51 + Math.random() * 950)).padStart(5, '0')}`,
+      regNumber: fullRegNo.replace(/-/g, ''),
+      type: formData.model,
+      status: 'idle', // newly registered start as idle
+      driver: formData.driver,
+      driverId: `DRV-${String(Math.floor(100 + Math.random() * 400)).padStart(5, '0')}`,
+      origin: formData.origin,
+      destination: formData.destination,
+      lat: 19.0760, // default Mumbai
+      lng: 72.8777,
+      speed: 0,
+      fuelLevel: 100,
+      fuelType: formData.fuelType,
+      fastagBalance: 10000,
+      lastUpdate: new Date().toISOString(),
+      eta: '-',
+      loadWeight: 0,
+      temperature: null,
+      mileage: 0,
+      nextService: '5000 km',
+      healthScore: 100,
+      dailyCost: 12000,
+      business: formData.business,
+      chassisNumber: formData.chassisNumber,
+      engineNumber: formData.engineNumber,
+      gvw: formData.gvw,
+      unladenWeight: formData.unladenWeight,
+      nationalPermit: formData.nationalPermit,
+      fastagId: formData.fastagId,
+      pucNumber: formData.pucNumber,
+      fitnessValidity: formData.fitnessValidity,
+      insurancePolicy: formData.insurancePolicy
+    };
+
+    // Emit event to simulation engine
+    RealityEngine.dispatchEvent('VEHICLE_COMMISSIONED', {
+      vehicleId: newTruck.id,
+      regNumber: newTruck.regNumber,
+      operator: 'Arjun Kapoor',
+      nationalPermit: newTruck.nationalPermit,
+      fastagId: newTruck.fastagId
+    });
+
+    onAdd(newTruck);
+  };
+
+  // Styles
+  const modalStyles = {
+    overlay: {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(10, 15, 30, 0.75)',
+      backdropFilter: 'blur(12px)',
+      zIndex: 1100,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px',
+    },
+    container: {
+      width: '100%',
+      maxWidth: '680px',
+      background: '#131929',
+      border: '1px solid rgba(255,255,255,0.08)',
+      borderRadius: '16px',
+      padding: '28px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '20px',
+      boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+      position: 'relative',
+    },
+    closeBtn: {
+      position: 'absolute',
+      top: '20px',
+      right: '20px',
+      background: 'transparent',
+      border: 'none',
+      color: 'var(--text-secondary)',
+      cursor: 'pointer',
+      padding: '4px',
+      borderRadius: '50%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      transition: 'background 0.2s',
+    },
+    titleSection: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px',
+    },
+    badge: {
+      fontSize: '10px',
+      fontWeight: 700,
+      padding: '3px 8px',
+      background: 'rgba(99, 102, 241, 0.15)',
+      color: 'var(--primary-400)',
+      borderRadius: '10px',
+      border: '1px solid rgba(99, 102, 241, 0.3)',
+      textTransform: 'uppercase',
+      letterSpacing: '0.5px'
+    },
+    headerText: {
+      fontSize: '20px',
+      fontWeight: 700,
+      color: '#fff',
+      margin: 0,
+    },
+    wizardBar: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      borderBottom: '1px solid rgba(255,255,255,0.05)',
+      paddingBottom: '12px',
+      marginBottom: '8px',
+    },
+    stepIndicator: (active) => ({
+      fontSize: '12px',
+      fontWeight: 600,
+      color: active ? 'var(--primary-400)' : 'var(--text-muted)',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '6px',
+      paddingBottom: '4px',
+      borderBottom: active ? '2px solid var(--primary-500)' : 'none',
+    }),
+    form: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '16px',
+    },
+    row: {
+      display: 'flex',
+      gap: '16px',
+    },
+    col: (span) => ({
+      flex: span,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '6px',
+    }),
+    label: {
+      fontSize: '11px',
+      fontWeight: 600,
+      color: 'var(--text-secondary)',
+      textTransform: 'uppercase',
+      letterSpacing: '0.5px',
+    },
+    input: {
+      background: 'rgba(255,255,255,0.03)',
+      border: '1px solid rgba(255,255,255,0.08)',
+      borderRadius: '8px',
+      padding: '10px 14px',
+      color: '#fff',
+      fontSize: '13px',
+      outline: 'none',
+      transition: 'border-color 0.2s',
+      fontFamily: 'var(--font-sans)',
+    },
+    select: {
+      background: '#161d30',
+      border: '1px solid rgba(255,255,255,0.08)',
+      borderRadius: '8px',
+      padding: '10px 14px',
+      color: '#fff',
+      fontSize: '13px',
+      outline: 'none',
+      fontFamily: 'var(--font-sans)',
+      cursor: 'pointer',
+    },
+    actions: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      marginTop: '12px',
+      alignItems: 'center',
+    },
+    errorText: {
+      fontSize: '10px',
+      color: '#FF4D6B',
+      marginTop: '2px',
+      fontWeight: 500,
+    },
+    infoBox: {
+      background: 'rgba(59, 130, 246, 0.08)',
+      border: '1px solid rgba(59, 130, 246, 0.2)',
+      borderRadius: '8px',
+      padding: '12px',
+      fontSize: '11px',
+      color: '#93c5fd',
+      lineHeight: 1.5,
+      display: 'flex',
+      gap: '8px',
+      alignItems: 'flex-start'
+    }
+  };
+
+  return (
+    <div style={modalStyles.overlay}>
+      <motion.div
+        style={modalStyles.container}
+        initial={{ opacity: 0, scale: 0.95, y: 15 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 15 }}
+      >
+        <button style={modalStyles.closeBtn} onClick={onClose}>
+          <X size={18} />
+        </button>
+
+        <div style={modalStyles.titleSection}>
+          <div style={modalStyles.badge}>CMVR Form 20</div>
+          <h2 style={modalStyles.headerText}>Vahan e-Registry Portal</h2>
+        </div>
+
+        {/* Wizard Steps */}
+        <div style={modalStyles.wizardBar}>
+          <span style={modalStyles.stepIndicator(step === 1)}>1. RTO & Maker</span>
+          <span style={modalStyles.stepIndicator(step === 2)}>2. Engine & Weights</span>
+          <span style={modalStyles.stepIndicator(step === 3)}>3. Permits & FASTag</span>
+          <span style={modalStyles.stepIndicator(step === 4)}>4. Hub Assignment</span>
+        </div>
+
+        <form onSubmit={handleSubmit} style={modalStyles.form}>
+          {/* STEP 1: Registration and Maker */}
+          {step === 1 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={modalStyles.infoBox}>
+                <Truck size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
+                <span>Under CMV Rules, commercial vehicles must be registered with their state/RTO codes. Enter the Registration Number details below.</span>
+              </div>
+              <div style={modalStyles.row}>
+                <div style={modalStyles.col(2)}>
+                  <label style={modalStyles.label}>State Code</label>
+                  <select
+                    style={modalStyles.select}
+                    value={formData.stateCode}
+                    onChange={(e) => handleInputChange('stateCode', e.target.value)}
+                  >
+                    {['MH', 'DL', 'KA', 'TN', 'GJ', 'RJ', 'UP', 'WB', 'AP', 'HR'].map(st => (
+                      <option key={st} value={st}>{st} ({st === 'MH' ? 'Maharashtra' : st === 'DL' ? 'Delhi' : st === 'KA' ? 'Karnataka' : st === 'TN' ? 'Tamil Nadu' : st === 'GJ' ? 'Gujarat' : st})</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={modalStyles.col(2)}>
+                  <label style={modalStyles.label}>RTO Code</label>
+                  <input
+                    style={modalStyles.input}
+                    value={formData.rtoCode}
+                    maxLength={2}
+                    placeholder="e.g. 12"
+                    onChange={(e) => handleInputChange('rtoCode', e.target.value.replace(/\D/g, ''))}
+                  />
+                  {errors.rtoCode && <span style={modalStyles.errorText}>{errors.rtoCode}</span>}
+                </div>
+                <div style={modalStyles.col(2)}>
+                  <label style={modalStyles.label}>Series</label>
+                  <input
+                    style={modalStyles.input}
+                    value={formData.series}
+                    maxLength={2}
+                    placeholder="e.g. AB"
+                    onChange={(e) => handleInputChange('series', e.target.value.toUpperCase().replace(/[^A-Z]/g, ''))}
+                  />
+                  {errors.series && <span style={modalStyles.errorText}>{errors.series}</span>}
+                </div>
+                <div style={modalStyles.col(4)}>
+                  <label style={modalStyles.label}>Unique 4-Digits</label>
+                  <input
+                    style={modalStyles.input}
+                    value={formData.regNum}
+                    maxLength={4}
+                    placeholder="e.g. 9840"
+                    onChange={(e) => handleInputChange('regNum', e.target.value.replace(/\D/g, ''))}
+                  />
+                  {errors.regNum && <span style={modalStyles.errorText}>{errors.regNum}</span>}
+                </div>
+              </div>
+
+              <div style={modalStyles.row}>
+                <div style={modalStyles.col(6)}>
+                  <label style={modalStyles.label}>Maker (Manufacturer)</label>
+                  <select
+                    style={modalStyles.select}
+                    value={formData.maker}
+                    onChange={(e) => handleInputChange('maker', e.target.value)}
+                  >
+                    {['Tata Motors', 'Ashok Leyland', 'BharatBenz', 'Mahindra', 'Eicher'].map(m => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={modalStyles.col(6)}>
+                  <label style={modalStyles.label}>Model & Classification</label>
+                  <select
+                    style={modalStyles.select}
+                    value={formData.model}
+                    onChange={(e) => handleInputChange('model', e.target.value)}
+                  >
+                    {formData.maker === 'Tata Motors' && [
+                      'Tata Signa 4825.T', 'Tata Prima 5530.S', 'Tata Ultra T.16'
+                    ].map(mo => <option key={mo} value={mo}>{mo}</option>)}
+                    {formData.maker === 'Ashok Leyland' && [
+                      'Ashok Leyland 3520', 'Ashok Leyland 4220', 'Ashok Leyland Ecomet'
+                    ].map(mo => <option key={mo} value={mo}>{mo}</option>)}
+                    {formData.maker !== 'Tata Motors' && formData.maker !== 'Ashok Leyland' && [
+                      'BharatBenz 3523R', 'Mahindra Blazo X 35', 'Eicher Pro 6048'
+                    ].map(mo => <option key={mo} value={mo}>{mo}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div style={modalStyles.row}>
+                <div style={modalStyles.col(6)}>
+                  <label style={modalStyles.label}>Fuel Type</label>
+                  <select
+                    style={modalStyles.select}
+                    value={formData.fuelType}
+                    onChange={(e) => handleInputChange('fuelType', e.target.value)}
+                  >
+                    {['Diesel', 'CNG', 'LNG', 'Electric'].map(fl => (
+                      <option key={fl} value={fl}>{fl}</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={modalStyles.col(6)}>
+                  <label style={modalStyles.label}>Vehicle Class</label>
+                  <select
+                    style={modalStyles.select}
+                    value={formData.type}
+                    onChange={(e) => handleInputChange('type', e.target.value)}
+                  >
+                    {['Heavy Goods Vehicle (HGV)', 'Medium Goods Vehicle (MGV)', 'Multi-Axle Trailer', 'Reefer Container'].map(vc => (
+                      <option key={vc} value={vc}>{vc}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 2: Engine Specs & Weight */}
+          {step === 2 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={modalStyles.infoBox}>
+                <Wrench size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
+                <span>Enter technical details below. Chassis numbers must match the 17-character VIN standard, and Weights must comply with legal axle load limits.</span>
+              </div>
+              <div style={modalStyles.row}>
+                <div style={modalStyles.col(12)}>
+                  <label style={modalStyles.label}>Chassis Number (VIN)</label>
+                  <input
+                    style={{ ...modalStyles.input, fontFamily: 'var(--font-mono)' }}
+                    value={formData.chassisNumber}
+                    maxLength={17}
+                    placeholder="e.g. MAT42981084920194"
+                    onChange={(e) => handleInputChange('chassisNumber', e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
+                  />
+                  {errors.chassisNumber && <span style={modalStyles.errorText}>{errors.chassisNumber}</span>}
+                </div>
+              </div>
+              <div style={modalStyles.row}>
+                <div style={modalStyles.col(12)}>
+                  <label style={modalStyles.label}>Engine Number</label>
+                  <input
+                    style={{ ...modalStyles.input, fontFamily: 'var(--font-mono)' }}
+                    value={formData.engineNumber}
+                    placeholder="e.g. ENG9920183"
+                    onChange={(e) => handleInputChange('engineNumber', e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
+                  />
+                  {errors.engineNumber && <span style={modalStyles.errorText}>{errors.engineNumber}</span>}
+                </div>
+              </div>
+
+              <div style={modalStyles.row}>
+                <div style={modalStyles.col(6)}>
+                  <label style={modalStyles.label}>Gross Vehicle Weight (GVW) (kg)</label>
+                  <input
+                    style={modalStyles.input}
+                    value={formData.gvw}
+                    placeholder="e.g. 35000"
+                    onChange={(e) => handleInputChange('gvw', e.target.value.replace(/\D/g, ''))}
+                  />
+                  {errors.gvw && <span style={modalStyles.errorText}>{errors.gvw}</span>}
+                </div>
+                <div style={modalStyles.col(6)}>
+                  <label style={modalStyles.label}>Unladen Weight (Kerb) (kg)</label>
+                  <input
+                    style={modalStyles.input}
+                    value={formData.unladenWeight}
+                    placeholder="e.g. 12000"
+                    onChange={(e) => handleInputChange('unladenWeight', e.target.value.replace(/\D/g, ''))}
+                  />
+                  {errors.unladenWeight && <span style={modalStyles.errorText}>{errors.unladenWeight}</span>}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 3: Permits & Compliance */}
+          {step === 3 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={modalStyles.infoBox}>
+                <FileText size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
+                <span>National Permits and FASTag identifiers are required for interstate transport under MoRTH rules. Fastags are NPCI-linked RFID codes.</span>
+              </div>
+              <div style={modalStyles.row}>
+                <div style={modalStyles.col(12)}>
+                  <label style={modalStyles.label}>National Permit (NP) ID</label>
+                  <input
+                    style={{ ...modalStyles.input, fontFamily: 'var(--font-mono)' }}
+                    value={formData.nationalPermit}
+                    placeholder="e.g. NP/2026/MH/10892"
+                    onChange={(e) => handleInputChange('nationalPermit', e.target.value.toUpperCase())}
+                  />
+                  {errors.nationalPermit && <span style={modalStyles.errorText}>{errors.nationalPermit}</span>}
+                </div>
+              </div>
+              <div style={modalStyles.row}>
+                <div style={modalStyles.col(12)}>
+                  <label style={modalStyles.label}>FASTag ID (NPCI-Mapped)</label>
+                  <input
+                    style={{ ...modalStyles.input, fontFamily: 'var(--font-mono)' }}
+                    value={formData.fastagId}
+                    placeholder="e.g. FT-8829103982710328"
+                    maxLength={20}
+                    onChange={(e) => handleInputChange('fastagId', e.target.value)}
+                  />
+                  {errors.fastagId && <span style={modalStyles.errorText}>{errors.fastagId}</span>}
+                </div>
+              </div>
+
+              <div style={modalStyles.row}>
+                <div style={modalStyles.col(6)}>
+                  <label style={modalStyles.label}>PUC Certificate Number</label>
+                  <input
+                    style={modalStyles.input}
+                    value={formData.pucNumber}
+                    placeholder="e.g. PUC/MH/88219"
+                    onChange={(e) => handleInputChange('pucNumber', e.target.value.toUpperCase())}
+                  />
+                  {errors.pucNumber && <span style={modalStyles.errorText}>{errors.pucNumber}</span>}
+                </div>
+                <div style={modalStyles.col(6)}>
+                  <label style={modalStyles.label}>Carrier Insurance Policy</label>
+                  <input
+                    style={modalStyles.input}
+                    value={formData.insurancePolicy}
+                    placeholder="e.g. INS/CR-9921"
+                    onChange={(e) => handleInputChange('insurancePolicy', e.target.value.toUpperCase())}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 4: Assignment & Hubs */}
+          {step === 4 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={modalStyles.infoBox}>
+                <MapPin size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
+                <span>Specify the operating hubs, business division, and designate a licensed driver for the newly commissioned fleet asset.</span>
+              </div>
+              <div style={modalStyles.row}>
+                <div style={modalStyles.col(12)}>
+                  <label style={modalStyles.label}>Designated Driver</label>
+                  <select
+                    style={modalStyles.select}
+                    value={formData.driver}
+                    onChange={(e) => handleInputChange('driver', e.target.value)}
+                  >
+                    {['Rajesh Kumar', 'Amit Singh', 'Sukhwinder Singh', 'Gurpreet Singh', 'Harpreet Singh', 'Mohammad Ali', 'Vijay Yadav'].map(dr => (
+                      <option key={dr} value={dr}>{dr}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div style={modalStyles.row}>
+                <div style={modalStyles.col(6)}>
+                  <label style={modalStyles.label}>Base Origin Hub</label>
+                  <select
+                    style={modalStyles.select}
+                    value={formData.origin}
+                    onChange={(e) => handleInputChange('origin', e.target.value)}
+                  >
+                    {['Mumbai', 'Delhi', 'Chennai', 'Kolkata', 'Ahmedabad', 'Pune', 'Guwahati', 'Hyderabad', 'Bangalore'].map(cit => (
+                      <option key={cit} value={cit}>{cit}</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={modalStyles.col(6)}>
+                  <label style={modalStyles.label}>Route Destination Hub</label>
+                  <select
+                    style={modalStyles.select}
+                    value={formData.destination}
+                    onChange={(e) => handleInputChange('destination', e.target.value)}
+                  >
+                    {['Delhi', 'Mumbai', 'Chennai', 'Kolkata', 'Ahmedabad', 'Pune', 'Guwahati', 'Hyderabad', 'Bangalore'].map(cit => (
+                      <option key={cit} value={cit} disabled={cit === formData.origin}>{cit}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div style={modalStyles.row}>
+                <div style={modalStyles.col(12)}>
+                  <label style={modalStyles.label}>Associated Business Account</label>
+                  <select
+                    style={modalStyles.select}
+                    value={formData.business}
+                    onChange={(e) => handleInputChange('business', e.target.value)}
+                  >
+                    {['Tata Motors Logistics', 'Reliance Retail Ltd', 'ITC Foods Division', 'Amazon India Core', 'Ambuja Cements'].map(bs => (
+                      <option key={bs} value={bs}>{bs}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Action Footer */}
+          <div style={modalStyles.actions}>
+            {step > 1 ? (
+              <button
+                type="button"
+                style={{ ...styles.btnSecondary, padding: '8px 16px' }}
+                onClick={handleBack}
+              >
+                Back
+              </button>
+            ) : (
+              <button
+                type="button"
+                style={{ ...styles.btnSecondary, background: 'rgba(99, 102, 241, 0.08)', color: 'var(--primary-400)', border: '1px dashed var(--primary-500)', padding: '8px 16px' }}
+                onClick={autogenerateDetails}
+              >
+                Auto-fill Mock Info
+              </button>
+            )}
+
+            {step < 4 ? (
+              <button
+                type="button"
+                style={{ ...styles.btnPrimary, padding: '8px 20px' }}
+                onClick={handleNext}
+              >
+                Next Step
+              </button>
+            ) : (
+              <button
+                type="submit"
+                style={{ ...styles.btnPrimary, background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)', padding: '8px 24px' }}
+              >
+                Commission Vehicle
+              </button>
+            )}
+          </div>
+        </form>
+      </motion.div>
     </div>
   );
 }
