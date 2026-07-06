@@ -436,6 +436,7 @@ const styles = {
 export default function FleetOverview() {
   const [trucks, setTrucks] = useState(() => ALL_TRUCKS);
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [selectedTruckForDocs, setSelectedTruckForDocs] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'asc' });
@@ -802,9 +803,27 @@ export default function FleetOverview() {
                           <td style={styles.td}>
                             <span style={styles.vehicleId}>{truck.id}</span>
                           </td>
-                          <td style={styles.td}>
-                            <span style={styles.regNumber}>{truck.regNumber}</span>
-                          </td>
+                           <td style={styles.td}>
+                             <div 
+                               style={{ 
+                                 display: 'flex', 
+                                 alignItems: 'center', 
+                                 gap: '6px',
+                                 cursor: 'pointer',
+                               }}
+                               onClick={() => setSelectedTruckForDocs(truck)}
+                               title="Click to view Vahan Registration Documents"
+                             >
+                               <span style={{ 
+                                 ...styles.regNumber, 
+                                 color: 'var(--primary-400)', 
+                                 textDecoration: 'underline',
+                               }}>
+                                 {truck.regNumber}
+                               </span>
+                               <FileText size={12} color="var(--primary-400)" style={{ opacity: 0.8 }} />
+                             </div>
+                           </td>
                           <td style={styles.td}>
                             <span style={{ fontSize: '12px' }}>{truck.type}</span>
                           </td>
@@ -1104,6 +1123,15 @@ export default function FleetOverview() {
               setTrucks(prev => [newTruck, ...prev]);
               setAddModalOpen(false);
             }}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {selectedTruckForDocs && (
+          <VehicleDocumentsModal
+            truck={selectedTruckForDocs}
+            onClose={() => setSelectedTruckForDocs(null)}
           />
         )}
       </AnimatePresence>
@@ -1793,6 +1821,320 @@ function AddVehicleModal({ onClose, onAdd }) {
             )}
           </div>
         </form>
+      </motion.div>
+    </div>
+  );
+}
+
+// ---- VEHICLE DOCUMENTS / CERTIFICATE VIEW MODAL ----
+function VehicleDocumentsModal({ truck, onClose }) {
+  // Format registration number for neat display: MH12QE4592 -> MH-12-QE-4592
+  const formattedReg = useMemo(() => {
+    const reg = truck.regNumber || '';
+    if (reg.includes('-')) return reg;
+    if (reg.length === 10) {
+      return `${reg.slice(0, 2)}-${reg.slice(2, 4)}-${reg.slice(4, 6)}-${reg.slice(6)}`;
+    }
+    return reg;
+  }, [truck.regNumber]);
+
+  const modalStyles = {
+    overlay: {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(10, 15, 30, 0.75)',
+      backdropFilter: 'blur(12px)',
+      zIndex: 1100,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px',
+    },
+    container: {
+      width: '100%',
+      maxWidth: '560px',
+      background: '#131929',
+      border: '1px solid rgba(255,255,255,0.08)',
+      borderRadius: '16px',
+      padding: '28px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '20px',
+      boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+      position: 'relative',
+    },
+    closeBtn: {
+      position: 'absolute',
+      top: '20px',
+      right: '20px',
+      background: 'transparent',
+      border: 'none',
+      color: 'var(--text-secondary)',
+      cursor: 'pointer',
+      padding: '4px',
+      borderRadius: '50%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      transition: 'background 0.2s',
+    },
+    titleSection: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px',
+    },
+    badge: {
+      fontSize: '10px',
+      fontWeight: 700,
+      padding: '3px 8px',
+      background: 'rgba(16, 185, 129, 0.15)',
+      color: '#10b981',
+      borderRadius: '10px',
+      border: '1px solid rgba(16, 185, 129, 0.3)',
+      textTransform: 'uppercase',
+      letterSpacing: '0.5px'
+    },
+    headerText: {
+      fontSize: '18px',
+      fontWeight: 700,
+      color: '#fff',
+      margin: 0,
+    },
+    certificateCard: {
+      background: 'linear-gradient(135deg, #161e33, #0f1524)',
+      border: '1px solid rgba(255,255,255,0.05)',
+      borderRadius: '12px',
+      padding: '20px',
+      position: 'relative',
+      overflow: 'hidden',
+    },
+    watermark: {
+      position: 'absolute',
+      right: '-30px',
+      bottom: '-30px',
+      opacity: 0.03,
+      transform: 'rotate(-15deg)',
+      pointerEvents: 'none',
+    },
+    certHeader: {
+      textAlign: 'center',
+      borderBottom: '2px solid rgba(255,255,255,0.06)',
+      paddingBottom: '12px',
+      marginBottom: '16px',
+    },
+    govtText: {
+      fontSize: '10px',
+      fontWeight: 700,
+      color: 'var(--text-muted)',
+      letterSpacing: '1px',
+      textTransform: 'uppercase',
+    },
+    rcTitle: {
+      fontSize: '14px',
+      fontWeight: 700,
+      color: '#fff',
+      marginTop: '4px',
+    },
+    grid: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: '14px',
+    },
+    label: {
+      fontSize: '9px',
+      fontWeight: 600,
+      color: 'var(--text-muted)',
+      textTransform: 'uppercase',
+      letterSpacing: '0.5px',
+    },
+    val: {
+      fontSize: '12px',
+      fontWeight: 600,
+      color: 'var(--text-primary)',
+      marginTop: '2px',
+      wordBreak: 'break-all',
+    },
+    verifiedItem: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '8px 12px',
+      background: 'rgba(255,255,255,0.02)',
+      border: '1px solid rgba(255,255,255,0.04)',
+      borderRadius: '6px',
+    }
+  };
+
+  return (
+    <div style={modalStyles.overlay}>
+      <motion.div
+        style={modalStyles.container}
+        initial={{ opacity: 0, scale: 0.95, y: 15 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 15 }}
+      >
+        <button style={modalStyles.closeBtn} onClick={onClose}>
+          <X size={18} />
+        </button>
+
+        <div style={modalStyles.titleSection}>
+          <div style={modalStyles.badge}>Vahan e-Docs</div>
+          <h2 style={modalStyles.headerText}>Vehicle Registry Wallet</h2>
+        </div>
+
+        <div style={modalStyles.certificateCard}>
+          <div style={modalStyles.watermark}>
+            <Truck size={200} color="#fff" />
+          </div>
+
+          <div style={modalStyles.certHeader}>
+            <div style={modalStyles.govtText}>Ministry of Road Transport & Highways</div>
+            <div style={modalStyles.rcTitle}>Certificate of Registration (Form 23)</div>
+            <div style={{
+              fontSize: '16px',
+              fontFamily: 'var(--font-mono)',
+              fontWeight: 700,
+              color: 'var(--primary-400)',
+              marginTop: '8px',
+              letterSpacing: '1px',
+            }}>
+              {formattedReg}
+            </div>
+          </div>
+
+          <div style={modalStyles.grid}>
+            <div>
+              <div style={modalStyles.label}>Owner Name</div>
+              <div style={modalStyles.val}>GatiFleet Carriers Ltd</div>
+            </div>
+            <div>
+              <div style={modalStyles.label}>Maker / Model</div>
+              <div style={modalStyles.val}>{truck.type}</div>
+            </div>
+            <div>
+              <div style={modalStyles.label}>Chassis Number (VIN)</div>
+              <div style={{ ...modalStyles.val, fontFamily: 'var(--font-mono)' }}>
+                {truck.chassisNumber || 'MAT48291039281038'}
+              </div>
+            </div>
+            <div>
+              <div style={modalStyles.label}>Engine Number</div>
+              <div style={{ ...modalStyles.val, fontFamily: 'var(--font-mono)' }}>
+                {truck.engineNumber || 'ENG992019482'}
+              </div>
+            </div>
+            <div>
+              <div style={modalStyles.label}>Fuel Type</div>
+              <div style={modalStyles.val}>{truck.fuelType || 'Diesel'}</div>
+            </div>
+            <div>
+              <div style={modalStyles.label}>Unladen Weight / GVW</div>
+              <div style={modalStyles.val}>
+                {truck.unladenWeight || '12000'} / {truck.gvw || '35000'} kg
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h3 style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', margin: '4px 0 0', letterSpacing: '0.5px' }}>
+          Compliance & Permit Ledgers
+        </h3>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={modalStyles.verifiedItem}>
+            <div>
+              <div style={modalStyles.label}>National Transport Permit</div>
+              <div style={{ fontSize: '11px', fontWeight: 600, marginTop: '2px', fontFamily: 'var(--font-mono)' }}>
+                {truck.nationalPermit || 'NP/2026/MH/10892'}
+              </div>
+            </div>
+            <span style={{ fontSize: '9px', fontWeight: 700, color: '#38CE3C', background: 'rgba(56, 206, 60, 0.12)', padding: '2px 6px', borderRadius: '4px' }}>
+              VALID
+            </span>
+          </div>
+
+          <div style={modalStyles.verifiedItem}>
+            <div>
+              <div style={modalStyles.label}>FASTag ID (NPCI RFID Link)</div>
+              <div style={{ fontSize: '11px', fontWeight: 600, marginTop: '2px', fontFamily: 'var(--font-mono)' }}>
+                {truck.fastagId || 'FT-8829103982710328'}
+              </div>
+            </div>
+            <span style={{ fontSize: '9px', fontWeight: 700, color: '#38CE3C', background: 'rgba(56, 206, 60, 0.12)', padding: '2px 6px', borderRadius: '4px' }}>
+              ACTIVE
+            </span>
+          </div>
+
+          <div style={modalStyles.verifiedItem}>
+            <div>
+              <div style={modalStyles.label}>Pollution Under Control (PUC)</div>
+              <div style={{ fontSize: '11px', fontWeight: 600, marginTop: '2px', fontFamily: 'var(--font-mono)' }}>
+                {truck.pucNumber || 'PUC/MH/88219'}
+              </div>
+            </div>
+            <span style={{ fontSize: '9px', fontWeight: 700, color: '#38CE3C', background: 'rgba(56, 206, 60, 0.12)', padding: '2px 6px', borderRadius: '4px' }}>
+              VERIFIED
+            </span>
+          </div>
+
+          <div style={modalStyles.verifiedItem}>
+            <div>
+              <div style={modalStyles.label}>Carrier Insurance Policy</div>
+              <div style={{ fontSize: '11px', fontWeight: 600, marginTop: '2px', fontFamily: 'var(--font-mono)' }}>
+                {truck.insurancePolicy || 'INS/CR-992182'}
+              </div>
+            </div>
+            <span style={{ fontSize: '9px', fontWeight: 700, color: '#38CE3C', background: 'rgba(56, 206, 60, 0.12)', padding: '2px 6px', borderRadius: '4px' }}>
+              ACTIVE
+            </span>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+          <button
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              padding: '10px 18px',
+              borderRadius: 'var(--radius-md)',
+              border: 'none',
+              background: 'linear-gradient(135deg, #6366f1, #818cf8)',
+              color: '#fff',
+              fontSize: '13px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              flex: 1
+            }}
+            onClick={() => alert('Certificate downloaded to wallet successfully!')}
+          >
+            Download RC PDF
+          </button>
+          <button
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              padding: '10px 18px',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              background: 'rgba(255,255,255,0.02)',
+              color: 'var(--text-secondary)',
+              fontSize: '13px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              flex: 1
+            }}
+            onClick={onClose}
+          >
+            Close Wallet
+          </button>
+        </div>
       </motion.div>
     </div>
   );
