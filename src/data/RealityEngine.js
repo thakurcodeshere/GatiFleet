@@ -244,6 +244,7 @@ class TransportationRealityEngine {
   dispatchEvent(eventType, payload, operatorId = 'AI-SYSTEM') {
     // In the new architecture, events should be pushed to the backend API
     // and processed by the UnifiedNeuralNetworkEngine there.
+    console.log(`Dispatching event ${eventType} by ${operatorId}`);
     this.notify();
     return { status: 'DELEGATED_TO_BACKEND' };
   }

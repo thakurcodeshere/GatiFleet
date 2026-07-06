@@ -17,10 +17,25 @@ import PortalsWorkspace from './pages/portals/PortalsWorkspace';
 import CustomerPortal from './pages/portals/CustomerPortal';
 import ProfileSettings from './pages/profile/ProfileSettings';
 import SecurityFortress from './pages/security/SecurityFortress';
+import LandingPage from './pages/LandingPage';
+import Unauthorized from './pages/security/Unauthorized';
 
 import { ThemeContext } from './context/ThemeContext';
 import { Lock, Shield, Fingerprint, AlertCircle, CheckCircle } from 'lucide-react';
 import { RealityEngine } from './data/RealityEngine';
+
+// Permission Matrix mapping roles to allowed paths
+const ROLE_PERMISSIONS = {
+  OPERATIONS: ['/', '/fleet', '/tracking', '/knowledge-graph', '/portals', '/erp', '/copilot', '/profile'],
+  FINANCE: ['/', '/analytics', '/erp', '/copilot', '/profile'],
+  HR: ['/', '/hcm', '/profile', '/copilot'],
+  CEO: ['/', '/customer-portal', '/analytics', '/crm', '/copilot', '/agents', '/knowledge-graph', '/profile'],
+  ADVISOR: ['/', '/analytics', '/crm', '/copilot', '/knowledge-graph', '/profile'],
+  CFO: ['/', '/analytics', '/erp', '/copilot', '/profile'],
+  CTO: ['/', '/knowledge-graph', '/copilot', '/agents', '/security', '/profile'],
+  CRO: ['/', '/analytics', '/crm', '/security', '/copilot', '/profile'],
+  ADMIN: ['/', '/customer-portal', '/analytics', '/fleet', '/tracking', '/knowledge-graph', '/portals', '/erp', '/crm', '/hcm', '/copilot', '/agents', '/security', '/profile']
+};
 
 function App() {
   const [theme, setTheme] = useState(
@@ -29,6 +44,9 @@ function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [copilotOpen, setCopilotOpen] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
+  const [userRole, setUserRole] = useState(
+    () => localStorage.getItem('gatifleet-user-role') || null
+  );
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -38,13 +56,20 @@ function App() {
   const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   const toggleSidebar = () => setSidebarCollapsed(prev => !prev);
   const toggleCopilot = () => setCopilotOpen(prev => !prev);
+  
+  const logoutUser = () => {
+    setUserRole(null);
+    localStorage.removeItem('gatifleet-user-role');
+    window.location.hash = '#/';
+  };
 
   // Global Context Provider Values
   const contextValue = {
     theme, toggleTheme, 
     sidebarCollapsed, toggleSidebar,
     copilotOpen, toggleCopilot,
-    isLocked, setIsLocked
+    isLocked, setIsLocked,
+    userRole, setUserRole, logoutUser
   };
 
   if (isLocked) {
@@ -55,29 +80,46 @@ function App() {
     );
   }
 
+  if (!userRole) {
+    return (
+      <ThemeContext.Provider value={contextValue}>
+        <LandingPage />
+      </ThemeContext.Provider>
+    );
+  }
+
   return (
     <ThemeContext.Provider value={contextValue}>
       <Layout>
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/fleet" element={<FleetOverview />} />
-          <Route path="/tracking" element={<LiveTracking />} />
-          <Route path="/knowledge-graph" element={<KnowledgeGraph />} />
-          <Route path="/erp" element={<ERPDashboard />} />
-          <Route path="/crm" element={<CRMDashboard />} />
-          <Route path="/hcm" element={<HCMDashboard />} />
-          <Route path="/copilot" element={<AICopilot />} />
-          <Route path="/agents" element={<AgentsDashboard />} />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="/portals" element={<PortalsWorkspace />} />
-          <Route path="/customer-portal" element={<CustomerPortal />} />
-          <Route path="/profile" element={<ProfileSettings />} />
-          <Route path="/security" element={<SecurityFortress />} />
+          <Route path="/" element={<ProtectedRoute element={<Dashboard />} path="/" userRole={userRole} />} />
+          <Route path="/fleet" element={<ProtectedRoute element={<FleetOverview />} path="/fleet" userRole={userRole} />} />
+          <Route path="/tracking" element={<ProtectedRoute element={<LiveTracking />} path="/tracking" userRole={userRole} />} />
+          <Route path="/knowledge-graph" element={<ProtectedRoute element={<KnowledgeGraph />} path="/knowledge-graph" userRole={userRole} />} />
+          <Route path="/erp" element={<ProtectedRoute element={<ERPDashboard />} path="/erp" userRole={userRole} />} />
+          <Route path="/crm" element={<ProtectedRoute element={<CRMDashboard />} path="/crm" userRole={userRole} />} />
+          <Route path="/hcm" element={<ProtectedRoute element={<HCMDashboard />} path="/hcm" userRole={userRole} />} />
+          <Route path="/copilot" element={<ProtectedRoute element={<AICopilot />} path="/copilot" userRole={userRole} />} />
+          <Route path="/agents" element={<ProtectedRoute element={<AgentsDashboard />} path="/agents" userRole={userRole} />} />
+          <Route path="/analytics" element={<ProtectedRoute element={<Analytics />} path="/analytics" userRole={userRole} />} />
+          <Route path="/portals" element={<ProtectedRoute element={<PortalsWorkspace />} path="/portals" userRole={userRole} />} />
+          <Route path="/customer-portal" element={<ProtectedRoute element={<CustomerPortal />} path="/customer-portal" userRole={userRole} />} />
+          <Route path="/profile" element={<ProtectedRoute element={<ProfileSettings />} path="/profile" userRole={userRole} />} />
+          <Route path="/security" element={<ProtectedRoute element={<SecurityFortress />} path="/security" userRole={userRole} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Layout>
     </ThemeContext.Provider>
   );
+}
+
+// Helper component to check permissions
+function ProtectedRoute({ element, path, userRole }) {
+  const permissions = ROLE_PERMISSIONS[userRole] || [];
+  if (!permissions.includes(path)) {
+    return <Unauthorized />;
+  }
+  return element;
 }
 
 // Fullscreen Premium Lock Screen Component

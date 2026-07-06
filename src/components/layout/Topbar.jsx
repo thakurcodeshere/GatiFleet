@@ -55,16 +55,35 @@ const menuSections = [
   }
 ];
 
+// Permission Matrix mapping roles to allowed paths
+const ROLE_PERMISSIONS = {
+  OPERATIONS: ['/', '/fleet', '/tracking', '/knowledge-graph', '/portals', '/erp', '/copilot', '/profile'],
+  FINANCE: ['/', '/analytics', '/erp', '/copilot', '/profile'],
+  HR: ['/', '/hcm', '/profile', '/copilot'],
+  CEO: ['/', '/customer-portal', '/analytics', '/crm', '/copilot', '/agents', '/knowledge-graph', '/profile'],
+  ADVISOR: ['/', '/analytics', '/crm', '/copilot', '/knowledge-graph', '/profile'],
+  CFO: ['/', '/analytics', '/erp', '/copilot', '/profile'],
+  CTO: ['/', '/knowledge-graph', '/copilot', '/agents', '/security', '/profile'],
+  CRO: ['/', '/analytics', '/crm', '/security', '/copilot', '/profile'],
+  ADMIN: ['/', '/customer-portal', '/analytics', '/fleet', '/tracking', '/knowledge-graph', '/portals', '/erp', '/crm', '/hcm', '/copilot', '/agents', '/security', '/profile']
+};
+
 export default function Topbar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { theme, toggleTheme, toggleCopilot, copilotOpen } = useTheme();
+  const { theme, toggleTheme, toggleCopilot, copilotOpen, userRole, logoutUser } = useTheme();
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [activeMenu, setActiveMenu] = useState(null);
   const alerts = generateAlerts().slice(0, 5);
+
+  const allowedPaths = ROLE_PERMISSIONS[userRole] || [];
+  const filteredMenuSections = menuSections.map(sec => {
+    const filteredItems = sec.items.filter(item => allowedPaths.includes(item.path));
+    return { ...sec, items: filteredItems };
+  }).filter(sec => sec.items.length > 0);
 
   const styles = {
     topbar: {
@@ -439,7 +458,7 @@ export default function Topbar() {
 
         {/* Horizontal Navigation Strip */}
         <nav style={styles.navStrip}>
-          {menuSections.map((sec) => {
+          {filteredMenuSections.map((sec) => {
             const isSecActive = sec.items.some(item => location.pathname === item.path);
             const isOpen = activeMenu === sec.key;
             
@@ -608,7 +627,7 @@ export default function Topbar() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left', lineHeight: 1.1 }}>
               <span style={{ fontWeight: 600, fontSize: 'var(--text-xs)', color: 'var(--text-primary)' }}>Arjun Kapoor</span>
-              <span style={{ fontSize: '9px', color: 'var(--text-muted)' }}>CEO</span>
+              <span style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{userRole?.toLowerCase()} Console</span>
             </div>
           </div>
           
@@ -616,7 +635,7 @@ export default function Topbar() {
             <div style={styles.profileDropdown}>
               <div style={{ padding: '8px 12px', marginBottom: 4 }}>
                 <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>Arjun Kapoor</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>CEO, GatiFleet</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'capitalize' }}>Role: {userRole?.toLowerCase()}</div>
               </div>
               <div style={styles.divider} />
               <button
@@ -638,11 +657,11 @@ export default function Topbar() {
               <div style={styles.divider} />
               <button
                 style={{ ...styles.profileItem, color: 'var(--danger-500)' }}
-                onClick={() => { alert('Sign out simulations run: User session logs cleared.'); setShowProfile(false); }}
+                onClick={() => { logoutUser(); setShowProfile(false); }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--danger-bg)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
               >
-                <LogOut size={16} /> Sign Out
+                <LogOut size={16} /> Exit Console
               </button>
             </div>
           )}
