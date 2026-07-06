@@ -1389,9 +1389,6 @@ function AddVehicleModal({ onClose, onAdd }) {
       gap: '6px',
       paddingBottom: '4px',
       borderBottom: active ? '2px solid var(--primary-500)' : 'none',
-      cursor: 'pointer',
-      transition: 'all 0.2s',
-      userSelect: 'none',
     }),
     form: {
       display: 'flex',
@@ -1401,15 +1398,12 @@ function AddVehicleModal({ onClose, onAdd }) {
     row: {
       display: 'flex',
       gap: '16px',
-      width: '100%',
-      boxSizing: 'border-box',
     },
     col: (span) => ({
       flex: span,
       display: 'flex',
       flexDirection: 'column',
       gap: '6px',
-      minWidth: 0,
     }),
     label: {
       fontSize: '11px',
@@ -1419,6 +1413,8 @@ function AddVehicleModal({ onClose, onAdd }) {
       letterSpacing: '0.5px',
     },
     input: {
+      width: '100%',
+      boxSizing: 'border-box',
       background: 'rgba(255,255,255,0.03)',
       border: '1px solid rgba(255,255,255,0.08)',
       borderRadius: '8px',
@@ -1428,11 +1424,10 @@ function AddVehicleModal({ onClose, onAdd }) {
       outline: 'none',
       transition: 'border-color 0.2s',
       fontFamily: 'var(--font-sans)',
-      width: '100%',
-      boxSizing: 'border-box',
-      minWidth: 0,
     },
     select: {
+      width: '100%',
+      boxSizing: 'border-box',
       background: '#161d30',
       border: '1px solid rgba(255,255,255,0.08)',
       borderRadius: '8px',
@@ -1442,9 +1437,6 @@ function AddVehicleModal({ onClose, onAdd }) {
       outline: 'none',
       fontFamily: 'var(--font-sans)',
       cursor: 'pointer',
-      width: '100%',
-      boxSizing: 'border-box',
-      minWidth: 0,
     },
     actions: {
       display: 'flex',
@@ -1491,10 +1483,30 @@ function AddVehicleModal({ onClose, onAdd }) {
 
         {/* Wizard Steps */}
         <div style={modalStyles.wizardBar}>
-          <span style={modalStyles.stepIndicator(step === 1)} onClick={() => setStep(1)}>1. RTO & Maker</span>
-          <span style={modalStyles.stepIndicator(step === 2)} onClick={() => setStep(2)}>2. Engine & Weights</span>
-          <span style={modalStyles.stepIndicator(step === 3)} onClick={() => setStep(3)}>3. Permits & FASTag</span>
-          <span style={modalStyles.stepIndicator(step === 4)} onClick={() => setStep(4)}>4. Hub Assignment</span>
+          <span 
+            style={{ ...modalStyles.stepIndicator(step === 1), cursor: 'pointer' }}
+            onClick={() => setStep(1)}
+          >
+            1. RTO & Maker
+          </span>
+          <span 
+            style={{ ...modalStyles.stepIndicator(step === 2), cursor: 'pointer' }}
+            onClick={() => setStep(2)}
+          >
+            2. Engine & Weights
+          </span>
+          <span 
+            style={{ ...modalStyles.stepIndicator(step === 3), cursor: 'pointer' }}
+            onClick={() => setStep(3)}
+          >
+            3. Permits & FASTag
+          </span>
+          <span 
+            style={{ ...modalStyles.stepIndicator(step === 4), cursor: 'pointer' }}
+            onClick={() => setStep(4)}
+          >
+            4. Hub Assignment
+          </span>
         </div>
 
         <form onSubmit={handleSubmit} style={modalStyles.form}>
@@ -1506,7 +1518,7 @@ function AddVehicleModal({ onClose, onAdd }) {
                 <span>Under CMV Rules, commercial vehicles must be registered with their state/RTO codes. Enter the Registration Number details below.</span>
               </div>
               <div style={modalStyles.row}>
-                <div style={modalStyles.col(6)}>
+                <div style={modalStyles.col(2)}>
                   <label style={modalStyles.label}>State Code</label>
                   <select
                     style={modalStyles.select}
@@ -1518,7 +1530,7 @@ function AddVehicleModal({ onClose, onAdd }) {
                     ))}
                   </select>
                 </div>
-                <div style={modalStyles.col(6)}>
+                <div style={modalStyles.col(2)}>
                   <label style={modalStyles.label}>RTO Code</label>
                   <input
                     style={modalStyles.input}
@@ -1529,10 +1541,7 @@ function AddVehicleModal({ onClose, onAdd }) {
                   />
                   {errors.rtoCode && <span style={modalStyles.errorText}>{errors.rtoCode}</span>}
                 </div>
-              </div>
-
-              <div style={modalStyles.row}>
-                <div style={modalStyles.col(6)}>
+                <div style={modalStyles.col(2)}>
                   <label style={modalStyles.label}>Series</label>
                   <input
                     style={modalStyles.input}
@@ -1543,7 +1552,7 @@ function AddVehicleModal({ onClose, onAdd }) {
                   />
                   {errors.series && <span style={modalStyles.errorText}>{errors.series}</span>}
                 </div>
-                <div style={modalStyles.col(6)}>
+                <div style={modalStyles.col(4)}>
                   <label style={modalStyles.label}>Unique 4-Digits</label>
                   <input
                     style={modalStyles.input}
