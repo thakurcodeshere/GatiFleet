@@ -1506,7 +1506,7 @@ function AddVehicleModal({ onClose, onAdd }) {
                 <span>Under CMV Rules, commercial vehicles must be registered with their state/RTO codes. Enter the Registration Number details below.</span>
               </div>
               <div style={modalStyles.row}>
-                <div style={modalStyles.col(2)}>
+                <div style={modalStyles.col(6)}>
                   <label style={modalStyles.label}>State Code</label>
                   <select
                     style={modalStyles.select}
@@ -1518,7 +1518,7 @@ function AddVehicleModal({ onClose, onAdd }) {
                     ))}
                   </select>
                 </div>
-                <div style={modalStyles.col(2)}>
+                <div style={modalStyles.col(6)}>
                   <label style={modalStyles.label}>RTO Code</label>
                   <input
                     style={modalStyles.input}
@@ -1529,7 +1529,10 @@ function AddVehicleModal({ onClose, onAdd }) {
                   />
                   {errors.rtoCode && <span style={modalStyles.errorText}>{errors.rtoCode}</span>}
                 </div>
-                <div style={modalStyles.col(2)}>
+              </div>
+
+              <div style={modalStyles.row}>
+                <div style={modalStyles.col(6)}>
                   <label style={modalStyles.label}>Series</label>
                   <input
                     style={modalStyles.input}
@@ -1540,7 +1543,7 @@ function AddVehicleModal({ onClose, onAdd }) {
                   />
                   {errors.series && <span style={modalStyles.errorText}>{errors.series}</span>}
                 </div>
-                <div style={modalStyles.col(4)}>
+                <div style={modalStyles.col(6)}>
                   <label style={modalStyles.label}>Unique 4-Digits</label>
                   <input
                     style={modalStyles.input}
