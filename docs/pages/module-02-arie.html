@@ -1,0 +1,82 @@
+<h1>Module 2 — Autonomous Revenue Intelligence Engine (ARIE)</h1>
+
+<p>The <strong>Autonomous Revenue Intelligence Engine (ARIE)</strong> oversees the sales pipeline, lane viability solvers, and real-time quoting algorithms.</p>
+
+<h2>1. Business Goal</h2>
+<p>Optimize gross margin and win probabilities by executing logistics feasibility checks and matching competitor pricing before committing to a contract lane tariff.</p>
+
+<h2>2. Core Components</h2>
+<ul>
+  <li><strong>Logistics Feasibility Solver:</strong> Scans regional depot capacity, equipment availability, and border clearance queues to determine route viability.</li>
+  <li><strong>AI Pricing Engine:</strong> Formulates three distinct pricing options:
+    <ol>
+      <li><strong>Best Price:</strong> Balances competitive bids with optimal win probability.</li>
+      <li><strong>Best Margin:</strong> Sets peak tariff pricing matching seasonal corridor demand density.</li>
+      <li><strong>Negotiation Range:</strong> Defines the absolute bottom floor tariff to guard trip operating costs.</li>
+    </ol>
+  </li>
+  <li><strong>Buying Organization Graph:</strong> Maps the client procurement tree (CEO, procurement heads, warehouse contacts) with sentiment tracking.</li>
+</ul>
+
+<h2>3. Opportunity Creation Flow</h2>
+<div class="diagram-container">
+  <pre class="mermaid">
+sequenceDiagram
+    participant Sales
+    participant ARIE
+    participant FleetAPI as IFAOS Fleet Engine
+    participant PricingEngine
+    
+    Sales->>ARIE: Create Opportunity (Corridor / Volume)
+    ARIE->>FleetAPI: Request Capacity Verification
+    FleetAPI-->>ARIE: Return Empty Kilometers & Trailer Counts
+    ARIE->>PricingEngine: Request Tariff Generation
+    PricingEngine-->>ARIE: Best Price, Margin, floor Tariffs
+    ARIE->>Sales: Authorize Quote proposal
+  </pre>
+</div>
+
+<h2>4. Event Taxonomy</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Event Name</th>
+      <th>Trigger</th>
+      <th>Database / State Changes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>OPPORTUNITY_REQUESTED</code></td>
+      <td>Sales operator requests new quote template.</td>
+      <td>Creates a pending Opportunity row; locks temporary capacity reservation.</td>
+    </tr>
+    <tr>
+      <td><code>FEASIBILITY_VERIFIED</code></td>
+      <td>Route and asset check solver successfully completes.</td>
+      <td>Updates Opportunity feasibility status; saves estimated corridor route.</td>
+    </tr>
+    <tr>
+      <td><code>PROPOSAL_GENERATED</code></td>
+      <td>Pricing engine produces the three tariff options.</td>
+      <td>Attaches pricing ranges to Opportunity record.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>5. L1 Event Payload Example</h2>
+<pre><code class="language-json">{
+  "eventId": "evt_arie_209381",
+  "eventType": "PROPOSAL_GENERATED",
+  "timestamp": "2026-07-06T12:05:00Z",
+  "payload": {
+    "opportunityId": "OPP-74921",
+    "corridor": "NH48-Mumbai-Delhi",
+    "estimates": {
+      "bestPrice": 48200.00,
+      "bestMargin": 52000.00,
+      "negotiationFloor": 45000.00
+    },
+    "currency": "INR"
+  }
+}</code></pre>

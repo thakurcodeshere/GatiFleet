@@ -1,0 +1,86 @@
+<h1>Module 1 — Customer Intelligence Core (CIC)</h1>
+
+<p>The <strong>Customer Intelligence Core (CIC)</strong> maps and monitors the strategic, commercial, and operational status of shippers and organizational clients in GatiFleet.</p>
+
+<h2>1. Business Goal</h2>
+<p>Maintain a unified digital twin of the customer's operational and financial interactions to support high-accuracy risk forecasts (such as churn or delay risks) and optimize pricing tiers.</p>
+
+<h2>2. Core Entity Aggregate Model</h2>
+<p>A customer is represented as a connected aggregate root in the database, containing references to:</p>
+<ul>
+  <li><strong>Organization:</strong> Legal name, registration number, GSTIN, and business segment.</li>
+  <li><strong>Contacts:</strong> Corporate sponsors, billing contacts, and site operations managers.</li>
+  <li><strong>Contracts:</strong> Signed agreements, pricing formulas, and SLA parameters.</li>
+  <li><strong>Digital Twin:</strong> Six-dimensional cognitive brains tracking metrics in real-time.</li>
+</ul>
+
+<h2>3. Customer Digital Twin brains</h2>
+<p>Each customer profile maintains six distinct simulated "brains":</p>
+<ol>
+  <li><strong>Commercial Brain:</strong> Tracks LTV, gross margin, active pipeline value, and contract renewal dates.</li>
+  <li><strong>Operational Brain:</strong> Monitored shipment counts, on-time delivery rates, and SLA penalty exposures.</li>
+  <li><strong>Financial Brain:</strong> Tracks outstanding accounts receivables (AR), aging invoices, and toll/fuel surcharges.</li>
+  <li><strong>Relationship Brain:</strong> Records executive cadences, support ticket sentiment, and NPS ratings.</li>
+  <li><strong>Strategic Brain:</strong> Explores lane growth potential, competitive threats, and corridor options.</li>
+  <li><strong>Learning Brain:</strong> Analyzes divergence between operational estimates and real-world outcomes.</li>
+</ol>
+
+<h2>4. Customer State Machine</h2>
+<div class="diagram-container">
+  <pre class="mermaid">
+stateDiagram-v2
+    [*] --> Prospect
+    Prospect --> Qualified : Details Verified
+    Qualified --> Opportunity : RFQ Created
+    Opportunity --> Contracted : Deal Won
+    Contracted --> Active : First Load Booked
+    Active --> Expanding : Volume Increase
+    Active --> AtRisk : SLA Drops / Late Payments
+    AtRisk --> Recovering : Resolution Met
+    AtRisk --> Lost : Inactive > 90 Days
+  </pre>
+</div>
+
+<h2>5. Event Taxonomy</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Event Name</th>
+      <th>Trigger</th>
+      <th>Database / State Changes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>CUSTOMER_CREATED</code></td>
+      <td>New profile saved manually or imported from ERP.</td>
+      <td>Creates Organization row; initial digital twin state is set.</td>
+    </tr>
+    <tr>
+      <td><code>HEALTH_RECALCULATED</code></td>
+      <td>SLA status changes or new payment delay logged.</td>
+      <td>Recalculates multi-dimensional weighted health index.</td>
+    </tr>
+    <tr>
+      <td><code>CUSTOMER_AT_RISK</code></td>
+      <td>Overall health score drops below threshold (e.g. 50%).</td>
+      <td>Sets status to 'At Risk', dispatches alerts to account manager.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>6. L1 Event Payload Example</h2>
+<pre><code class="language-json">{
+  "eventId": "evt_cic_839210",
+  "eventType": "CUSTOMER_CREATED",
+  "timestamp": "2026-07-06T12:00:00Z",
+  "payload": {
+    "customerId": "CUS-83920",
+    "organization": {
+      "name": "Reliance Logistics Corp",
+      "gstin": "27AAACR1209B1ZN",
+      "region": "West-1"
+    },
+    "brains": ["commercial", "operational", "financial", "relationship", "strategic", "learning"]
+  }
+}</code></pre>

@@ -1,0 +1,77 @@
+<h1>Module 3 — Autonomous Customer Mobilization System (ACMS)</h1>
+
+<p>The <strong>Autonomous Customer Mobilization System (ACMS)</strong> coordinates the operational setup and compliance validation of a new customer immediately after a deal is marked won.</p>
+
+<h2>1. Business Goal</h2>
+<p>Ensure 100% operational readiness across commercial, compliance, technology, and fleet lanes before launching the first commercial shipment, minimizing onboarding delays and SLA defaults.</p>
+
+<h2>2. Onboarding lanes</h2>
+<p>On mobilization startup, ACMS parallelizes workflows across 9 distinct lanes:</p>
+<ol>
+  <li><strong>Customer Setup:</strong> Maps client organizational hierarchy and plant locations.</li>
+  <li><strong>Commercial Setup:</strong> Parses and structures contract lane tariffs, billing intervals, and penalties.</li>
+  <li><strong>Finance Setup:</strong> Sets accounts receivable limits, credit thresholds, and toll surcharge rules.</li>
+  <li><strong>Fleet Setup:</strong> Reserves dedicated tractors and runs telematics/ADAS checkups.</li>
+  <li><strong>Driver Setup:</strong> Roster familiar drivers and verifies safety safety logs.</li>
+  <li><strong>Technology Setup:</strong> Configures EDI pipelines and generates Client Portal credentials.</li>
+  <li><strong>Support Setup:</strong> Configures helpdesk severity SLA matrices.</li>
+  <li><strong>Executive Setup:</strong> Assigns GatiFleet Account Directors to customer counterpart sponsors.</li>
+  <li><strong>Compliance Setup:</strong> Verifies FASTag permits, regional state permits, and carrier insurance.</li>
+</ol>
+
+<h2>3. Mobilization Flow</h2>
+<div class="diagram-container">
+  <pre class="mermaid">
+graph LR
+    DealWon[DEAL_WON Event] --> ACMSStart[CUSTOMER_MOBILIZATION_STARTED]
+    ACMSStart --> Lane1[Lanes Onboarding: 1-9]
+    Lane1 --> Simulation[End-to-End Transaction Test]
+    Simulation --> ScoreCheck{Readiness Score > 90%?}
+    ScoreCheck -->|Yes| Active[CUSTOMER_FULLY_OPERATIONAL]
+    ScoreCheck -->|No| Fix[Address Onboarding Bottlenecks]
+    Fix --> Simulation
+  </pre>
+</div>
+
+<h2>4. Event Taxonomy</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Event Name</th>
+      <th>Trigger</th>
+      <th>Database / State Changes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>CUSTOMER_MOBILIZATION_STARTED</code></td>
+      <td>Opportunity status is updated to 'Closed Won'.</td>
+      <td>Creates Onboarding task logs; sets Customer status to 'Mobilizing'.</td>
+    </tr>
+    <tr>
+      <td><code>READINESS_SIMULATION_COMPLETED</code></td>
+      <td>Mock transaction passes compliance and telematics checks.</td>
+      <td>Calculates final readiness percentage.</td>
+    </tr>
+    <tr>
+      <td><code>CUSTOMER_FULLY_OPERATIONAL</code></td>
+      <td>Readiness score matches or exceeds the 90% threshold.</td>
+      <td>Sets Customer status to 'Active', opens booking portals.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>5. L1 Event Payload Example</h2>
+<pre><code class="language-json">{
+  "eventId": "evt_acms_902811",
+  "eventType": "CUSTOMER_FULLY_OPERATIONAL",
+  "timestamp": "2026-07-06T12:10:00Z",
+  "payload": {
+    "customerId": "CUS-83920",
+    "mobilizationId": "MOB-19028",
+    "readinessScore": 96.5,
+    "completedLanes": [
+      "commercial", "finance", "compliance", "telematics", "driver_roster"
+    ]
+  }
+}</code></pre>

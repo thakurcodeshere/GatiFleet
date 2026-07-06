@@ -1,0 +1,67 @@
+<h1>Module 12 — Autonomous Financial Intelligence & Treasury Platform (AFITP)</h1>
+
+<p>The <strong>Autonomous Financial Intelligence & Treasury Platform (AFITP)</strong> manages GatiFleet's real-time financial digital twin, checking P&L status across modules.</p>
+
+<h2>1. Business Goal</h2>
+<p>Maintain treasury liquidity and protect margins by automatically mapping operational logistics transactions directly to P&L reports.</p>
+
+<h2>2. Core Components</h2>
+<ul>
+  <li><strong>Financial Digital Twin:</strong> Models bank balances, accounts payable/receivable (AP/AR), and working capital limits in real-time.</li>
+  <li><strong>Real-Time Margin Tracker:</strong> Computes contribution margins at customer, corridor, vehicle, and driver levels.</li>
+  <li><strong>Collections Risk Solver:</strong> Evaluates invoice aging limits to forecast working capital trends.</li>
+</ul>
+
+<h2>3. Financial Transaction Mapping</h2>
+<div class="diagram-container">
+  <pre class="mermaid">
+flowchart LR
+    Event[L1 Operational Event] --> Accrual[Accrual Calculator]
+    Accrual --> PnL[Real-time P&L Ledger]
+    PnL --> Cash[Treasury Forecast]
+    Event -->|FASTag / Fuel Surcharge| Accrual
+  </pre>
+</div>
+
+<h2>4. Event Taxonomy</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Event Name</th>
+      <th>Trigger</th>
+      <th>Database / State Changes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>TRANSACTION_ACCRUED</code></td>
+      <td>FASTag crossing or driver allowance logged.</td>
+      <td>Creates accrual ledger row; recalculates margin metrics.</td>
+    </tr>
+    <tr>
+      <td><code>COLLECTIONS_ALERT_TRIGGERED</code></td>
+      <td>AR invoice exceeds payment days limit.</td>
+      <td>Updates customer risk scores; flags profile.</td>
+    </tr>
+    <tr>
+      <td><code>TREASURY_RECONCILIATION_COMPLETED</code></td>
+      <td>Bank statement matched to AR ledger.</td>
+      <td>Updates invoice status to 'Settled'; frees credit lines.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>5. L1 Event Payload Example</h2>
+<pre><code class="language-json">{
+  "eventId": "evt_afitp_892810",
+  "eventType": "TRANSACTION_ACCRUED",
+  "timestamp": "2026-07-06T12:32:00Z",
+  "payload": {
+    "accrualId": "ACC-9082",
+    "tripId": "TRIP-019283",
+    "accrualType": "FASTAG_TOLL_EXPENSE",
+    "amount": 420.00,
+    "currency": "INR",
+    "affectedMarginPercent": -0.015
+  }
+}</code></pre>

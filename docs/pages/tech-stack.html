@@ -1,0 +1,95 @@
+<h1>Tech Stack & Core APIs</h1>
+
+<p>GatiFleet uses a modern Javascript stack built for high telemetry throughput and low compute expenses.</p>
+
+<h2>Frontend Technologies</h2>
+<ul>
+  <li><strong>Core Framework:</strong> React 19 + Vite</li>
+  <li><strong>State Management:</strong> React Context + Hooks</li>
+  <li><strong>Mapping & Geospatial:</strong> Leaflet & React-Leaflet (WMS integrations, custom layer maps)</li>
+  <li><strong>Charts & Viz:</strong> Chart.js & React-Chartjs-2</li>
+  <li><strong>Transitions:</strong> Framer Motion + Custom CSS system</li>
+</ul>
+
+<h2>Backend Technologies</h2>
+<ul>
+  <li><strong>Web API Gateway:</strong> Node.js + Express.js</li>
+  <li><strong>Database ORM:</strong> Prisma Client</li>
+  <li><strong>Relational DB:</strong> SQLite (Local server file, zero compute costs)</li>
+  <li><strong>Real-time Telemetry:</strong> Socket.io</li>
+  <li><strong>Process Daemon:</strong> PM2 Cluster Engine</li>
+  <li><strong>Security Middlewares:</strong> express-rate-limit, cors, helmet</li>
+</ul>
+
+<h2>Core REST API Endpoints</h2>
+
+<h3>Customer Operations</h3>
+<table>
+  <thead>
+    <tr>
+      <th>HTTP Method</th>
+      <th>Endpoint Path</th>
+      <th>Payload Details</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>GET</code></td>
+      <td><code>/api/customers</code></td>
+      <td>None</td>
+      <td>Returns list of customers, details, and active health scores.</td>
+    </tr>
+    <tr>
+      <td><code>POST</code></td>
+      <td><code>/api/customers</code></td>
+      <td><code>{ name, gstin, region }</code></td>
+      <td>Saves new organization; initializes digital twin state.</td>
+    </tr>
+    <tr>
+      <td><code>GET</code></td>
+      <td><code>/api/customers/:id/twin</code></td>
+      <td>None</td>
+      <td>Returns the six-brain states for a customer profile.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Fleet & Tracking</h3>
+<table>
+  <thead>
+    <tr>
+      <th>HTTP Method</th>
+      <th>Endpoint Path</th>
+      <th>Payload Details</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>GET</code></td>
+      <td><code>/api/fleet</code></td>
+      <td>None</td>
+      <td>Returns active vehicle registry and telematics status.</td>
+    </tr>
+    <tr>
+      <td><code>POST</code></td>
+      <td><code>/api/fleet/telemetry</code></td>
+      <td><code>{ lat, lng, speed, rpm }</code></td>
+      <td>Simulates physical vehicle telemetry signals.</td>
+    </tr>
+    <tr>
+      <td><code>GET</code></td>
+      <td><code>/api/trips/:id/route</code></td>
+      <td>None</td>
+      <td>Returns checkpoint nodes and geofence coordinates.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>WebSocket Events (Socket.io)</h2>
+<ul>
+  <li><code>subscribe:telemetry</code> (Client -> Server) - Subscribes to live vehicle tracking coordinate updates.</li>
+  <li><code>telemetry:update</code> (Server -> Client) - Emits coordinate signals, vehicle status, and speed details.</li>
+  <li><code>incident:warn</code> (Server -> Client) - Alerts client when route anomalies or fatigue events occur.</li>
+</ul>

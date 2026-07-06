@@ -1,0 +1,68 @@
+<h1>Module 7 — Intelligent Fleet & Asset Operations System (IFAOS)</h1>
+
+<p>The <strong>Intelligent Fleet & Asset Operations System (IFAOS)</strong> manages GatiFleet's physical assets (trucks, trailers, reefers, tyres) and maps active telemetry feeds.</p>
+
+<h2>1. Business Goal</h2>
+<p>Maximize vehicle uptime and prevent transit breakdowns by computing remaining useful life (RUL) on components and scheduling maintenance dynamically.</p>
+
+<h2>2. Core Components</h2>
+<ul>
+  <li><strong>Physical Asset Registry:</strong> Tracks trucks, reefer temperature controllers, FASTag IDs, and tyre parameters.</li>
+  <li><strong>Telemetry Mapping Engine:</strong> Parses engine RPM, fuel level logs, tire pressures, and cold chain temperature segments.</li>
+  <li><strong>Predictive Maintenance Solver:</strong> Generates RUL indices (0-100%) for braking pads, battery sets, and engines.</li>
+</ul>
+
+<h2>3. Telemetry Integration Flow</h2>
+<div class="diagram-container">
+  <pre class="mermaid">
+graph TD
+    GPS[GPS Tracker] -->|Coordinate / Speed| API[Gateway Telemetry Parser]
+    OBD[OBD Engine Sensor] -->|RPM / Uptime| API
+    Temp[Reefer Temp Sensor] -->|Cold Chain Log| API
+    API --> Cache[Node Cache]
+    API --> Socket[Socket.io Stream]
+    API --> DB[(SQLite Database)]
+  </pre>
+</div>
+
+<h2>4. Event Taxonomy</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Event Name</th>
+      <th>Trigger</th>
+      <th>Database / State Changes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>ASSET_TELEMETRY_INGESTED</code></td>
+      <td>IoT device uploads coordinate or sensor payload.</td>
+      <td>Updates cached asset position; appends trip mileage metrics.</td>
+    </tr>
+    <tr>
+      <td><code>MECHANICAL_FAULT_LOGGED</code></td>
+      <td>OBD sensor fires engine check flag.</td>
+      <td>Creates a pending maintenance ticket; flags vehicle status.</td>
+    </tr>
+    <tr>
+      <td><code>MAINTENANCE_SCHEDULED</code></td>
+      <td>RUL drops below the 20% limit.</td>
+      <td>Books repair bay; triggers route re-assignment.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>5. L1 Event Payload Example</h2>
+<pre><code class="language-json">{
+  "eventId": "evt_ifaos_109283",
+  "eventType": "MECHANICAL_FAULT_LOGGED",
+  "timestamp": "2026-07-06T12:20:00Z",
+  "payload": {
+    "vehicleId": "VEH-MH12-9028",
+    "faultCode": "P0300",
+    "component": "Engine Cylinder Misfire",
+    "remainingUsefulLife": 18.2,
+    "currentTrip": "TRIP-019283"
+  }
+}</code></pre>

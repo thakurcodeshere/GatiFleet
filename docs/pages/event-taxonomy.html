@@ -1,0 +1,118 @@
+<h1>Event Taxonomy (L1 Registry)</h1>
+
+<p>Every operational transaction within GatiFleet is governed by an <strong>L1 Event taxonomy</strong>. Business data mutations are processed downline from these events, keeping database tables, digital twin models, and graph relationships in sync.</p>
+
+<h2>Global Event Registry</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Module</th>
+      <th>Event Name</th>
+      <th>Source / Trigger</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>CIC</strong></td>
+      <td><code>CUSTOMER_CREATED</code></td>
+      <td>Sales Onboarding / ERP Import</td>
+      <td>Initializes customer profile and launches digital twin brains.</td>
+    </tr>
+    <tr>
+      <td><strong>CIC</strong></td>
+      <td><code>HEALTH_RECALCULATED</code></td>
+      <td>Downstream Analytics Engines</td>
+      <td>Calculates new weighted customer health values.</td>
+    </tr>
+    <tr>
+      <td><strong>ARIE</strong></td>
+      <td><code>OPPORTUNITY_REQUESTED</code></td>
+      <td>CRM Operator / AI Auto-Discovery</td>
+      <td>Launches opportunity twin check; runs lane viability.</td>
+    </tr>
+    <tr>
+      <td><strong>ARIE</strong></td>
+      <td><code>PROPOSAL_GENERATED</code></td>
+      <td>AI Pricing Engine</td>
+      <td>Outputs the three corridor tariff price options.</td>
+    </tr>
+    <tr>
+      <td><strong>ACMS</strong></td>
+      <td><code>CUSTOMER_MOBILIZATION_STARTED</code></td>
+      <td>Deal status updated to 'Closed Won'</td>
+      <td>Triggers the parallel onboarding lanes check.</td>
+    </tr>
+    <tr>
+      <td><strong>ACMS</strong></td>
+      <td><code>CUSTOMER_FULLY_OPERATIONAL</code></td>
+      <td>Mobilization Readiness Solver</td>
+      <td>Updates customer status to active; unlocks booking portals.</td>
+    </tr>
+    <tr>
+      <td><strong>ACAIS</strong></td>
+      <td><code>SLA_WARN_TRIGGERED</code></td>
+      <td>SLA & Violation Monitor</td>
+      <td>Warns dispatch of ETA delay risk thresholds.</td>
+    </tr>
+    <tr>
+      <td><strong>RABIP</strong></td>
+      <td><code>INVOICE_AUDIT_COMPLETED</code></td>
+      <td>RABIP Billing Engine</td>
+      <td>Validates toll charges and logs invoice status.</td>
+    </tr>
+    <tr>
+      <td><strong>ACOIP</strong></td>
+      <td><code>ROUTE_ANOMALY_DETECTED</code></td>
+      <td>GPS Telemetry Stream Anomaly</td>
+      <td>Flags route deviations or weather delay events.</td>
+    </tr>
+    <tr>
+      <td><strong>IFAOS</strong></td>
+      <td><code>MECHANICAL_FAULT_LOGGED</code></td>
+      <td>OBD Telemetry Code Trigger</td>
+      <td>Logs fault check codes; schedules maintenance.</td>
+    </tr>
+    <tr>
+      <td><strong>ATPDS</strong></td>
+      <td><code>ROUTE_DEVIATION_ALERT</code></td>
+      <td>GPS Telemetry Boundary Check</td>
+      <td>Warns operator if vehicle drifts >10km from route.</td>
+    </tr>
+    <tr>
+      <td><strong>DWIP</strong></td>
+      <td><code>FATIGUE_WARN_TRIGGERED</code></td>
+      <td>Driver Safety ADAS Camera</td>
+      <td>Flags lane drifts or consecutive driving hours breaches.</td>
+    </tr>
+    <tr>
+      <td><strong>LIIS</strong></td>
+      <td><code>VEHICLE_ARRIVED_AT_GATE</code></td>
+      <td>Gate RFID / FASTag Scanner</td>
+      <td>Logs gate check timestamp; assigns parking space.</td>
+    </tr>
+    <tr>
+      <td><strong>ASNIP</strong></td>
+      <td><code>NETWORK_DISRUPTION_LOGGED</code></td>
+      <td>Regional Supply Chain Feed</td>
+      <td>Warns network operators of port or highway closures.</td>
+    </tr>
+    <tr>
+      <td><strong>AFITP</strong></td>
+      <td><code>TRANSACTION_ACCRUED</code></td>
+      <td>FASTag / Fuel Surcharge Event</td>
+      <td>Recalculates active trip contribution margins.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>L1 Event Lifecycle Pipeline</h2>
+<div class="diagram-container">
+  <pre class="mermaid">
+flowchart LR
+    Action[User Action / IoT Telemetry] -->|Dispatches| L1Event[L1 Event Payload]
+    L1Event -->|Feeds| Twins[Digital Twins]
+    L1Event -->|Updates| Graph[Knowledge Graph]
+    L1Event -->|Logs to| Ledger[Permanent Event Ledger]
+  </pre>
+</div>

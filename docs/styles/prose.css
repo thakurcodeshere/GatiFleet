@@ -1,0 +1,142 @@
+/* Prose Typography matching trees.software clean and modern layouts */
+.prose-container {
+  max-width: var(--max-content-width);
+  margin: 0 auto;
+}
+
+.prose h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 16px;
+  color: var(--fg);
+}
+
+.prose h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 40px;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  color: var(--fg);
+  position: relative;
+}
+
+.prose h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-top: 24px;
+  margin-bottom: 12px;
+  color: var(--fg);
+}
+
+.prose p {
+  margin-bottom: 18px;
+  font-size: 0.95rem;
+  color: var(--fg);
+  line-height: 1.7;
+}
+
+.prose ul, .prose ol {
+  margin-bottom: 18px;
+  padding-left: 24px;
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.prose li {
+  margin-bottom: 6px;
+}
+
+/* Monospace & Inline Code blocks styling */
+.prose code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background-color: var(--code-bg);
+  padding: 3px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  color: var(--accent);
+}
+
+.prose pre {
+  margin-bottom: 24px;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border);
+  background-color: var(--code-bg) !important;
+  padding: 16px;
+  overflow-x: auto;
+}
+
+.prose pre code {
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+  border: none;
+  font-size: 0.85rem;
+  color: var(--fg);
+}
+
+/* Tables styling */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 24px;
+  font-size: 0.875rem;
+  text-align: left;
+}
+
+.prose th, .prose td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.prose th {
+  font-weight: 600;
+  color: var(--fg);
+  background-color: var(--sidebar-bg);
+}
+
+.prose tr:hover td {
+  background-color: var(--sidebar-bg);
+}
+
+/* Links inside prose content */
+.prose a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+.prose a:hover {
+  color: var(--fg);
+}
+
+/* Anchor Link Icon for H2/H3 headers */
+.anchor-link {
+  opacity: 0;
+  position: absolute;
+  left: -20px;
+  padding-right: 10px;
+  color: var(--fg-muted);
+  transition: opacity 0.15s ease;
+}
+
+.prose h2:hover .anchor-link, .prose h3:hover .anchor-link {
+  opacity: 1;
+}
+
+/* Diagram Container styles */
+.diagram-container {
+  margin: 24px 0;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  background-color: var(--sidebar-bg);
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+}

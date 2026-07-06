@@ -1,0 +1,41 @@
+<h1>Quick Start Guide</h1>
+
+<p>Get GatiFleet up and running on your local machine or server. This guide walks you through setting up the 11-Tier full-stack monolith architecture in development mode.</p>
+
+<h2>Prerequisites</h2>
+<p>Ensure you have the following installed on your machine:</p>
+<ul>
+  <li><strong>Node.js:</strong> Version 20.x or higher (LTS recommended)</li>
+  <li><strong>SQLite3:</strong> For local database storage</li>
+  <li><strong>NPM:</strong> Bundled with Node.js</li>
+</ul>
+
+<h2>1. Clone the Codebase</h2>
+<p>Clone the GatiFleet repository to your workspace and navigate into the root directory:</p>
+<pre><code class="language-bash">git clone https://github.com/thakurcodeshere/GatiFleet.git
+cd GatiFleet</code></pre>
+
+<h2>2. Install Dependencies</h2>
+<p>Install package dependencies for both the frontend client and the backend server:</p>
+<pre><code class="language-bash"># Install frontend dependencies
+npm install
+
+# Install backend dependencies
+cd server
+npm install
+cd ..</code></pre>
+
+<h2>3. Start the Backend API (PM2 Daemon)</h2>
+<p>The backend API manages real-time socket connections, database querying via Prisma, and background queues. Start it using PM2:</p>
+<pre><code class="language-bash">cd server
+npx pm2 start ecosystem.config.js</code></pre>
+<p>This runs the daemonized Express API server listening on <code>http://localhost:3000</code>.</p>
+
+<h2>4. Start the Frontend Dev Server</h2>
+<p>Open a new terminal window at the GatiFleet root directory and start the Vite development server:</p>
+<pre><code class="language-bash">npm run dev</code></pre>
+<p>The client interface will boot up instantly and can be accessed at <code>http://localhost:5173</code>.</p>
+
+<h2>5. Code Verification</h2>
+<p>Before committing changes, check for linting errors and syntax standards:</p>
+<pre><code class="language-bash">npm run lint</code></pre>

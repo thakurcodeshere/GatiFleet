@@ -1,0 +1,56 @@
+<h1>System Architecture</h1>
+
+<p>GatiFleet is built as an <strong>11-Tier Enterprise Monolith</strong>. This pattern prioritizes low latency, clean interfaces, and low compute costs by co-locating transactional databases, telemetry parsers, and neural logic steps within a single execution grid.</p>
+
+<h2>Architecture Overview</h2>
+<div class="diagram-container">
+  <pre class="mermaid">
+graph TD
+    User([User Browser]) -->|HTTPS/WSS| Tier1[Tier 1: React Frontend]
+    Tier1 -->|API Calls| Tier2[Tier 2: Express Gateway]
+    Tier2 -->|Auth Check| Tier6[Tier 6: JWT Auth]
+    Tier2 -->|Fast Read| Tier4[Tier 4: Node Cache]
+    Tier2 -->|Telemetry Stream| Tier5[Tier 5: Socket.io]
+    Tier2 -->|Transactional Query| Tier3[Tier 3: Prisma ORM + SQLite]
+    Tier2 -->|File Upload| Tier7[Tier 7: Multer Storage]
+    Tier2 -->|Background Job| Tier8[Tier 8: FastQ Worker]
+    Tier8 -->|Solve Dispatch/AI| Tier9[Tier 9: Neural Engine]
+    Tier2 -->|Log Event| Tier10[Tier 10: Winston & Morgan]
+    Tier21[Tier 11: PM2 Cluster] -.->|Manages| Tier2
+  </pre>
+</div>
+
+<h2>The 11 Tiers Explained</h2>
+
+<h3>1. Frontend Tier (React + Vite)</h3>
+<p>An animated, context-driven workspace built on React 19 and Vite. Utilizes Framer Motion for UI transitions and Leaflet.js for real-time map plots.</p>
+
+<h3>2. Gateway Tier (Express API)</h3>
+<p>The centralized route entry point (located in <code>server/index.js</code>). Governs rate limits, CORS policies, helmet headers, and delegates payloads to downstream controllers.</p>
+
+<h3>3. Database ORM Tier (SQLite + Prisma)</h3>
+<p>Prisma ORM handles relational schemes, database migrations, and queries. A local SQLite database is utilized, eliminating external DB costs and reducing latency to microseconds for local queries.</p>
+
+<h3>4. Caching Tier (Node-Cache)</h3>
+<p>An in-memory Key-Value store to cache static route distances, customer credentials, and active driver locations. Minimizes redundant SQLite hits.</p>
+
+<h3>5. Real-Time Telemetry Tier (Socket.io)</h3>
+<p>Coordinates live bidirectional WebSocket channels. Subscribes client browsers to telemetry updates and parses incoming coordinate signals from the Reality Engine simulator.</p>
+
+<h3>6. Authentication Tier (JWT + bcrypt)</h3>
+<p>Token-based session authentication. Signs and verifies JSON Web Tokens (JWT) and hashes worker credentials via bcrypt.</p>
+
+<h3>7. Storage Tier (Multer Local Disk)</h3>
+<p>Multipart form-data middleware to process physical contract uploads, driver licensing documents, and invoice scans, storing them locally under the static public folder.</p>
+
+<h3>8. Job Queue Tier (FastQ)</h3>
+<p>An in-memory background worker queue. Offloads heavy computational tasks (such as driver roster rosters and route-optimization solvers) from the main API thread.</p>
+
+<h3>9. Intelligence Tier (Neural Engine)</h3>
+<p>Evaluates pricing models, constructs organizational charts, and executes heuristics to spot route deviations and mechanical failures.</p>
+
+<h3>10. Monitoring Tier (Winston + Morgan)</h3>
+<p>HTTP request logs (via Morgan) and custom system events (via Winston) are outputted to daily rotating files under <code>server/logs/</code>.</p>
+
+<h3>11. Process Management Tier (PM2)</h3>
+<p>Coordinates clustering, auto-restart triggers, and telemetry logs. Manages Node server health on production machines.</p>

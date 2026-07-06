@@ -1,0 +1,65 @@
+<h1>Module 11 — Autonomous Supply Network Intelligence Platform (ASNIP)</h1>
+
+<p>The <strong>Autonomous Supply Network Intelligence Platform (ASNIP)</strong> orchestrates shipments across complex, multi-party shipping networks using road, rail, and port corridors.</p>
+
+<h2>1. Business Goal</h2>
+<p>Ensure network resiliency and minimize transport delays by executing multi-modal routing models to bypass port bottlenecks, strikes, or weather gridlocks.</p>
+
+<h2>2. Core Components</h2>
+<ul>
+  <li><strong>Multi-Party Network Graph:</strong> Models relationships between customers, suppliers, terminal hubs, customs, and carriers.</li>
+  <li><strong>Multi-Modal Routing Solver:</strong> Analyzes cost, duration, carbon outputs, and transport risks across transport modes (Rail, Road, Ocean).</li>
+  <li><strong>Disruption Recovery Solver:</strong> Dynamically models alternative shipping routes when corridor delays occur.</li>
+</ul>
+
+<h2>3. Supply Path Optimization</h2>
+<div class="diagram-container">
+  <pre class="mermaid">
+graph TD
+    Factory[Factory Node] -->|Road Carrier| Hub[Container Hub]
+    Hub -->|Choice A: Road NH48| Port[Port Terminal]
+    Hub -->|Choice B: Rail Corridor| Port
+    Port -->|Ocean Carrier| Destination[Global Warehouse]
+  </pre>
+</div>
+
+<h2>4. Event Taxonomy</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Event Name</th>
+      <th>Trigger</th>
+      <th>Database / State Changes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>NETWORK_DISRUPTION_LOGGED</code></td>
+      <td>Port terminal delays exceed threshold.</td>
+      <td>Flags disrupted nodes; triggers recalculation solver.</td>
+    </tr>
+    <tr>
+      <td><code>MODAL_SWITCH_COMMITTED</code></td>
+      <td>Routing engine shifts route from Road to Rail.</td>
+      <td>Updates shipment carrier plan; books rail slot.</td>
+    </tr>
+    <tr>
+      <td><code>CONTAINER_TRACKING_UPDATED</code></td>
+      <td>RFID or satellite tracker logs coordinate.</td>
+      <td>Saves container location; updates ETA bounds.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>5. L1 Event Payload Example</h2>
+<pre><code class="language-json">{
+  "eventId": "evt_asnip_602931",
+  "eventType": "NETWORK_DISRUPTION_LOGGED",
+  "timestamp": "2026-07-06T12:30:00Z",
+  "payload": {
+    "disruptedNode": "PORT-JNPT-MUMBAI",
+    "disruptionType": "STRIKE_DELAY",
+    "estimatedDwellIncreaseHours": 72,
+    "affectedShipmentsCount": 14
+  }
+}</code></pre>

@@ -1,0 +1,43 @@
+<h1>Digital Twin Architecture</h1>
+
+<p>GatiFleet represents physical and organizational assets (Customers, Vehicles, Drivers) as active <strong>Digital Twins</strong>. Rather than storing flat status columns, a Digital Twin maintains multiple state machines and cognitive "brains" that simulate financial and operational outcomes.</p>
+
+<h2>Overview of the Six Brains</h2>
+<p>Each customer's digital twin is split into six cognitive brains to process metrics concurrently:</p>
+
+<div class="diagram-container">
+  <pre class="mermaid">
+graph TD
+    DT[Digital Twin Node] --> CB[Commercial Brain]
+    DT --> OB[Operational Brain]
+    DT --> FB[Financial Brain]
+    DT --> RB[Relationship Brain]
+    DT --> SB[Strategic Brain]
+    DT --> LB[Learning Brain]
+    
+    CB -->|Monitors| LTV[LTV & RFQs]
+    OB -->|Monitors| SLA[OTD & Delays]
+    FB -->|Monitors| Cash[AR & Disputes]
+    RB -->|Monitors| NPS[NPS & Sentiment]
+    SB -->|Monitors| Scale[Lane Expansion]
+    LB -->|Monitors| Rules[Rule Retraining]
+  </pre>
+</div>
+
+<h3>1. Commercial Brain</h3>
+<p>Simulates customer contract lifetimes (LTV), margin protection thresholds, volume commitments, and active RFQ proposal conversions. It generates warnings if a customer's contract margin falls below corporate limits.</p>
+
+<h3>2. Operational Brain</h3>
+<p>Parses live telematics, checkpost updates, and geofence events. It continuously calculates the On-Time Delivery (OTD) index and SLA penalty exposures, requesting route adjustments from the planning engine if delays occur.</p>
+
+<h3>3. Financial Brain</h3>
+<p>Manages accounts receivables (AR) aging parameters, dispute triggers, toll validations, and fuel surcharge updates. It calculates working capital requirements for customer corridors.</p>
+
+<h3>4. Relationship Brain</h3>
+<p>Evaluates support ticket counts, case resolution speeds, and helpdesk chat logs using sentiment analysis to calculate an overall Relationship Index (0-100%).</p>
+
+<h3>5. Strategic Brain</h3>
+<p>Tracks shipment patterns and matches them against market capacity, suggesting expansion corridor paths or warning account teams of competitive risks.</p>
+
+<h3>6. Learning Brain</h3>
+<p>Compares estimated trip durations, fuel surcharges, and asset utilization metrics against actual results, retraining heuristics to reduce planning errors.</p>

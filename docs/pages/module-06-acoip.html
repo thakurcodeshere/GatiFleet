@@ -1,0 +1,69 @@
+<h1>Module 6 — Autonomous Customer Operations Intelligence Platform (ACOIP)</h1>
+
+<p>The <strong>Autonomous Customer Operations Intelligence Platform (ACOIP)</strong> evaluates route risks (weather, traffic, breakdowns) and triggers self-healing dispatch updates.</p>
+
+<h2>1. Business Goal</h2>
+<p>Maintain customer service index thresholds by actively predicting logistics failures and executing re-routing options before delay limits are exceeded.</p>
+
+<h2>2. System Components</h2>
+<ul>
+  <li><strong>Proactive Risk Monitor:</strong> Ingests external weather updates and NH48 corridor traffic congestion indices to compute delay probabilities.</li>
+  <li><strong>Simulation Desk:</strong> Models backup options (alternative routes, driver swaps) comparing cost differences against potential SLA default fines.</li>
+  <li><strong>5 Whys Incident Logger:</strong> Runs a permanent learning audit on resolved incidents to update operational risk scores.</li>
+</ul>
+
+<h2>3. Incident Recovery workflow</h2>
+<div class="diagram-container">
+  <pre class="mermaid">
+flowchart TD
+    Incident[Telemetry Anomaly / NH48 Roadblock] --> Warn[Trigger Route Incident]
+    Warn --> Sim[Simulate Alternative Routes]
+    Sim --> Select{Choose Recovery Plan}
+    Select -->|Option A: Reroute| Update[Update GPS Destination]
+    Select -->|Option B: Swop Driver| Swop[Roster New Driver]
+    Update --> Resolve[Resolve Incident & Log 5-Whys]
+    Swop --> Resolve
+  </pre>
+</div>
+
+<h2>4. Event Taxonomy</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Event Name</th>
+      <th>Trigger</th>
+      <th>Database / State Changes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>ROUTE_ANOMALY_DETECTED</code></td>
+      <td>Vehicle telemetry stops or falls behind schedule.</td>
+      <td>Creates Incident log; flags shipment record.</td>
+    </tr>
+    <tr>
+      <td><code>RECOVERY_PLAN_COMMITTED</code></td>
+      <td>Solver chooses best alternative routing path.</td>
+      <td>Updates active driver instruction log; notifies customer contact.</td>
+    </tr>
+    <tr>
+      <td><code>INCIDENT_CLOSED</code></td>
+      <td>Vehicle reaches checkpoint; operator completes 5-Whys log.</td>
+      <td>Saves root-cause parameters to training engine.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>5. L1 Event Payload Example</h2>
+<pre><code class="language-json">{
+  "eventId": "evt_acoip_902817",
+  "eventType": "ROUTE_ANOMALY_DETECTED",
+  "timestamp": "2026-07-06T12:18:00Z",
+  "payload": {
+    "tripId": "TRIP-019283",
+    "incidentType": "SEVERE_WEATHER_DELAY",
+    "location": "NH48-Pune-Segment-3",
+    "estimatedDelayMinutes": 180,
+    "slaBreachRisk": 0.85
+  }
+}</code></pre>

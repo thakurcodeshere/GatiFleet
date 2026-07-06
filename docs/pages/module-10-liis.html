@@ -1,0 +1,73 @@
+<h1>Module 10 — Logistics Infrastructure Intelligence System (LIIS)</h1>
+
+<p>The <strong>Logistics Infrastructure Intelligence System (LIIS)</strong> manages depot coordinates, warehouse docking slots, and gate throughput levels.</p>
+
+<h2>1. Business Goal</h2>
+<p>Reduce vehicle turnaround time (TAT) at depots by aligning inbound ETA predictions with warehouse labor and docking bay scheduling.</p>
+
+<h2>2. Core Components</h2>
+<ul>
+  <li><strong>Infrastructure Digital Twin:</strong> Models layout configurations for docks, scales, and trailer parking slots.</li>
+  <li><strong>Congestion Index Monitor:</strong> Models yard congestion indexes by checking current inbound ETAs against active labor schedules.</li>
+  <li><strong>Dock Allocation Solver:</strong> Dynamically updates trailer parking and door assignments based on cargo manifests.</li>
+</ul>
+
+<h2>3. Yard Turnaround Flow</h2>
+<div class="diagram-container">
+  <pre class="mermaid">
+sequenceDiagram
+    participant Truck as Telematics API
+    participant YardGate as gate RFID
+    participant LIIS as LIIS Allocator
+    participant Dock as Dock Controller
+    
+    Truck->>LIIS: Transmit Inbound ETA (15m out)
+    LIIS->>LIIS: Generate Dock Allocation Proposal
+    YardGate->>LIIS: Scan FASTag (Truck enters yard)
+    LIIS->>Truck: Transmit Parking Bay Assignment
+    Dock->>LIIS: Confirm Loading/Unloading Completed
+    LIIS->>YardGate: Authorize Gate Pass Release
+  </pre>
+</div>
+
+<h2>4. Event Taxonomy</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Event Name</th>
+      <th>Trigger</th>
+      <th>Database / State Changes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>INBOUND_ETA_UPDATED</code></td>
+      <td>Truck telematics updates route duration.</td>
+      <td>Appends details to depot arrival board; updates gate queues.</td>
+    </tr>
+    <tr>
+      <td><code>VEHICLE_ARRIVED_AT_GATE</code></td>
+      <td>Gate RFID scanner parses FASTag.</td>
+      <td>Sets status to 'In Yard'; updates congestion metrics.</td>
+    </tr>
+    <tr>
+      <td><code>DOCK_COMMITTED</code></td>
+      <td>Truck backs into assigned loading door.</td>
+      <td>Sets dock status to 'Busy'; initiates turnaround timer.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>5. L1 Event Payload Example</h2>
+<pre><code class="language-json">{
+  "eventId": "evt_liis_509283",
+  "eventType": "VEHICLE_ARRIVED_AT_GATE",
+  "timestamp": "2026-07-06T12:28:00Z",
+  "payload": {
+    "depotId": "DEP-MUMBAI-01",
+    "vehicleId": "VEH-MH12-9028",
+    "gateNumber": 2,
+    "currentCongestionIndex": 0.65,
+    "assignedDockDoor": 12
+  }
+}</code></pre>

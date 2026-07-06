@@ -1,0 +1,242 @@
+/* Header Styling with background blur exactly like trees.software */
+.site-header {
+  position: sticky;
+  top: 0;
+  height: var(--header-height);
+  border-bottom: 1px solid var(--border);
+  background-color: var(--header-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+}
+
+.header-container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo-area {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.logo {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--fg);
+  letter-spacing: -0.02em;
+}
+
+.logo:hover {
+  color: var(--accent);
+}
+
+.sub-logo {
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+  font-weight: 500;
+}
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.nav-link {
+  font-size: 0.875rem;
+  color: var(--fg-muted);
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: var(--border-radius);
+  transition: all 0.15s ease;
+}
+
+.nav-link:hover, .nav-link.active {
+  color: var(--fg);
+}
+
+.nav-divider {
+  width: 1px;
+  height: 16px;
+  background-color: var(--border);
+}
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--fg-muted);
+  padding: 6px;
+  border-radius: var(--border-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.theme-toggle-btn:hover {
+  color: var(--fg);
+  background-color: var(--border);
+}
+
+/* Hide/Show Theme Icons */
+html[data-theme="dark"] .sun-icon {
+  display: block;
+}
+html[data-theme="dark"] .moon-icon {
+  display: none;
+}
+html[data-theme="light"] .sun-icon {
+  display: none;
+}
+html[data-theme="light"] .moon-icon {
+  display: block;
+}
+
+/* Mobile Menu Toggle button */
+.mobile-menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--fg-muted);
+  padding: 6px;
+  border-radius: var(--border-radius);
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-menu-toggle:hover {
+  color: var(--fg);
+  background-color: var(--border);
+}
+
+/* Layout Grid Wrapper */
+.layout-wrapper {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  min-height: calc(100vh - var(--header-height));
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Sidebar Styling */
+.sidebar {
+  border-right: 1px solid var(--border);
+  background-color: var(--sidebar-bg);
+  padding: 32px 24px;
+  overflow-y: auto;
+  position: sticky;
+  top: var(--header-height);
+  height: calc(100vh - var(--header-height));
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.group-title {
+  font-size: 0.725rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fg-muted);
+  margin-bottom: 8px;
+}
+
+.group-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar-link {
+  font-size: 0.85rem;
+  color: var(--fg-muted);
+  font-weight: 500;
+  display: block;
+  padding: 6px 8px;
+  border-radius: var(--border-radius);
+  transition: all 0.15s ease;
+}
+
+.sidebar-link:hover {
+  color: var(--fg);
+  background-color: var(--border);
+}
+
+.sidebar-link.active {
+  color: var(--accent);
+  background-color: var(--accent-muted);
+  font-weight: 600;
+}
+
+/* Content Area Styling */
+.content-panel {
+  padding: 40px 60px;
+  overflow-y: auto;
+  max-width: 100%;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 900px) {
+  .layout-wrapper {
+    grid-template-columns: 1fr;
+  }
+  
+  .mobile-menu-toggle {
+    display: flex;
+  }
+  
+  .sidebar {
+    position: fixed;
+    left: -100%;
+    top: var(--header-height);
+    width: var(--sidebar-width);
+    z-index: 90;
+    transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.1);
+  }
+  
+  .sidebar.open {
+    left: 0;
+  }
+  
+  .content-panel {
+    padding: 30px 20px;
+  }
+}

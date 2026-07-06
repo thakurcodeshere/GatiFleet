@@ -1,0 +1,34 @@
+<h1>Contributing Guidelines</h1>
+
+<p>Thank you for your interest in contributing to GatiFleet. We welcome contributions that improve performance, expand neural agent solvers, or optimize user interface layouts.</p>
+
+<h2>Development Process</h2>
+<ol>
+  <li><strong>Fork & Clone:</strong> Fork the GatiFleet repository and clone it to your local environment.</li>
+  <li><strong>Branching:</strong> Create a new feature branch using a descriptive name:
+    <pre><code class="language-bash">git checkout -b feature/driver-allowance-rules</code></pre>
+  </li>
+  <li><strong>Local Code Check:</strong> Ensure code conforms to eslint standards by running:
+    <pre><code class="language-bash">npm run lint</code></pre>
+  </li>
+  <li><strong>Commit Guidelines:</strong> Commit your changes using descriptive commit messages:
+    <pre><code class="language-bash">git commit -m "feat(dwip): calculate allowances from FASTag logs"</code></pre>
+  </li>
+  <li><strong>Pull Request:</strong> Push changes to your fork and submit a Pull Request to the <code>main</code> branch of GatiFleet.</li>
+</ol>
+
+<h2>Testing Local Telemetry</h2>
+<p>To verify telematics maps and event pipelines locally without physical IoT devices:</p>
+<ul>
+  <li>Start GatiFleet in full-stack mode (refer to the <a href="#/quick-start">Quick Start Guide</a>).</li>
+  <li>Open the <strong>Fleet Tracking</strong> dashboard at <code>http://localhost:5173/tracking</code>.</li>
+  <li>Click the "Simulate Route" toggle to feed mock coordinates via Socket.io channels, verifying geofence alerts and P&L updates occur downline.</li>
+</ul>
+
+<h2>SLA and Policy Standards</h2>
+<p>When extending GatiFleet modules or adding new database tables, ensure compliance with GatiFleet guidelines:</p>
+<ol>
+  <li><strong>Never update data directly from buttons:</strong> Every operator interaction must emit an L1 event.</li>
+  <li><strong>Link transactions:</strong> Every new order or tracking entry must update the client's digital twin brains and graph relationships.</li>
+  <li><strong>Audit Trails:</strong> Maintain audit timestamps and operator references on database changes.</li>
+</ol>

@@ -1,0 +1,69 @@
+<h1>Module 8 — Autonomous Transportation Planning & Dispatch System (ATPDS)</h1>
+
+<p>The <strong>Autonomous Transportation Planning & Dispatch System (ATPDS)</strong> is GatiFleet's core routing engine, executing transit optimization solutions across India's highways.</p>
+
+<h2>1. Business Goal</h2>
+<p>Reduce logistics operating expenses (empty kilometers, fuel use, drivers overtime) while maximizing SLA delivery compliance.</p>
+
+<h2>2. System Components</h2>
+<ul>
+  <li><strong>Unified Transportation Graph:</strong> Models depots, warehouses, checkpoints, and highway corridors (e.g. NH48, NH44) as nodes and edges.</li>
+  <li><strong>Multi-Objective Solver:</strong> Runs optimization algorithms to weigh travel duration and fuel overheads against driver rest schedules.</li>
+  <li><strong>Dynamic Re-Optimization Engine:</strong> Instantly modifies shipment assignments if roadblocks, mechanical failures, or border delays occur.</li>
+</ul>
+
+<h2>3. Dispatch Planning Flow</h2>
+<div class="diagram-container">
+  <pre class="mermaid">
+graph LR
+    Booking[New Shipment Booking] --> Solver[Multi-Objective Solver]
+    Solver --> Path[Identify Route Options]
+    Path --> Check{Driver Rest & Telematics OK?}
+    Check -->|Yes| Dispatch[Assign Driver & Vehicle]
+    Check -->|No| Solver
+    Dispatch --> Track[Monitor Telematics]
+  </pre>
+</div>
+
+<h2>4. Event Taxonomy</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Event Name</th>
+      <th>Trigger</th>
+      <th>Database / State Changes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>ROUTE_PLAN_GENERATED</code></td>
+      <td>Dispatch solver completes pathway calculations.</td>
+      <td>Saves active path checkpoints; reserves vehicle/driver slot.</td>
+    </tr>
+    <tr>
+      <td><code>DISPATCH_COMMITTED</code></td>
+      <td>Planner confirms route or AI agent triggers autogo.</td>
+      <td>Updates shipment state to 'Dispatched'; transmits details to driver portal.</td>
+    </tr>
+    <tr>
+      <td><code>ROUTE_DEVIATION_ALERT</code></td>
+      <td>Vehicle GPS drifts from plan corridor by >10km.</td>
+      <td>Flags trip status; initiates recovery desk alerts.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>5. L1 Event Payload Example</h2>
+<pre><code class="language-json">{
+  "eventId": "evt_atpds_209384",
+  "eventType": "ROUTE_DEVIATION_ALERT",
+  "timestamp": "2026-07-06T12:22:00Z",
+  "payload": {
+    "tripId": "TRIP-019283",
+    "driverId": "DRV-1928",
+    "vehicleId": "VEH-MH12-9028",
+    "expectedCorridor": "NH48-Mumbai-Pune",
+    "currentLocation": "18.3921, 73.8402",
+    "deviationKilometers": 14.5
+  }
+}</code></pre>

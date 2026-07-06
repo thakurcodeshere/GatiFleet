@@ -1,0 +1,36 @@
+<h1>Knowledge Graph Synchronization</h1>
+
+<p>Every operational transaction within GatiFleet updates a centralized <strong>Supply Chain Knowledge Graph</strong>. This represents live spatial, commercial, and operational dependencies, allowing the AI agents to locate bottlenecks and trace root causes.</p>
+
+<h2>Graph Relationship Model</h2>
+<p>The knowledge graph connects entities using semantic edges. A simplified layout of relationships is mapped below:</p>
+
+<div class="diagram-container">
+  <pre class="mermaid">
+graph LR
+    CUS[Customer] -->|HAS_CONTRACT| CON[Contract]
+    CUS -->|USES_ROUTE| RTE[Route Corridor]
+    CUS -->|CREATES_CASES| CAS[Support Case]
+    RTE -->|SERVED_BY| FLT[Fleet Vehicle]
+    FLT -->|ASSIGNED_TO| DRV[Driver Profile]
+    RTE -->|DEPENDS_ON| WH[Warehouse Hub]
+  </pre>
+</div>
+
+<h2>Core Graph Node Types</h2>
+<ul>
+  <li><strong>Customer:</strong> Holds organizational attributes, digital twin references, and global health ratings.</li>
+  <li><strong>Contract:</strong> Defines SLA penalty rules, corridor tariffs, and payment days.</li>
+  <li><strong>Route Corridor:</strong> Tracks checkpoints, FASTag toll coordinates, and average transit durations.</li>
+  <li><strong>Fleet Vehicle:</strong> Holds engine metrics, tyre health configurations, and trailer dimensions.</li>
+  <li><strong>Driver Profile:</strong> Records compliance ratings, rest logs, and lane safety scores.</li>
+  <li><strong>Warehouse Hub:</strong> Represents yard layouts, scale capacities, and labor schedules.</li>
+</ul>
+
+<h2>Dynamic Event Sync</h2>
+<p>Unlike relational databases that perform nightly batch updates, GatiFleet syncs graph relationships immediately on L1 events:</p>
+<ol>
+  <li><strong><code>CUSTOMER_CREATED</code>:</strong> Inserts a new Customer node and maps relations to Assigned Account Managers.</li>
+  <li><strong><code>DISPATCH_COMMITTED</code>:</strong> Establishes a temporary <code>SERVES</code> edge between a Fleet Vehicle, Driver, and the Customer node.</li>
+  <li><strong><code>ROUTE_DEVIATION_ALERT</code>:</strong> Appends a temporary <code>BLOCKED_BY</code> or <code>DEVIATED_FROM</code> edge, triggering a route re-calculation check.</li>
+</ol>

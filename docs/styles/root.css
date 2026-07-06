@@ -1,0 +1,94 @@
+/* Base Design Token Variables matching trees.software aesthetic */
+:root {
+  /* Fonts */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+
+  /* Sizing */
+  --header-height: 56px;
+  --sidebar-width: 260px;
+  --max-content-width: 860px;
+  --border-radius: 6px;
+
+  /* HSL Color Tokens - Light Theme Default */
+  --bg-h: 0;
+  --bg-s: 0%;
+  --bg-l: 100%;
+  --bg: hsl(var(--bg-h), var(--bg-s), var(--bg-l));
+  
+  --fg-h: 0;
+  --fg-s: 0%;
+  --fg-l: 9%;
+  --fg: hsl(var(--fg-h), var(--fg-s), var(--fg-l));
+  --fg-muted: hsl(var(--fg-h), var(--fg-s), 45%);
+  
+  --border: hsl(var(--fg-h), var(--fg-s), 92%);
+  --sidebar-bg: hsl(var(--bg-h), var(--bg-s), 98%);
+  --header-bg: hsla(var(--bg-h), var(--bg-s), var(--bg-l), 0.8);
+  --accent: hsl(35, 100%, 50%); /* Amber accent for GatiFleet */
+  --accent-muted: hsl(35, 100%, 94%);
+  
+  --code-bg: hsl(var(--fg-h), var(--fg-s), 96%);
+  --callout-info-bg: hsl(210, 100%, 96%);
+  --callout-info-border: hsl(210, 100%, 80%);
+  --callout-info-fg: hsl(210, 100%, 25%);
+
+  --callout-warning-bg: hsl(35, 100%, 96%);
+  --callout-warning-border: hsl(35, 100%, 80%);
+  --callout-warning-fg: hsl(35, 100%, 25%);
+}
+
+/* Dark Mode Override (matching trees.software dark theme) */
+[data-theme="dark"] {
+  --bg-h: 0;
+  --bg-s: 0%;
+  --bg-l: 4%;
+  --bg: hsl(var(--bg-h), var(--bg-s), var(--bg-l)); /* #0a0a0a */
+  
+  --fg-h: 0;
+  --fg-s: 0%;
+  --fg-l: 93%;
+  --fg: hsl(var(--fg-h), var(--fg-s), var(--fg-l));
+  --fg-muted: hsl(var(--fg-h), var(--fg-s), 55%);
+  
+  --border: hsl(var(--fg-h), var(--fg-s), 14%);
+  --sidebar-bg: hsl(var(--bg-h), var(--bg-s), 5%); /* #0d0d0d */
+  --header-bg: hsla(var(--bg-h), var(--bg-s), var(--bg-l), 0.8);
+  --accent: hsl(38, 92%, 50%); /* Vibrant Amber */
+  --accent-muted: hsl(38, 92%, 12%);
+  
+  --code-bg: hsl(var(--fg-h), var(--fg-s), 9%);
+  --callout-info-bg: hsl(210, 100%, 8%);
+  --callout-info-border: hsl(210, 100%, 20%);
+  --callout-info-fg: hsl(210, 100%, 80%);
+
+  --callout-warning-bg: hsl(38, 92%, 8%);
+  --callout-warning-border: hsl(38, 92%, 20%);
+  --callout-warning-fg: hsl(38, 92%, 80%);
+}
+
+/* Global resets and system font setups */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg);
+  color: var(--fg);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+a:hover {
+  text-decoration: none;
+}

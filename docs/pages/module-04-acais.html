@@ -1,0 +1,66 @@
+<h1>Module 4 — Autonomous Commercial Agreement Intelligence System (ACAIS)</h1>
+
+<p>The <strong>Autonomous Commercial Agreement Intelligence System (ACAIS)</strong> translates raw legal agreements into executable digital policy parameters, monitoring SLA violation risks in real-time.</p>
+
+<h2>1. Business Goal</h2>
+<p>Protect operating margins and avoid contractual penalties by parsing legal clauses into structured code rules and forecasting renewability months before expiration.</p>
+
+<h2>2. System Mechanics</h2>
+<ul>
+  <li><strong>Clause Compiler:</strong> Runs regex and OCR parsers on contract PDFs to extract rate escalators, volume commitments, and SLA thresholds. Converts them to executable logic code blocks (e.g. <code>IF Transit_Time > 72 HOURS THEN Trigger_Penalty(5%)</code>).</li>
+  <li><strong>Commercial Risk Index:</strong> Calculates exposure risk (0-100) based on historical route volatility, fuel price indicators, and asset locking expenses.</li>
+  <li><strong>SLA Monitor:</strong> Regularly checks shipment transit profiles, warning the dispatch panel if a route is trending toward an SLA penalty event.</li>
+</ul>
+
+<h2>3. Clause Parse & Execute Pipeline</h2>
+<div class="diagram-container">
+  <pre class="mermaid">
+flowchart LR
+    PDF[Raw Contract PDF] --> Parser[Clause Parser OCR]
+    Parser -->|Extracts Rule Logic| Rules[Agreement Policies]
+    Rules -->|Applies to| Billing[RABIP Billing Engine]
+    Rules -->|Applies to| Dispatch[ATPDS Routing Engine]
+  </pre>
+</div>
+
+<h2>4. Event Taxonomy</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Event Name</th>
+      <th>Trigger</th>
+      <th>Database / State Changes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>AGREEMENT_COMPILED</code></td>
+      <td>Legal team uploads signed PDF.</td>
+      <td>Inserts contract parameters; compiles active logic policies.</td>
+    </tr>
+    <tr>
+      <td><code>SLA_WARN_TRIGGERED</code></td>
+      <td>Active trip ETA matches or exceeds contract SLA limit.</td>
+      <td>Flags trip record; dispatches re-routing requests to Dispatch.</td>
+    </tr>
+    <tr>
+      <td><code>RENEWAL_FORECAST_GENERATED</code></td>
+      <td>Contract hits its 90-day pre-expiry window.</td>
+      <td>Calculates estimated margin outcome; updates pipeline.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>5. L1 Event Payload Example</h2>
+<pre><code class="language-json">{
+  "eventId": "evt_acais_309182",
+  "eventType": "SLA_WARN_TRIGGERED",
+  "timestamp": "2026-07-06T12:12:00Z",
+  "payload": {
+    "contractId": "CON-28931",
+    "tripId": "TRIP-019283",
+    "slaThresholdHours": 48.0,
+    "currentEtaHours": 51.5,
+    "potentialPenaltyEstimate": 12500.00
+  }
+}</code></pre>

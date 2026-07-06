@@ -1,0 +1,71 @@
+<h1>Module 5 — Revenue Assurance & Autonomous Billing Intelligence Platform (RABIP)</h1>
+
+<p>The <strong>Revenue Assurance & Autonomous Billing Intelligence Platform (RABIP)</strong> matches operational events (telemetry, FASTag crossings, sensor logs) against commercial contract rules to automate invoicing and invoice validation.</p>
+
+<h2>1. Business Goal</h2>
+<p>Eliminate revenue leakage and billing disputes by dynamically calculating freight ratings, fuel surcharges, accessorial delays, and SLA penalties without manual intervention.</p>
+
+<h2>2. Core Modules</h2>
+<ul>
+  <li><strong>Revenue Event Ledger:</strong> Ingests GPS locations, geo-fence transitions, and loading dock timestamps as raw billing events.</li>
+  <li><strong>Fraud & Override Scanner:</strong> Cross-checks driver manual overrides and repeated toll reimbursement claims, flagging anomalous records with a fraud score.</li>
+  <li><strong>Dynamic Fuel Rating Engine:</strong> Automatically adjusts fuel surcharge adjustments based on regional daily fuel indexes.</li>
+  <li><strong>SLA Penalty Adjuster:</strong> Applies penalties or rebates automatically to invoice lines based on transit logs.</li>
+</ul>
+
+<h2>3. Billing Lifecycle Flow</h2>
+<div class="diagram-container">
+  <pre class="mermaid">
+stateDiagram-v2
+    [*] --> PendingRating : Trip Completed
+    PendingRating --> RatingCalculated : Apply Surcharge & Accessorials
+    RatingCalculated --> AuditFailed : Fraud / GPS Mismatch
+    RatingCalculated --> Audited : Validation Checked
+    Audited --> InvoiceGenerated : Create Legal PDF
+    InvoiceGenerated --> [*] : Invoiced
+  </pre>
+</div>
+
+<h2>4. Event Taxonomy</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Event Name</th>
+      <th>Trigger</th>
+      <th>Database / State Changes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>BILLABLE_EVENT_NORMALIZED</code></td>
+      <td>GPS telemetry shows vehicle entering customer geofence.</td>
+      <td>Logs normalized timestamp, corridor, and GPS signature.</td>
+    </tr>
+    <tr>
+      <td><code>INVOICE_AUDIT_COMPLETED</code></td>
+      <td>Fraud check matches toll crossings against logs.</td>
+      <td>Saves fraud score; updates status to 'Approved' or 'Flagged'.</td>
+    </tr>
+    <tr>
+      <td><code>INVOICE_DISPATCHED</code></td>
+      <td>Invoice JSON compiles and registers.</td>
+      <td>Applies P&L values to financial ledgers; emails client.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>5. L1 Event Payload Example</h2>
+<pre><code class="language-json">{
+  "eventId": "evt_rabip_749182",
+  "eventType": "INVOICE_AUDIT_COMPLETED",
+  "timestamp": "2026-07-06T12:15:00Z",
+  "payload": {
+    "invoiceId": "INV-90283",
+    "tripId": "TRIP-019283",
+    "baseRate": 38000.00,
+    "fuelSurcharge": 4200.00,
+    "tollCharges": 1850.00,
+    "detentionCharges": 1200.00,
+    "fraudConfidenceScore": 0.02
+  }
+}</code></pre>

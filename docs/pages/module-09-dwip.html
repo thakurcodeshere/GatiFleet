@@ -1,0 +1,69 @@
+<h1>Module 9 — Driver Workforce Intelligence Platform (DWIP)</h1>
+
+<p>The <strong>Driver Workforce Intelligence Platform (DWIP)</strong> oversees driver shift scheduling, route rosters, licensing compliance, and real-time safety scores.</p>
+
+<h2>1. Business Goal</h2>
+<p>Ensure regulatory compliance (hours-of-service, rest patterns) and optimize driver retention rates while calculating payouts dynamically based on safety metrics.</p>
+
+<h2>2. Core Components</h2>
+<ul>
+  <li><strong>Driver Digital Twin:</strong> Stores licensing limits, route familiarity history, rest-log parameters, and safe-driving indices.</li>
+  <li><strong>Smart Roster Engine:</strong> Matches driver schedules against highway routing constraints, checking hours-of-service safety windows.</li>
+  <li><strong>Event-Driven Payroll:</strong> Automatically computes trip allowances, night surcharges, and fuel savings bonuses directly from geofence events.</li>
+</ul>
+
+<h2>3. Driver Roster Verification</h2>
+<div class="diagram-container">
+  <pre class="mermaid">
+stateDiagram-v2
+    [*] --> RosterCandidate : Shift Planning Initiated
+    RosterCandidate --> ValidationPassed : HOS Checked & License Active
+    RosterCandidate --> ValidationFailed : Rest Hours Insufficient
+    ValidationPassed --> AssignedToTrip : Roster Committed
+    AssignedToTrip --> CompletedTrip : Trip Completed
+    CompletedTrip --> AllowanceCalculated : Apply Surcharges
+    AllowanceCalculated --> [*] : Paid
+  </pre>
+</div>
+
+<h2>4. Event Taxonomy</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Event Name</th>
+      <th>Trigger</th>
+      <th>Database / State Changes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>DRIVER_ROSTERED</code></td>
+      <td>Roster solver confirms vehicle-driver match.</td>
+      <td>Sets shift schedule row; links driver to trip.</td>
+    </tr>
+    <tr>
+      <td><code>FATIGUE_WARN_TRIGGERED</code></td>
+      <td>ADAS sensor flags repeated lane drift or long hours.</td>
+      <td>Logs fatigue warning; alerts dispatch planner.</td>
+    </tr>
+    <tr>
+      <td><code>PAYROLL_LINE_CALCULATED</code></td>
+      <td>Trip completed event triggers rating engine.</td>
+      <td>Creates allowance records; queues payout to ERP.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>5. L1 Event Payload Example</h2>
+<pre><code class="language-json">{
+  "eventId": "evt_dwip_409182",
+  "eventType": "FATIGUE_WARN_TRIGGERED",
+  "timestamp": "2026-07-06T12:25:00Z",
+  "payload": {
+    "driverId": "DRV-1928",
+    "tripId": "TRIP-019283",
+    "consecutiveDrivingHours": 8.5,
+    "adasScore": 62,
+    "lastRestStop": "2026-07-06T03:55:00Z"
+  }
+}</code></pre>
