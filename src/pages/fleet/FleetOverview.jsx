@@ -1140,6 +1140,19 @@ export default function FleetOverview() {
   );
 }
 
+// Indian Commercial Vehicle Models Map
+const VEHICLE_MODELS_MAP = {
+  'Tata Motors': ['Tata Signa 4825.T', 'Tata Prima 5530.S', 'Tata Ultra T.16', 'Tata LPT 1918', 'Tata Signa 2821.T', 'Tata Prima 3530.K'],
+  'Ashok Leyland': ['Ashok Leyland 4825 HN', 'Ashok Leyland 5520', 'Ashok Leyland Ecomet 1615', 'Ashok Leyland Boss 1215', 'Ashok Leyland AVTR 3120', 'Ashok Leyland Bada Dost'],
+  'Mahindra & Mahindra': ['Mahindra Blazo X 49', 'Mahindra Furio 14', 'Mahindra Blazo X 35', 'Mahindra Cruzio', 'Mahindra Bolero Maxx'],
+  'BharatBenz': ['BharatBenz 4828R', 'BharatBenz 5528TT', 'BharatBenz 1917R', 'BharatBenz 2823R', 'BharatBenz 3523R'],
+  'Eicher Motors': ['Eicher Pro 6048', 'Eicher Pro 3019', 'Eicher Pro 2049', 'Eicher Pro 8055', 'Eicher Pro 6028'],
+  'Volvo Trucks': ['Volvo FMX 460 Tipper', 'Volvo FH 520 Puller', 'Volvo FM 420 Haulage'],
+  'Scania India': ['Scania R500 Heavy Puller', 'Scania G410 Tipper', 'Scania P410 Coal Hauler'],
+  'AMW': ['AMW 2518 TP Tipper', 'AMW 3118 HL Haulage'],
+  'Isuzu Motors': ['Isuzu D-Max S-Cab', 'Isuzu MU-X Support Utility']
+};
+
 // ---- REGISTRATION HELPER / MODAL COMPONENT ----
 function AddVehicleModal({ onClose, onAdd }) {
   const [step, setStep] = useState(1);
@@ -1506,8 +1519,45 @@ function AddVehicleModal({ onClose, onAdd }) {
                     value={formData.stateCode}
                     onChange={(e) => handleInputChange('stateCode', e.target.value)}
                   >
-                    {['MH', 'DL', 'KA', 'TN', 'GJ', 'RJ', 'UP', 'WB', 'AP', 'HR'].map(st => (
-                      <option key={st} value={st}>{st} ({st === 'MH' ? 'Maharashtra' : st === 'DL' ? 'Delhi' : st === 'KA' ? 'Karnataka' : st === 'TN' ? 'Tamil Nadu' : st === 'GJ' ? 'Gujarat' : st})</option>
+                    {[
+                      { c: 'AN', n: 'Andaman & Nicobar' },
+                      { c: 'AP', n: 'Andhra Pradesh' },
+                      { c: 'AR', n: 'Arunachal Pradesh' },
+                      { c: 'AS', n: 'Assam' },
+                      { c: 'BR', n: 'Bihar' },
+                      { c: 'CH', n: 'Chandigarh' },
+                      { c: 'CG', n: 'Chhattisgarh' },
+                      { c: 'DN', n: 'Dadra & Nagar Haveli' },
+                      { c: 'DL', n: 'Delhi' },
+                      { c: 'GA', n: 'Goa' },
+                      { c: 'GJ', n: 'Gujarat' },
+                      { c: 'HR', n: 'Haryana' },
+                      { c: 'HP', n: 'Himachal Pradesh' },
+                      { c: 'JK', n: 'Jammu & Kashmir' },
+                      { c: 'JH', n: 'Jharkhand' },
+                      { c: 'KA', n: 'Karnataka' },
+                      { c: 'KL', n: 'Kerala' },
+                      { c: 'LA', n: 'Ladakh' },
+                      { c: 'LD', n: 'Lakshadweep' },
+                      { c: 'MP', n: 'Madhya Pradesh' },
+                      { c: 'MH', n: 'Maharashtra' },
+                      { c: 'MN', n: 'Manipur' },
+                      { c: 'ML', n: 'Meghalaya' },
+                      { c: 'MZ', n: 'Mizoram' },
+                      { c: 'NL', n: 'Nagaland' },
+                      { c: 'OD', n: 'Odisha' },
+                      { c: 'PB', n: 'Punjab' },
+                      { c: 'PY', n: 'Puducherry' },
+                      { c: 'RJ', n: 'Rajasthan' },
+                      { c: 'SK', n: 'Sikkim' },
+                      { c: 'TN', n: 'Tamil Nadu' },
+                      { c: 'TS', n: 'Telangana' },
+                      { c: 'TR', n: 'Tripura' },
+                      { c: 'UP', n: 'Uttar Pradesh' },
+                      { c: 'UK', n: 'Uttarakhand' },
+                      { c: 'WB', n: 'West Bengal' }
+                    ].map(st => (
+                      <option key={st.c} value={st.c}>{st.c} - {st.n}</option>
                     ))}
                   </select>
                 </div>
@@ -1555,9 +1605,17 @@ function AddVehicleModal({ onClose, onAdd }) {
                   <select
                     style={modalStyles.select}
                     value={formData.maker}
-                    onChange={(e) => handleInputChange('maker', e.target.value)}
+                    onChange={(e) => {
+                      const newMaker = e.target.value;
+                      const defaultModel = VEHICLE_MODELS_MAP[newMaker]?.[0] || '';
+                      setFormData(prev => ({
+                        ...prev,
+                        maker: newMaker,
+                        model: defaultModel
+                      }));
+                    }}
                   >
-                    {['Tata Motors', 'Ashok Leyland', 'BharatBenz', 'Mahindra', 'Eicher'].map(m => (
+                    {Object.keys(VEHICLE_MODELS_MAP).map(m => (
                       <option key={m} value={m}>{m}</option>
                     ))}
                   </select>
@@ -1569,15 +1627,9 @@ function AddVehicleModal({ onClose, onAdd }) {
                     value={formData.model}
                     onChange={(e) => handleInputChange('model', e.target.value)}
                   >
-                    {formData.maker === 'Tata Motors' && [
-                      'Tata Signa 4825.T', 'Tata Prima 5530.S', 'Tata Ultra T.16'
-                    ].map(mo => <option key={mo} value={mo}>{mo}</option>)}
-                    {formData.maker === 'Ashok Leyland' && [
-                      'Ashok Leyland 3520', 'Ashok Leyland 4220', 'Ashok Leyland Ecomet'
-                    ].map(mo => <option key={mo} value={mo}>{mo}</option>)}
-                    {formData.maker !== 'Tata Motors' && formData.maker !== 'Ashok Leyland' && [
-                      'BharatBenz 3523R', 'Mahindra Blazo X 35', 'Eicher Pro 6048'
-                    ].map(mo => <option key={mo} value={mo}>{mo}</option>)}
+                    {(VEHICLE_MODELS_MAP[formData.maker] || []).map(mo => (
+                      <option key={mo} value={mo}>{mo}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -1602,7 +1654,18 @@ function AddVehicleModal({ onClose, onAdd }) {
                     value={formData.type}
                     onChange={(e) => handleInputChange('type', e.target.value)}
                   >
-                    {['Heavy Goods Vehicle (HGV)', 'Medium Goods Vehicle (MGV)', 'Multi-Axle Trailer', 'Reefer Container'].map(vc => (
+                    {[
+                      'Heavy Goods Vehicle (HGV)',
+                      'Medium Goods Vehicle (MGV)',
+                      'Light Commercial Vehicle (LCV)',
+                      'Multi-Axle Articulated Trailer',
+                      'Tipper / Dumper Truck',
+                      'Reefer Container (Cold Chain)',
+                      'Liquid/Gas Tanker',
+                      'Tractor-Trailer Unit',
+                      'Box Container Truck',
+                      'Special Purpose Vehicle (SPV)'
+                    ].map(vc => (
                       <option key={vc} value={vc}>{vc}</option>
                     ))}
                   </select>
