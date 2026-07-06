@@ -1404,6 +1404,7 @@ function AddVehicleModal({ onClose, onAdd }) {
       display: 'flex',
       flexDirection: 'column',
       gap: '6px',
+      minWidth: 0,
     }),
     label: {
       fontSize: '11px',
@@ -1483,30 +1484,10 @@ function AddVehicleModal({ onClose, onAdd }) {
 
         {/* Wizard Steps */}
         <div style={modalStyles.wizardBar}>
-          <span 
-            style={{ ...modalStyles.stepIndicator(step === 1), cursor: 'pointer' }}
-            onClick={() => setStep(1)}
-          >
-            1. RTO & Maker
-          </span>
-          <span 
-            style={{ ...modalStyles.stepIndicator(step === 2), cursor: 'pointer' }}
-            onClick={() => setStep(2)}
-          >
-            2. Engine & Weights
-          </span>
-          <span 
-            style={{ ...modalStyles.stepIndicator(step === 3), cursor: 'pointer' }}
-            onClick={() => setStep(3)}
-          >
-            3. Permits & FASTag
-          </span>
-          <span 
-            style={{ ...modalStyles.stepIndicator(step === 4), cursor: 'pointer' }}
-            onClick={() => setStep(4)}
-          >
-            4. Hub Assignment
-          </span>
+          <span style={modalStyles.stepIndicator(step === 1)}>1. RTO & Maker</span>
+          <span style={modalStyles.stepIndicator(step === 2)}>2. Engine & Weights</span>
+          <span style={modalStyles.stepIndicator(step === 3)}>3. Permits & FASTag</span>
+          <span style={modalStyles.stepIndicator(step === 4)}>4. Hub Assignment</span>
         </div>
 
         <form onSubmit={handleSubmit} style={modalStyles.form}>
