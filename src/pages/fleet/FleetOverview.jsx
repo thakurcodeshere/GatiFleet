@@ -450,6 +450,11 @@ export default function FleetOverview() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+  const [classFilter, setClassFilter] = useState('all');
+  const [fuelTypeFilter, setFuelTypeFilter] = useState('all');
+  const [lowFuelFilter, setLowFuelFilter] = useState(false);
+  const [movingOnlyFilter, setMovingOnlyFilter] = useState(false);
 
   const handleStatusChange = (truckId, newStatus) => {
     setTrucks(prev => prev.map(t => t.id === truckId ? { ...t, status: newStatus } : t));
@@ -458,6 +463,38 @@ export default function FleetOverview() {
       newStatus: newStatus,
       timestamp: new Date().toISOString()
     });
+  };
+
+  const handleExportCSV = () => {
+    const headers = ['Vehicle ID', 'Registration Number', 'Maker/Model', 'Status', 'Driver', 'Route From', 'Route To', 'Speed (km/h)', 'Fuel Level (%)', 'Associated Account', 'FASTag ID', 'National Permit'];
+    const rows = filteredTrucks.map(t => [
+      t.id,
+      t.regNumber,
+      t.type,
+      t.status,
+      t.driver,
+      t.origin,
+      t.destination,
+      t.speed,
+      t.fuelLevel,
+      t.business || '',
+      t.fastagId || '',
+      t.nationalPermit || ''
+    ]);
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `GatiFleet_Inventory_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
   const [hoveredRow, setHoveredRow] = useState(null);
   const ITEMS_PER_PAGE = 10;
@@ -492,8 +529,34 @@ export default function FleetOverview() {
       );
     }
 
+    // Vehicle Class Filter
+    if (classFilter !== 'all') {
+      result = result.filter(t => {
+        const type = t.type.toLowerCase();
+        if (classFilter === 'hgv') return type.includes('hgv') || type.includes('heavy') || type.includes('prima') || type.includes('signa') || type.includes('volvo') || type.includes('scania');
+        if (classFilter === 'mgv') return type.includes('mgv') || type.includes('medium') || type.includes('eicher') || type.includes('ultra');
+        if (classFilter === 'lcv') return type.includes('lcv') || type.includes('light') || type.includes('bada') || type.includes('bolero') || type.includes('d-max');
+        return true;
+      });
+    }
+
+    // Fuel Type Filter
+    if (fuelTypeFilter !== 'all') {
+      result = result.filter(t => (t.fuelType || 'Diesel').toLowerCase() === fuelTypeFilter.toLowerCase());
+    }
+
+    // Low Fuel Filter
+    if (lowFuelFilter) {
+      result = result.filter(t => t.fuelLevel < 30);
+    }
+
+    // Moving Only Filter
+    if (movingOnlyFilter) {
+      result = result.filter(t => t.speed > 0);
+    }
+
     return result;
-  }, [searchQuery, statusFilter, trucks]);
+  }, [trucks, statusFilter, searchQuery, classFilter, fuelTypeFilter, lowFuelFilter, movingOnlyFilter]);
 
   const sortedTrucks = useMemo(() => {
     const sorted = [...filteredTrucks];
@@ -621,13 +684,22 @@ export default function FleetOverview() {
             style={styles.btnSecondary}
             whileHover={{ scale: 1.02, background: 'var(--bg-600)' }}
             whileTap={{ scale: 0.97 }}
+            onClick={handleExportCSV}
           >
             <Download size={16} /> Export
           </motion.button>
           <motion.button
-            style={styles.btnSecondary}
+            style={{
+              ...styles.btnSecondary,
+              ...(filterPanelOpen ? {
+                borderColor: 'var(--primary-500)',
+                color: 'var(--primary-400)',
+                background: 'rgba(99, 102, 241, 0.08)'
+              } : {})
+            }}
             whileHover={{ scale: 1.02, background: 'var(--bg-600)' }}
             whileTap={{ scale: 0.97 }}
+            onClick={() => setFilterPanelOpen(prev => !prev)}
           >
             <Filter size={16} /> Filter
           </motion.button>
@@ -769,6 +841,124 @@ export default function FleetOverview() {
               </motion.button>
             )}
           </motion.div>
+
+          {/* Collapsible Filter Drawer */}
+          <AnimatePresence>
+            {filterPanelOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                style={{
+                  background: 'var(--surface)',
+                  border: '1px solid var(--surface-border)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '16px',
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '16px',
+                  marginTop: '12px',
+                  overflow: 'hidden'
+                }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '150px', flex: 1 }}>
+                  <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Vehicle Class</span>
+                  <select
+                    value={classFilter}
+                    onChange={(e) => { setClassFilter(e.target.value); setCurrentPage(1); }}
+                    style={{
+                      background: '#161d30',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: '8px',
+                      padding: '8px 12px',
+                      color: '#fff',
+                      fontSize: '12px',
+                      outline: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <option value="all">All Classes</option>
+                    <option value="hgv">Heavy Goods Vehicle (HGV)</option>
+                    <option value="mgv">Medium Goods Vehicle (MGV)</option>
+                    <option value="lcv">Light Commercial Vehicle (LCV)</option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '150px', flex: 1 }}>
+                  <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Fuel Type</span>
+                  <select
+                    value={fuelTypeFilter}
+                    onChange={(e) => { setFuelTypeFilter(e.target.value); setCurrentPage(1); }}
+                    style={{
+                      background: '#161d30',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: '8px',
+                      padding: '8px 12px',
+                      color: '#fff',
+                      fontSize: '12px',
+                      outline: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <option value="all">All Fuel Types</option>
+                    <option value="diesel">Diesel</option>
+                    <option value="cng">CNG</option>
+                    <option value="lng">LNG</option>
+                    <option value="electric">Electric</option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: '150px', flex: 1, marginTop: '20px' }}>
+                  <input
+                    type="checkbox"
+                    id="low-fuel-checkbox"
+                    checked={lowFuelFilter}
+                    onChange={(e) => { setLowFuelFilter(e.target.checked); setCurrentPage(1); }}
+                    style={{ cursor: 'pointer', width: '15px', height: '15px' }}
+                  />
+                  <label htmlFor="low-fuel-checkbox" style={{ fontSize: '12px', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+                    Low Fuel Alert (&lt;30%)
+                  </label>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: '150px', flex: 1, marginTop: '20px' }}>
+                  <input
+                    type="checkbox"
+                    id="moving-only-checkbox"
+                    checked={movingOnlyFilter}
+                    onChange={(e) => { setMovingOnlyFilter(e.target.checked); setCurrentPage(1); }}
+                    style={{ cursor: 'pointer', width: '15px', height: '15px' }}
+                  />
+                  <label htmlFor="moving-only-checkbox" style={{ fontSize: '12px', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+                    Moving Vehicles Only
+                  </label>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto', marginTop: '16px' }}>
+                  <button
+                    onClick={() => {
+                      setClassFilter('all');
+                      setFuelTypeFilter('all');
+                      setLowFuelFilter(false);
+                      setMovingOnlyFilter(false);
+                      setCurrentPage(1);
+                    }}
+                    style={{
+                      background: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: '6px',
+                      padding: '6px 12px',
+                      color: 'var(--text-secondary)',
+                      fontSize: '11px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Reset Filters
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* ---- Fleet Table ---- */}
           <motion.div
