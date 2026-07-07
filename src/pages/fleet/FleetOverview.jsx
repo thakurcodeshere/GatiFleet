@@ -1268,6 +1268,7 @@ function AddVehicleModal({ onClose, onAdd }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (step < 4) return;
     if (!validateStep()) return;
 
     const fullRegNo = `${formData.stateCode}-${formData.rtoCode}-${formData.series.toUpperCase()}-${formData.regNum}`;
@@ -1900,6 +1901,7 @@ function AddVehicleModal({ onClose, onAdd }) {
 
             {step < 4 ? (
               <button
+                key="btn-next-step"
                 type="button"
                 style={{ ...styles.btnPrimary, padding: '8px 20px' }}
                 onClick={handleNext}
@@ -1908,6 +1910,7 @@ function AddVehicleModal({ onClose, onAdd }) {
               </button>
             ) : (
               <button
+                key="btn-commission-submit"
                 type="submit"
                 style={{ ...styles.btnPrimary, background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)', padding: '8px 24px' }}
               >
