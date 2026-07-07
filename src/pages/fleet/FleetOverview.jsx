@@ -1156,6 +1156,7 @@ const VEHICLE_MODELS_MAP = {
 // ---- REGISTRATION HELPER / MODAL COMPONENT ----
 function AddVehicleModal({ onClose, onAdd }) {
   const [step, setStep] = useState(1);
+  const [lastStepChangeTime, setLastStepChangeTime] = useState(0);
   const [formData, setFormData] = useState({
     stateCode: 'MH',
     rtoCode: '12',
@@ -1258,17 +1259,21 @@ function AddVehicleModal({ onClose, onAdd }) {
 
   const handleNext = () => {
     if (validateStep()) {
+      setLastStepChangeTime(Date.now());
       setStep(prev => prev + 1);
     }
   };
 
   const handleBack = () => {
+    setLastStepChangeTime(Date.now());
     setStep(prev => prev - 1);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (step < 4) return;
+    // Block submission if step was changed less than 400ms ago (prevents mouseup/click leak)
+    if (Date.now() - lastStepChangeTime < 400) return;
     if (!validateStep()) return;
 
     const fullRegNo = `${formData.stateCode}-${formData.rtoCode}-${formData.series.toUpperCase()}-${formData.regNum}`;
