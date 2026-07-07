@@ -879,12 +879,14 @@ export default function FleetOverview() {
                                 onClick={() => setSelectedTruckForRouteMap(truck)}
                                 title="Click to manually update route & view live map"
                               >
-                                <MapPin size={11} color="var(--text-muted)" />
+                                <MapPin size={11} color="var(--primary-500)" />
                                 <span style={{ color: 'var(--primary-500)', fontSize: '12px', textDecoration: 'underline' }}>
                                   {truck.origin}
                                 </span>
-                                <span style={{ color: 'var(--text-muted)', margin: '0 2px' }}>→</span>
-                                <span style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{truck.destination}</span>
+                                <span style={{ color: 'var(--primary-500)', margin: '0 4px' }}>→</span>
+                                <span style={{ color: 'var(--primary-500)', fontSize: '12px', textDecoration: 'underline' }}>
+                                  {truck.destination}
+                                </span>
                               </div>
                            </td>
                           <td style={styles.td}>
