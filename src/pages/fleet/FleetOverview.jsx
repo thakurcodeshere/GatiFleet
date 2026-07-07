@@ -451,6 +451,7 @@ export default function FleetOverview() {
   const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
   const [classFilter, setClassFilter] = useState('all');
   const [fuelTypeFilter, setFuelTypeFilter] = useState('all');
   const [lowFuelFilter, setLowFuelFilter] = useState(false);
@@ -684,7 +685,7 @@ export default function FleetOverview() {
             style={styles.btnSecondary}
             whileHover={{ scale: 1.02, background: 'var(--bg-600)' }}
             whileTap={{ scale: 0.97 }}
-            onClick={handleExportCSV}
+            onClick={() => setExportModalOpen(true)}
           >
             <Download size={16} /> Export
           </motion.button>
@@ -1374,6 +1375,15 @@ export default function FleetOverview() {
               setTrucks(prev => prev.map(t => t.id === truckId ? { ...t, origin: newOrigin, destination: newDestination } : t));
               setSelectedTruckForRouteMap(null);
             }}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {exportModalOpen && (
+          <ExportSettingsModal
+            filteredTrucks={filteredTrucks}
+            onClose={() => setExportModalOpen(false)}
           />
         )}
       </AnimatePresence>
@@ -2916,6 +2926,305 @@ function RouteMapModal({ truck, onClose, onUpdateRoute }) {
           <div style={modalStyles.mapPanel}>
             <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
           </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+// ---- EXPORT SETTINGS MODAL (COLUMN SELECTOR & PRESETS) ----
+const EXPORT_COLUMNS = [
+  { key: 'id', label: 'Vehicle ID', category: 'Operational' },
+  { key: 'regNumber', label: 'Registration Number', category: 'Operational' },
+  { key: 'type', label: 'Vehicle Maker/Model', category: 'Operational' },
+  { key: 'status', label: 'Operational Status', category: 'Operational' },
+  { key: 'driver', label: 'Driver Assigned', category: 'Operational' },
+  { key: 'route', label: 'Route Details (From/To)', category: 'Operational' },
+  { key: 'speed', label: 'Live Telematics Speed', category: 'Operational' },
+  { key: 'fuelLevel', label: 'Live Fuel Level', category: 'Operational' },
+  { key: 'business', label: 'Associated Account', category: 'Compliance' },
+  { key: 'fastagId', label: 'FASTag RFID Link', category: 'Compliance' },
+  { key: 'nationalPermit', label: 'National Permit Status', category: 'Compliance' },
+  { key: 'pucNumber', label: 'PUC Number', category: 'Compliance' },
+  { key: 'insurancePolicy', label: 'Insurance Policy ID', category: 'Compliance' }
+];
+
+function ExportSettingsModal({ filteredTrucks, onClose }) {
+  const [selectedFields, setSelectedFields] = useState(() => EXPORT_COLUMNS.map(c => c.key));
+  const [exportFormat, setExportFormat] = useState('csv');
+
+  const handleToggleField = (key) => {
+    setSelectedFields(prev =>
+      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
+    );
+  };
+
+  const applyPreset = (presetType) => {
+    if (presetType === 'all') {
+      setSelectedFields(EXPORT_COLUMNS.map(c => c.key));
+    } else if (presetType === 'operational') {
+      setSelectedFields(['id', 'regNumber', 'type', 'status', 'driver', 'route', 'speed', 'fuelLevel']);
+    } else if (presetType === 'compliance') {
+      setSelectedFields(['id', 'regNumber', 'business', 'fastagId', 'nationalPermit', 'pucNumber', 'insurancePolicy']);
+    } else if (presetType === 'none') {
+      setSelectedFields([]);
+    }
+  };
+
+  const handleDownload = () => {
+    if (selectedFields.length === 0) {
+      alert('Please select at least one column to export.');
+      return;
+    }
+
+    const exportData = filteredTrucks.map(t => {
+      const obj = {};
+      selectedFields.forEach(key => {
+        if (key === 'route') {
+          obj['Route From'] = t.origin;
+          obj['Route To'] = t.destination;
+        } else {
+          const colMeta = EXPORT_COLUMNS.find(c => c.key === key);
+          obj[colMeta ? colMeta.label : key] = t[key] || '';
+        }
+      });
+      return obj;
+    });
+
+    let blobContent = '';
+    let mimeType = 'text/plain';
+    let fileExt = 'txt';
+
+    if (exportFormat === 'csv') {
+      const headers = [];
+      selectedFields.forEach(key => {
+        if (key === 'route') {
+          headers.push('Route From', 'Route To');
+        } else {
+          const colMeta = EXPORT_COLUMNS.find(c => c.key === key);
+          headers.push(colMeta ? colMeta.label : key);
+        }
+      });
+
+      const csvRows = [
+        headers.join(','),
+        ...exportData.map(row =>
+          headers.map(header => {
+            const val = row[header] !== undefined ? row[header] : '';
+            return `"${String(val).replace(/"/g, '""')}"`;
+          }).join(',')
+        )
+      ];
+      blobContent = csvRows.join('\n');
+      mimeType = 'text/csv;charset=utf-8;';
+      fileExt = 'csv';
+    } else {
+      blobContent = JSON.stringify(exportData, null, 2);
+      mimeType = 'application/json;charset=utf-8;';
+      fileExt = 'json';
+    }
+
+    const blob = new Blob([blobContent], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `GatiFleet_Report_${new Date().toISOString().split('T')[0]}.${fileExt}`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    onClose();
+  };
+
+  const modalStyles = {
+    overlay: {
+      position: 'fixed',
+      top: 0, left: 0, right: 0, bottom: 0,
+      background: 'rgba(10, 15, 30, 0.75)',
+      backdropFilter: 'blur(12px)',
+      zIndex: 1200,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px',
+    },
+    container: {
+      width: '100%',
+      maxWidth: '620px',
+      background: '#131929',
+      border: '1px solid rgba(255,255,255,0.08)',
+      borderRadius: '16px',
+      padding: '28px',
+      boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+      position: 'relative',
+    },
+    closeBtn: {
+      position: 'absolute',
+      top: '20px', right: '20px',
+      background: 'transparent', border: 'none',
+      color: 'var(--text-secondary)', cursor: 'pointer',
+      padding: '4px', borderRadius: '50%',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    },
+    titleSection: {
+      marginBottom: '20px',
+    },
+    badge: {
+      fontSize: '10px', fontWeight: 700,
+      padding: '3px 8px', background: 'rgba(56, 206, 60, 0.15)',
+      color: '#38CE3C', borderRadius: '10px',
+      border: '1px solid rgba(56, 206, 60, 0.3)',
+      textTransform: 'uppercase', letterSpacing: '0.5px',
+      display: 'inline-block', marginBottom: '8px'
+    },
+    headerText: {
+      fontSize: '20px', fontWeight: 700, color: '#fff', margin: 0,
+    },
+    subtitleText: {
+      fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px'
+    },
+    sectionTitle: {
+      fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)',
+      textTransform: 'uppercase', letterSpacing: '0.5px',
+      margin: '20px 0 10px 0', borderBottom: '1px solid rgba(255,255,255,0.06)',
+      paddingBottom: '6px'
+    },
+    checkboxGrid: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: '10px',
+    },
+    checkboxLabel: {
+      display: 'flex', alignItems: 'center', gap: '8px',
+      fontSize: '13px', color: 'var(--text-secondary)',
+      cursor: 'pointer', padding: '6px', borderRadius: '6px',
+      transition: 'background 0.2s',
+      userSelect: 'none'
+    },
+    presetButton: {
+      padding: '6px 12px', borderRadius: '6px',
+      border: '1px solid rgba(255,255,255,0.08)',
+      background: 'rgba(255,255,255,0.02)',
+      color: 'var(--text-secondary)', fontSize: '11px',
+      cursor: 'pointer', fontWeight: 600, transition: 'all 0.2s'
+    },
+    formatOption: {
+      display: 'flex', alignItems: 'center', gap: '8px',
+      fontSize: '13px', color: '#fff', cursor: 'pointer'
+    }
+  };
+
+  return (
+    <div style={modalStyles.overlay}>
+      <motion.div
+        style={modalStyles.container}
+        initial={{ opacity: 0, scale: 0.95, y: 15 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 15 }}
+      >
+        <button style={modalStyles.closeBtn} onClick={onClose}>
+          <X size={18} />
+        </button>
+
+        <div style={modalStyles.titleSection}>
+          <div style={modalStyles.badge}>Export Dispatcher</div>
+          <h2 style={modalStyles.headerText}>Configure Export Columns</h2>
+          <p style={modalStyles.subtitleText}>Choose which columns to include in the exported document ({filteredTrucks.length} vehicles matching filters).</p>
+        </div>
+
+        {/* Presets Row */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+          <button style={modalStyles.presetButton} onClick={() => applyPreset('all')}>Select All</button>
+          <button style={modalStyles.presetButton} onClick={() => applyPreset('operational')}>Operational Only</button>
+          <button style={modalStyles.presetButton} onClick={() => applyPreset('compliance')}>Compliance Only</button>
+          <button style={modalStyles.presetButton} onClick={() => applyPreset('none')}>Clear All</button>
+        </div>
+
+        {/* Columns Lists */}
+        <div>
+          <div style={modalStyles.sectionTitle}>Operational Columns</div>
+          <div style={modalStyles.checkboxGrid}>
+            {EXPORT_COLUMNS.filter(c => c.category === 'Operational').map(c => (
+              <label key={c.key} style={modalStyles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={selectedFields.includes(c.key)}
+                  onChange={() => handleToggleField(c.key)}
+                  style={{ width: '15px', height: '15px', cursor: 'pointer' }}
+                />
+                {c.label}
+              </label>
+            ))}
+          </div>
+
+          <div style={modalStyles.sectionTitle}>Compliance Details</div>
+          <div style={modalStyles.checkboxGrid}>
+            {EXPORT_COLUMNS.filter(c => c.category === 'Compliance').map(c => (
+              <label key={c.key} style={modalStyles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={selectedFields.includes(c.key)}
+                  onChange={() => handleToggleField(c.key)}
+                  style={{ width: '15px', height: '15px', cursor: 'pointer' }}
+                />
+                {c.label}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Export Format Section */}
+        <div style={modalStyles.sectionTitle}>Document Format</div>
+        <div style={{ display: 'flex', gap: '20px', marginBottom: '24px' }}>
+          <label style={modalStyles.formatOption}>
+            <input
+              type="radio"
+              name="export-format"
+              checked={exportFormat === 'csv'}
+              onChange={() => setExportFormat('csv')}
+              style={{ cursor: 'pointer' }}
+            />
+            Comma Separated Values (.csv)
+          </label>
+          <label style={modalStyles.formatOption}>
+            <input
+              type="radio"
+              name="export-format"
+              checked={exportFormat === 'json'}
+              onChange={() => setExportFormat('json')}
+              style={{ cursor: 'pointer' }}
+            />
+            JSON Structured Format (.json)
+          </label>
+        </div>
+
+        {/* Footer Actions */}
+        <div style={{ display: 'flex', gap: '10px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '18px' }}>
+          <button
+            style={{
+              padding: '10px 18px', borderRadius: '8px', border: 'none',
+              background: 'linear-gradient(135deg, #10b981, #059669)',
+              color: '#fff', fontSize: '13px', fontWeight: 600,
+              cursor: 'pointer', flex: 1, display: 'flex', alignItems: 'center',
+              justifyContent: 'center', gap: '8px'
+            }}
+            onClick={handleDownload}
+          >
+            <Download size={14} /> Download Report
+          </button>
+          <button
+            style={{
+              padding: '10px 18px', borderRadius: '8px',
+              border: '1px solid rgba(255,255,255,0.08)',
+              background: 'rgba(255,255,255,0.02)',
+              color: 'var(--text-secondary)', fontSize: '13px',
+              fontWeight: 600, cursor: 'pointer'
+            }}
+            onClick={onClose}
+          >
+            Cancel
+          </button>
         </div>
       </motion.div>
     </div>
