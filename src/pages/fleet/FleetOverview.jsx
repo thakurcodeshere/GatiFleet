@@ -2155,7 +2155,7 @@ function VehicleDocumentsModal({ truck, onClose }) {
     val: {
       fontSize: '12px',
       fontWeight: 600,
-      color: 'var(--text-primary)',
+      color: '#ffffff',
       marginTop: '2px',
       wordBreak: 'break-all',
     },
@@ -2249,7 +2249,7 @@ function VehicleDocumentsModal({ truck, onClose }) {
           <div style={modalStyles.verifiedItem}>
             <div>
               <div style={modalStyles.label}>National Transport Permit</div>
-              <div style={{ fontSize: '11px', fontWeight: 600, marginTop: '2px', fontFamily: 'var(--font-mono)' }}>
+              <div style={{ fontSize: '11px', fontWeight: 600, marginTop: '2px', fontFamily: 'var(--font-mono)', color: '#ffffff' }}>
                 {truck.nationalPermit || 'NP/2026/MH/10892'}
               </div>
             </div>
@@ -2261,7 +2261,7 @@ function VehicleDocumentsModal({ truck, onClose }) {
           <div style={modalStyles.verifiedItem}>
             <div>
               <div style={modalStyles.label}>FASTag ID (NPCI RFID Link)</div>
-              <div style={{ fontSize: '11px', fontWeight: 600, marginTop: '2px', fontFamily: 'var(--font-mono)' }}>
+              <div style={{ fontSize: '11px', fontWeight: 600, marginTop: '2px', fontFamily: 'var(--font-mono)', color: '#ffffff' }}>
                 {truck.fastagId || 'FT-8829103982710328'}
               </div>
             </div>
@@ -2273,7 +2273,7 @@ function VehicleDocumentsModal({ truck, onClose }) {
           <div style={modalStyles.verifiedItem}>
             <div>
               <div style={modalStyles.label}>Pollution Under Control (PUC)</div>
-              <div style={{ fontSize: '11px', fontWeight: 600, marginTop: '2px', fontFamily: 'var(--font-mono)' }}>
+              <div style={{ fontSize: '11px', fontWeight: 600, marginTop: '2px', fontFamily: 'var(--font-mono)', color: '#ffffff' }}>
                 {truck.pucNumber || 'PUC/MH/88219'}
               </div>
             </div>
@@ -2285,7 +2285,7 @@ function VehicleDocumentsModal({ truck, onClose }) {
           <div style={modalStyles.verifiedItem}>
             <div>
               <div style={modalStyles.label}>Carrier Insurance Policy</div>
-              <div style={{ fontSize: '11px', fontWeight: 600, marginTop: '2px', fontFamily: 'var(--font-mono)' }}>
+              <div style={{ fontSize: '11px', fontWeight: 600, marginTop: '2px', fontFamily: 'var(--font-mono)', color: '#ffffff' }}>
                 {truck.insurancePolicy || 'INS/CR-992182'}
               </div>
             </div>
