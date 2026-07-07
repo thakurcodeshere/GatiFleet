@@ -1509,7 +1509,7 @@ function AddVehicleModal({ onClose, onAdd }) {
           <span style={modalStyles.stepIndicator(step === 4)}>4. Hub Assignment</span>
         </div>
 
-        <form onSubmit={handleSubmit} style={modalStyles.form}>
+        <div style={modalStyles.form}>
           {/* STEP 1: Registration and Maker */}
           {step === 1 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -1924,15 +1924,16 @@ function AddVehicleModal({ onClose, onAdd }) {
               ) : (
                 <button
                   key="btn-commission-submit"
-                  type="submit"
+                  type="button"
                   style={{ ...styles.btnPrimary, background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)', padding: '8px 24px' }}
+                  onClick={handleSubmit}
                 >
                   Commission Vehicle
                 </button>
               )}
             </div>
           </div>
-        </form>
+        </div>
       </motion.div>
     </div>
   );
