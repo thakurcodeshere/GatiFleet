@@ -1835,62 +1835,74 @@ function AddVehicleModal({ onClose, onAdd }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={modalStyles.infoBox}>
                 <MapPin size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
-                <span>Specify the operating hubs, business division, and designate a licensed driver for the newly commissioned fleet asset.</span>
+                <span>Specify the operating hubs, business division, and designate a licensed driver. Type freely or select from suggestions.</span>
               </div>
               <div style={modalStyles.row}>
                 <div style={modalStyles.col(12)}>
                   <label style={modalStyles.label}>Designated Driver</label>
-                  <select
-                    style={modalStyles.select}
+                  <input
+                    style={modalStyles.input}
                     value={formData.driver}
+                    placeholder="e.g. Rajesh Kumar"
                     onChange={(e) => handleInputChange('driver', e.target.value)}
-                  >
+                    list="drivers-list"
+                  />
+                  <datalist id="drivers-list">
                     {['Rajesh Kumar', 'Amit Singh', 'Sukhwinder Singh', 'Gurpreet Singh', 'Harpreet Singh', 'Mohammad Ali', 'Vijay Yadav'].map(dr => (
-                      <option key={dr} value={dr}>{dr}</option>
+                      <option key={dr} value={dr} />
                     ))}
-                  </select>
+                  </datalist>
                 </div>
               </div>
 
               <div style={modalStyles.row}>
                 <div style={modalStyles.col(6)}>
                   <label style={modalStyles.label}>Base Origin Hub</label>
-                  <select
-                    style={modalStyles.select}
+                  <input
+                    style={modalStyles.input}
                     value={formData.origin}
+                    placeholder="e.g. Mumbai"
                     onChange={(e) => handleInputChange('origin', e.target.value)}
-                  >
+                    list="origins-list"
+                  />
+                  <datalist id="origins-list">
                     {['Mumbai', 'Delhi', 'Chennai', 'Kolkata', 'Ahmedabad', 'Pune', 'Guwahati', 'Hyderabad', 'Bangalore'].map(cit => (
-                      <option key={cit} value={cit}>{cit}</option>
+                      <option key={cit} value={cit} />
                     ))}
-                  </select>
+                  </datalist>
                 </div>
                 <div style={modalStyles.col(6)}>
                   <label style={modalStyles.label}>Route Destination Hub</label>
-                  <select
-                    style={modalStyles.select}
+                  <input
+                    style={modalStyles.input}
                     value={formData.destination}
+                    placeholder="e.g. Delhi"
                     onChange={(e) => handleInputChange('destination', e.target.value)}
-                  >
+                    list="destinations-list"
+                  />
+                  <datalist id="destinations-list">
                     {['Delhi', 'Mumbai', 'Chennai', 'Kolkata', 'Ahmedabad', 'Pune', 'Guwahati', 'Hyderabad', 'Bangalore'].map(cit => (
-                      <option key={cit} value={cit} disabled={cit === formData.origin}>{cit}</option>
+                      <option key={cit} value={cit} />
                     ))}
-                  </select>
+                  </datalist>
                 </div>
               </div>
 
               <div style={modalStyles.row}>
                 <div style={modalStyles.col(12)}>
                   <label style={modalStyles.label}>Associated Business Account</label>
-                  <select
-                    style={modalStyles.select}
+                  <input
+                    style={modalStyles.input}
                     value={formData.business}
+                    placeholder="e.g. Tata Motors Logistics"
                     onChange={(e) => handleInputChange('business', e.target.value)}
-                  >
+                    list="business-list"
+                  />
+                  <datalist id="business-list">
                     {['Tata Motors Logistics', 'Reliance Retail Ltd', 'ITC Foods Division', 'Amazon India Core', 'Ambuja Cements'].map(bs => (
-                      <option key={bs} value={bs}>{bs}</option>
+                      <option key={bs} value={bs} />
                     ))}
-                  </select>
+                  </datalist>
                 </div>
               </div>
             </div>
