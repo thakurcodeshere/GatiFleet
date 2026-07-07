@@ -112,16 +112,23 @@ const styles = {
     backdropFilter: 'blur(12px)',
   },
   contentGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 300px',
+    display: 'flex',
+    flexDirection: 'column',
     gap: '24px',
-    alignItems: 'flex-start',
+    width: '100%',
   },
   mainContent: {
     display: 'flex',
     flexDirection: 'column',
     gap: '20px',
+    width: '100%',
     minWidth: 0,
+  },
+  bottomGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+    gap: '20px',
+    width: '100%',
   },
   // ---- Status Cards ----
   statusCardsRow: {
@@ -995,11 +1002,11 @@ export default function FleetOverview() {
           </motion.div>
         </div>
 
-        {/* ---- Quick Stats Sidebar ---- */}
+        {/* ---- Bottom Stats Grid ---- */}
         <motion.div
-          style={styles.sidebar}
-          initial={{ opacity: 0, x: 30 }}
-          animate={{ opacity: 1, x: 0 }}
+          style={styles.bottomGrid}
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
         >
           {/* Fleet Quick Stats */}
