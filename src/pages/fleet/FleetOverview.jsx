@@ -452,6 +452,7 @@ export default function FleetOverview() {
   const [currentPage, setCurrentPage] = useState(1);
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [selectedTrendMetric, setSelectedTrendMetric] = useState('distance');
   const [classFilter, setClassFilter] = useState('all');
   const [fuelTypeFilter, setFuelTypeFilter] = useState('all');
   const [lowFuelFilter, setLowFuelFilter] = useState(false);
@@ -600,7 +601,23 @@ export default function FleetOverview() {
     const totalDistToday = trucks.filter(t => t.status === 'active').reduce((s, t) => s + (t.speed || 0) * 4, 0);
     const fuelConsumption = trucks.filter(t => t.status === 'active').length * 38;
     const maintenanceAlerts = trucks.filter(t => (t.healthScore || 0) < 75).length;
-    return { avgAge, totalDistToday, fuelConsumption, maintenanceAlerts };
+
+    const co2Emissions = Math.round(fuelConsumption * 2.68);
+    const safetyScore = Math.round(85 + (trucks.filter(t => t.speed < 80).length / totalCount) * 12);
+    const operatingCost = Math.round(fuelConsumption * 92.5 + totalDistToday * 6.8);
+    const activeCount = trucks.filter(t => t.status === 'active').length;
+    const dispatchRate = Math.round((activeCount / totalCount) * 100);
+
+    return {
+      avgAge,
+      totalDistToday,
+      fuelConsumption,
+      maintenanceAlerts,
+      co2Emissions,
+      safetyScore: safetyScore > 100 ? 100 : safetyScore,
+      operatingCost,
+      dispatchRate
+    };
   }, [trucks]);
 
   // ---- Helpers ----
@@ -1204,26 +1221,70 @@ export default function FleetOverview() {
           <div style={styles.sidebarCard}>
             <h3 style={styles.sidebarTitle}>
               <BarChart3 size={16} color="#6366f1" />
-              Quick Stats
+              Quick Stats <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginLeft: 'auto', fontWeight: 'normal' }}>(Click to view graph)</span>
             </h3>
-            <div style={styles.statRow}>
-              <span style={styles.statLabel}>Average Fleet Age</span>
-              <span style={styles.statValue}>{quickStats.avgAge} yrs</span>
+            
+            <div
+              style={{
+                ...styles.statRow,
+                cursor: 'pointer',
+                background: selectedTrendMetric === 'age' ? 'rgba(99, 102, 241, 0.08)' : 'transparent',
+                borderRadius: '6px',
+                padding: '8px 10px',
+                margin: '2px 0'
+              }}
+              onClick={() => setSelectedTrendMetric(selectedTrendMetric === 'age' ? null : 'age')}
+            >
+              <span style={{ ...styles.statLabel, color: selectedTrendMetric === 'age' ? 'var(--primary-400)' : 'var(--text-secondary)' }}>Average Fleet Age</span>
+              <span style={{ ...styles.statValue, color: '#fff' }}>{quickStats.avgAge} yrs</span>
             </div>
-            <div style={styles.statRow}>
-              <span style={styles.statLabel}>Total Distance Today</span>
+
+            <div
+              style={{
+                ...styles.statRow,
+                cursor: 'pointer',
+                background: selectedTrendMetric === 'distance' ? 'rgba(56, 206, 60, 0.08)' : 'transparent',
+                borderRadius: '6px',
+                padding: '8px 10px',
+                margin: '2px 0'
+              }}
+              onClick={() => setSelectedTrendMetric(selectedTrendMetric === 'distance' ? null : 'distance')}
+            >
+              <span style={{ ...styles.statLabel, color: selectedTrendMetric === 'distance' ? '#38CE3C' : 'var(--text-secondary)' }}>Total Distance Today</span>
               <span style={{ ...styles.statValue, color: '#38CE3C' }}>
                 {(quickStats.totalDistToday).toLocaleString('en-IN')} km
               </span>
             </div>
-            <div style={styles.statRow}>
-              <span style={styles.statLabel}>Fuel Consumption</span>
+
+            <div
+              style={{
+                ...styles.statRow,
+                cursor: 'pointer',
+                background: selectedTrendMetric === 'fuel' ? 'rgba(245, 158, 11, 0.08)' : 'transparent',
+                borderRadius: '6px',
+                padding: '8px 10px',
+                margin: '2px 0'
+              }}
+              onClick={() => setSelectedTrendMetric(selectedTrendMetric === 'fuel' ? null : 'fuel')}
+            >
+              <span style={{ ...styles.statLabel, color: selectedTrendMetric === 'fuel' ? '#f59e0b' : 'var(--text-secondary)' }}>Fuel Consumption</span>
               <span style={{ ...styles.statValue, color: '#f59e0b' }}>
                 {quickStats.fuelConsumption.toLocaleString('en-IN')} L
               </span>
             </div>
-            <div style={{ ...styles.statRow, borderBottom: 'none' }}>
-              <span style={styles.statLabel}>Maintenance Alerts</span>
+
+            <div
+              style={{
+                ...styles.statRow,
+                cursor: 'pointer',
+                background: selectedTrendMetric === 'alerts' ? 'rgba(255, 77, 107, 0.08)' : 'transparent',
+                borderRadius: '6px',
+                padding: '8px 10px',
+                margin: '2px 0'
+              }}
+              onClick={() => setSelectedTrendMetric(selectedTrendMetric === 'alerts' ? null : 'alerts')}
+            >
+              <span style={{ ...styles.statLabel, color: selectedTrendMetric === 'alerts' ? '#FF4D6B' : 'var(--text-secondary)' }}>Maintenance Alerts</span>
               <span style={{
                 ...styles.statValue,
                 color: quickStats.maintenanceAlerts > 0 ? '#FF4D6B' : '#38CE3C',
@@ -1231,10 +1292,155 @@ export default function FleetOverview() {
                 alignItems: 'center',
                 gap: '4px',
               }}>
-                {quickStats.maintenanceAlerts > 0 && <AlertTriangle size={14} />}
+                {quickStats.maintenanceAlerts > 0 && <AlertTriangle size={12} />}
                 {quickStats.maintenanceAlerts}
               </span>
             </div>
+
+            {/* Advanced Metric 1: CO2 Emissions */}
+            <div
+              style={{
+                ...styles.statRow,
+                cursor: 'pointer',
+                background: selectedTrendMetric === 'co2' ? 'rgba(16, 185, 129, 0.08)' : 'transparent',
+                borderRadius: '6px',
+                padding: '8px 10px',
+                margin: '2px 0'
+              }}
+              onClick={() => setSelectedTrendMetric(selectedTrendMetric === 'co2' ? null : 'co2')}
+            >
+              <span style={{ ...styles.statLabel, color: selectedTrendMetric === 'co2' ? '#10b981' : 'var(--text-secondary)' }}>Carbon Emissions</span>
+              <span style={{ ...styles.statValue, color: '#10b981' }}>{quickStats.co2Emissions.toLocaleString('en-IN')} kg</span>
+            </div>
+
+            {/* Advanced Metric 2: Driver Safety Score */}
+            <div
+              style={{
+                ...styles.statRow,
+                cursor: 'pointer',
+                background: selectedTrendMetric === 'safety' ? 'rgba(59, 130, 246, 0.08)' : 'transparent',
+                borderRadius: '6px',
+                padding: '8px 10px',
+                margin: '2px 0'
+              }}
+              onClick={() => setSelectedTrendMetric(selectedTrendMetric === 'safety' ? null : 'safety')}
+            >
+              <span style={{ ...styles.statLabel, color: selectedTrendMetric === 'safety' ? '#3b82f6' : 'var(--text-secondary)' }}>Avg Safety Score</span>
+              <span style={{ ...styles.statValue, color: '#3b82f6' }}>{quickStats.safetyScore} / 100</span>
+            </div>
+
+            {/* Advanced Metric 3: Est. Operating Costs */}
+            <div
+              style={{
+                ...styles.statRow,
+                cursor: 'pointer',
+                background: selectedTrendMetric === 'cost' ? 'rgba(236, 72, 153, 0.08)' : 'transparent',
+                borderRadius: '6px',
+                padding: '8px 10px',
+                margin: '2px 0'
+              }}
+              onClick={() => setSelectedTrendMetric(selectedTrendMetric === 'cost' ? null : 'cost')}
+            >
+              <span style={{ ...styles.statLabel, color: selectedTrendMetric === 'cost' ? '#ec4899' : 'var(--text-secondary)' }}>Est. Daily Cost</span>
+              <span style={{ ...styles.statValue, color: '#ec4899' }}>₹{quickStats.operatingCost.toLocaleString('en-IN')}</span>
+            </div>
+
+            {/* Advanced Metric 4: Active Dispatch Rate */}
+            <div
+              style={{
+                ...styles.statRow,
+                borderBottom: 'none',
+                cursor: 'pointer',
+                background: selectedTrendMetric === 'dispatch' ? 'rgba(168, 85, 247, 0.08)' : 'transparent',
+                borderRadius: '6px',
+                padding: '8px 10px',
+                margin: '2px 0'
+              }}
+              onClick={() => setSelectedTrendMetric(selectedTrendMetric === 'dispatch' ? null : 'dispatch')}
+            >
+              <span style={{ ...styles.statLabel, color: selectedTrendMetric === 'dispatch' ? '#a855f7' : 'var(--text-secondary)' }}>Active Dispatch Rate</span>
+              <span style={{ ...styles.statValue, color: '#a855f7' }}>{quickStats.dispatchRate}%</span>
+            </div>
+
+            {/* Trend Graph Container */}
+            {selectedTrendMetric && METRIC_TRENDS[selectedTrendMetric] && (() => {
+              const trend = METRIC_TRENDS[selectedTrendMetric];
+              const maxVal = Math.max(...trend.data);
+              const minVal = Math.min(...trend.data);
+              const valRange = maxVal - minVal || 1;
+              const points = trend.data.map((val, idx) => {
+                const x = 30 + (idx * 30);
+                const y = 80 - ((val - minVal) / valRange) * 50;
+                return `${x},${y}`;
+              }).join(' ');
+
+              return (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  style={{
+                    marginTop: '16px',
+                    padding: '12px',
+                    background: 'rgba(255,255,255,0.02)',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>{trend.label}</span>
+                    <span style={{ fontSize: '10px', color: trend.color, fontWeight: 700 }}>7-Day History</span>
+                  </div>
+                  <div style={{ height: '90px', position: 'relative', marginTop: '4px' }}>
+                    <svg style={{ width: '100%', height: '100%', overflow: 'visible' }}>
+                      <line x1="30" y1="30" x2="220" y2="30" stroke="rgba(255,255,255,0.05)" strokeDasharray="3,3" />
+                      <line x1="30" y1="80" x2="220" y2="80" stroke="rgba(255,255,255,0.05)" strokeDasharray="3,3" />
+
+                      <polyline
+                        fill="none"
+                        stroke={trend.color}
+                        strokeWidth="2.5"
+                        points={points}
+                      />
+
+                      <polygon
+                        fill={`${trend.color}15`}
+                        points={`30,80 ${points} 210,80`}
+                      />
+
+                      {trend.data.map((val, idx) => {
+                        const x = 30 + (idx * 30);
+                        const y = 80 - ((val - minVal) / valRange) * 50;
+                        return (
+                          <g key={idx}>
+                            <circle
+                              cx={x}
+                              cy={y}
+                              r={idx === 6 ? "4.5" : "3.5"}
+                              fill={idx === 6 ? "#fff" : trend.color}
+                              stroke={trend.color}
+                              strokeWidth="1.5"
+                            />
+                            <text
+                              x={x}
+                              y={y - 8}
+                              fontSize="8px"
+                              fill="var(--text-secondary)"
+                              textAnchor="middle"
+                              fontWeight="600"
+                            >
+                              {val.toLocaleString('en-IN')}
+                            </text>
+                          </g>
+                        );
+                      })}
+                    </svg>
+                  </div>
+                </motion.div>
+              );
+            })()}
           </div>
 
           {/* Fleet Utilization */}
@@ -2592,6 +2798,58 @@ function VehicleDocumentsModal({ truck, onClose }) {
     </div>
   );
 }
+
+// ---- HISTORICAL METRIC TRENDS ----
+const METRIC_TRENDS = {
+  age: {
+    label: 'Average Fleet Age Trend (Years)',
+    data: [4.9, 4.8, 4.8, 4.7, 4.7, 4.7, 4.7],
+    color: '#818cf8',
+    yLabel: 'Years'
+  },
+  distance: {
+    label: 'Total Distance Traveled (Daily km)',
+    data: [2100, 2350, 2480, 2200, 2400, 2600, 2480],
+    color: '#38CE3C',
+    yLabel: 'km'
+  },
+  fuel: {
+    label: 'Fuel Consumption (Daily Liters)',
+    data: [320, 360, 380, 340, 370, 410, 380],
+    color: '#f59e0b',
+    yLabel: 'Liters'
+  },
+  alerts: {
+    label: 'Open Maintenance Alerts (Count)',
+    data: [18, 17, 16, 19, 15, 14, 16],
+    color: '#FF4D6B',
+    yLabel: 'Alerts'
+  },
+  co2: {
+    label: 'Carbon Emissions (kg CO2)',
+    data: [850, 960, 1018, 910, 990, 1100, 1018],
+    color: '#10b981',
+    yLabel: 'kg'
+  },
+  safety: {
+    label: 'Average Driver Safety Score',
+    data: [89, 90, 91, 91, 92, 92, 92],
+    color: '#3b82f6',
+    yLabel: 'Score'
+  },
+  cost: {
+    label: 'Daily Operating Costs (₹)',
+    data: [42000, 45000, 48500, 43000, 47000, 51000, 48500],
+    color: '#ec4899',
+    yLabel: '₹'
+  },
+  dispatch: {
+    label: 'Active Dispatch Rate (%)',
+    data: [28, 30, 32, 29, 31, 33, 32],
+    color: '#a855f7',
+    yLabel: '%'
+  }
+};
 
 // ---- ROUTE MAP MODAL (INTERACTIVE MAP & MANUALLY UPDATE ROUTE) ----
 const CITY_COORDS = {
