@@ -4,7 +4,7 @@
 // India's Transportation Intelligence Network
 // ============================================================
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Truck, Search, Filter, Plus, Download, ChevronUp, ChevronDown,
@@ -438,10 +438,20 @@ export default function FleetOverview() {
   const [trucks, setTrucks] = useState(() => ALL_TRUCKS);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [selectedTruckForDocs, setSelectedTruckForDocs] = useState(null);
+  const [selectedTruckForRouteMap, setSelectedTruckForRouteMap] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
+
+  const handleStatusChange = (truckId, newStatus) => {
+    setTrucks(prev => prev.map(t => t.id === truckId ? { ...t, status: newStatus } : t));
+    RealityEngine.dispatchEvent('VEHICLE_STATUS_CHANGED', {
+      vehicleId: truckId,
+      newStatus: newStatus,
+      timestamp: new Date().toISOString()
+    });
+  };
   const [hoveredRow, setHoveredRow] = useState(null);
   const ITEMS_PER_PAGE = 10;
 
@@ -829,35 +839,54 @@ export default function FleetOverview() {
                             <span style={{ fontSize: '12px' }}>{truck.type}</span>
                           </td>
                           <td style={styles.td}>
-                            <span style={{
-                              ...styles.statusBadge,
-                              color: scfg.color,
-                              background: scfg.bg,
-                            }}>
-                              <span style={{
-                                width: '6px', height: '6px', borderRadius: '50%',
-                                background: scfg.color,
-                                ...(truck.status === 'active' ? {
-                                  animation: 'pulse 1.5s ease-in-out infinite',
-                                  boxShadow: `0 0 6px ${scfg.color}`,
-                                } : {}),
-                              }} />
-                              {scfg.label}
-                            </span>
-                          </td>
-                          <td style={styles.td}>
-                            <span style={{ fontSize: '12px' }}>{truck.driver}</span>
-                          </td>
-                          <td style={styles.td}>
-                            <div style={styles.routeText}>
-                              <MapPin size={11} color="var(--text-muted)" />
-                              <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>
-                                {truck.origin}
-                              </span>
-                              <span style={{ color: 'var(--text-muted)', margin: '0 2px' }}>→</span>
-                              <span style={{ fontSize: '12px' }}>{truck.destination}</span>
-                            </div>
-                          </td>
+                             <select
+                               value={truck.status}
+                               onChange={(e) => handleStatusChange(truck.id, e.target.value)}
+                               style={{
+                                 ...styles.statusBadge,
+                                 color: scfg.color,
+                                 background: scfg.bg,
+                                 border: '1px solid rgba(255,255,255,0.08)',
+                                 padding: '4px 24px 4px 10px',
+                                 appearance: 'none',
+                                 cursor: 'pointer',
+                                 outline: 'none',
+                                 backgroundImage: `url("data:image/svg+xml;utf8,<svg fill='${encodeURIComponent(scfg.color)}' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>")`,
+                                 backgroundRepeat: 'no-repeat',
+                                 backgroundPosition: 'right 4px center',
+                                 fontSize: '11px',
+                                 fontWeight: 600,
+                                 borderRadius: '12px',
+                               }}
+                             >
+                               {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
+                                 <option
+                                   key={key}
+                                   value={key}
+                                   style={{ background: '#131929', color: '#fff' }}
+                                 >
+                                   {cfg.label}
+                                 </option>
+                               ))}
+                             </select>
+                           </td>
+                           <td style={styles.td}>
+                             <span style={{ fontSize: '12px' }}>{truck.driver}</span>
+                           </td>
+                           <td style={styles.td}>
+                             <div
+                               style={{ ...styles.routeText, cursor: 'pointer' }}
+                               onClick={() => setSelectedTruckForRouteMap(truck)}
+                               title="Click to manually update route & view live map"
+                             >
+                               <MapPin size={11} color="var(--primary-400)" />
+                               <span style={{ color: 'var(--primary-400)', fontSize: '12px', textDecoration: 'underline' }}>
+                                 {truck.origin}
+                               </span>
+                               <span style={{ color: 'var(--text-muted)', margin: '0 2px' }}>→</span>
+                               <span style={{ fontSize: '12px', color: '#fff' }}>{truck.destination}</span>
+                             </div>
+                           </td>
                           <td style={styles.td}>
                             <span style={{
                               ...styles.speedCell,
@@ -1133,6 +1162,19 @@ export default function FleetOverview() {
           <VehicleDocumentsModal
             truck={selectedTruckForDocs}
             onClose={() => setSelectedTruckForDocs(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {selectedTruckForRouteMap && (
+          <RouteMapModal
+            truck={selectedTruckForRouteMap}
+            onClose={() => setSelectedTruckForRouteMap(null)}
+            onUpdateRoute={(truckId, newOrigin, newDestination) => {
+              setTrucks(prev => prev.map(t => t.id === truckId ? { ...t, origin: newOrigin, destination: newDestination } : t));
+              setSelectedTruckForRouteMap(null);
+            }}
           />
         )}
       </AnimatePresence>
@@ -2336,6 +2378,345 @@ function VehicleDocumentsModal({ truck, onClose }) {
           >
             Close Wallet
           </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+// ---- ROUTE MAP MODAL (INTERACTIVE MAP & MANUALLY UPDATE ROUTE) ----
+const CITY_COORDS = {
+  'Mumbai': [19.0760, 72.8777],
+  'Delhi': [28.7041, 77.1025],
+  'Chennai': [13.0827, 80.2707],
+  'Kolkata': [22.5726, 88.3639],
+  'Ahmedabad': [23.0225, 72.5714],
+  'Pune': [18.5204, 73.8567],
+  'Guwahati': [26.1158, 91.7086],
+  'Hyderabad': [17.3850, 78.4867],
+  'Bangalore': [12.9716, 77.5946],
+  'Kochi': [9.9312, 76.2673],
+  'Jaipur': [26.9124, 75.7873],
+  'Nagpur': [21.1458, 79.0882],
+  'Chandigarh': [30.7333, 76.7794],
+  'Coimbatore': [11.0168, 76.9558],
+  'Surat': [21.1702, 72.8311]
+};
+
+function RouteMapModal({ truck, onClose, onUpdateRoute }) {
+  const [tempOrigin, setTempOrigin] = useState(truck.origin || 'Mumbai');
+  const [tempDestination, setTempDestination] = useState(truck.destination || 'Delhi');
+  const mapRef = useRef(null);
+  const mapInstance = useRef(null);
+
+  // Calculate distance based on coordinates
+  const distanceKm = useMemo(() => {
+    const o = CITY_COORDS[tempOrigin] || CITY_COORDS['Mumbai'];
+    const d = CITY_COORDS[tempDestination] || CITY_COORDS['Delhi'];
+    const R = 6371; // km
+    const dLat = (d[0] - o[0]) * Math.PI / 180;
+    const dLon = (d[1] - o[1]) * Math.PI / 180;
+    const lat1 = o[0] * Math.PI / 180;
+    const lat2 = d[0] * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return Math.round(R * c);
+  }, [tempOrigin, tempDestination]);
+
+  const etaHours = useMemo(() => {
+    return Math.round((distanceKm / 60) * 10) / 10;
+  }, [distanceKm]);
+
+  useEffect(() => {
+    if (window.L && mapRef.current) {
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+      }
+
+      const originCoord = CITY_COORDS[tempOrigin] || CITY_COORDS['Mumbai'];
+      const destCoord = CITY_COORDS[tempDestination] || CITY_COORDS['Delhi'];
+
+      const map = window.L.map(mapRef.current, {
+        center: [
+          (originCoord[0] + destCoord[0]) / 2,
+          (originCoord[1] + destCoord[1]) / 2
+        ],
+        zoom: 5,
+        zoomControl: true,
+        attributionControl: false
+      });
+
+      window.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 18
+      }).addTo(map);
+
+      const originMarker = window.L.marker(originCoord).addTo(map);
+      originMarker.bindPopup(`<b>Origin Hub:</b> ${tempOrigin}`).openPopup();
+
+      const destMarker = window.L.marker(destCoord).addTo(map);
+      destMarker.bindPopup(`<b>Destination Hub:</b> ${tempDestination}`);
+
+      const pathLine = window.L.polyline([originCoord, destCoord], {
+        color: '#6366f1',
+        weight: 3,
+        dashArray: '8, 8',
+        opacity: 0.8
+      }).addTo(map);
+
+      map.fitBounds(pathLine.getBounds(), { padding: [40, 40] });
+
+      const truckIcon = window.L.divIcon({
+        className: 'custom-truck-marker',
+        html: `<div style="background: #10b981; border: 2px solid #fff; width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 10px #10b981;"></div>`,
+        iconSize: [12, 12],
+        iconAnchor: [6, 6]
+      });
+
+      const truckMarker = window.L.marker(originCoord, { icon: truckIcon }).addTo(map);
+
+      let pct = 0;
+      const interval = setInterval(() => {
+        pct = (pct + 0.5) % 100;
+        const currentLat = originCoord[0] + (destCoord[0] - originCoord[0]) * (pct / 100);
+        const currentLng = originCoord[1] + (destCoord[1] - originCoord[1]) * (pct / 100);
+        truckMarker.setLatLng([currentLat, currentLng]);
+      }, 40);
+
+      mapInstance.current = map;
+
+      return () => {
+        clearInterval(interval);
+        map.remove();
+        mapInstance.current = null;
+      };
+    }
+  }, [tempOrigin, tempDestination]);
+
+  const modalStyles = {
+    overlay: {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(10, 15, 30, 0.75)',
+      backdropFilter: 'blur(12px)',
+      zIndex: 1100,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px',
+    },
+    container: {
+      width: '100%',
+      maxWidth: '820px',
+      background: '#131929',
+      border: '1px solid rgba(255,255,255,0.08)',
+      borderRadius: '16px',
+      padding: '28px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '20px',
+      boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+      position: 'relative',
+    },
+    closeBtn: {
+      position: 'absolute',
+      top: '20px',
+      right: '20px',
+      background: 'transparent',
+      border: 'none',
+      color: 'var(--text-secondary)',
+      cursor: 'pointer',
+      padding: '4px',
+      borderRadius: '50%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      transition: 'background 0.2s',
+    },
+    titleSection: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px',
+    },
+    badge: {
+      fontSize: '10px',
+      fontWeight: 700,
+      padding: '3px 8px',
+      background: 'rgba(99, 102, 241, 0.15)',
+      color: 'var(--primary-400)',
+      borderRadius: '10px',
+      border: '1px solid rgba(99, 102, 241, 0.3)',
+      textTransform: 'uppercase',
+      letterSpacing: '0.5px'
+    },
+    headerText: {
+      fontSize: '18px',
+      fontWeight: 700,
+      color: '#fff',
+      margin: 0,
+    },
+    layout: {
+      display: 'grid',
+      gridTemplateColumns: '280px 1fr',
+      gap: '20px',
+    },
+    formPanel: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '16px',
+    },
+    mapPanel: {
+      height: '380px',
+      borderRadius: '12px',
+      overflow: 'hidden',
+      border: '1px solid rgba(255,255,255,0.08)',
+      position: 'relative'
+    },
+    label: {
+      fontSize: '11px',
+      fontWeight: 600,
+      color: 'var(--text-secondary)',
+      textTransform: 'uppercase',
+      letterSpacing: '0.5px',
+      marginBottom: '6px',
+      display: 'block'
+    },
+    select: {
+      width: '100%',
+      boxSizing: 'border-box',
+      background: '#161d30',
+      border: '1px solid rgba(255,255,255,0.08)',
+      borderRadius: '8px',
+      padding: '10px 12px',
+      color: '#fff',
+      fontSize: '13px',
+      outline: 'none',
+      fontFamily: 'var(--font-sans)',
+      cursor: 'pointer',
+    },
+    metricsCard: {
+      background: 'rgba(255,255,255,0.02)',
+      border: '1px solid rgba(255,255,255,0.04)',
+      borderRadius: '8px',
+      padding: '14px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '8px',
+    },
+    metricRow: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      fontSize: '12px',
+    }
+  };
+
+  return (
+    <div style={modalStyles.overlay}>
+      <motion.div
+        style={modalStyles.container}
+        initial={{ opacity: 0, scale: 0.95, y: 15 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 15 }}
+      >
+        <button style={modalStyles.closeBtn} onClick={onClose}>
+          <X size={18} />
+        </button>
+
+        <div style={modalStyles.titleSection}>
+          <div style={modalStyles.badge}>Live Routing OS</div>
+          <h2 style={modalStyles.headerText}>Interactive Map & Route Planner</h2>
+        </div>
+
+        <div style={modalStyles.layout}>
+          {/* Left Config Panel */}
+          <div style={modalStyles.formPanel}>
+            <div>
+              <label style={modalStyles.label}>Origin Hub</label>
+              <select
+                style={modalStyles.select}
+                value={tempOrigin}
+                onChange={(e) => setTempOrigin(e.target.value)}
+              >
+                {Object.keys(CITY_COORDS).map(city => (
+                  <option key={city} value={city}>{city}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label style={modalStyles.label}>Destination Hub</label>
+              <select
+                style={modalStyles.select}
+                value={tempDestination}
+                onChange={(e) => setTempDestination(e.target.value)}
+              >
+                {Object.keys(CITY_COORDS).map(city => (
+                  <option key={city} value={city} disabled={city === tempOrigin}>{city}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={modalStyles.metricsCard}>
+              <div style={modalStyles.metricRow}>
+                <span style={{ color: 'var(--text-muted)' }}>Vehicle ID:</span>
+                <span style={{ fontWeight: 600, color: 'var(--primary-400)', fontFamily: 'var(--font-mono)' }}>{truck.id}</span>
+              </div>
+              <div style={modalStyles.metricRow}>
+                <span style={{ color: 'var(--text-muted)' }}>Reg Number:</span>
+                <span style={{ fontWeight: 600, color: '#fff' }}>{truck.regNumber}</span>
+              </div>
+              <div style={modalStyles.metricRow}>
+                <span style={{ color: 'var(--text-muted)' }}>Route Distance:</span>
+                <span style={{ fontWeight: 600, color: '#10b981' }}>{distanceKm} km</span>
+              </div>
+              <div style={modalStyles.metricRow}>
+                <span style={{ color: 'var(--text-muted)' }}>Est. Transit Time:</span>
+                <span style={{ fontWeight: 600, color: '#f59e0b' }}>{etaHours} hrs</span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px', marginTop: 'auto' }}>
+              <button
+                style={{
+                  padding: '10px 16px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #6366f1, #818cf8)',
+                  color: '#fff',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  flex: 1
+                }}
+                onClick={() => onUpdateRoute(truck.id, tempOrigin, tempDestination)}
+              >
+                Save Route
+              </button>
+              <button
+                style={{
+                  padding: '10px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  background: 'rgba(255,255,255,0.02)',
+                  color: 'var(--text-secondary)',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+                onClick={onClose}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+
+          {/* Right Live Map Panel */}
+          <div style={modalStyles.mapPanel}>
+            <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
+          </div>
         </div>
       </motion.div>
     </div>
