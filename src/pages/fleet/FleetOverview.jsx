@@ -874,18 +874,18 @@ export default function FleetOverview() {
                              <span style={{ fontSize: '12px' }}>{truck.driver}</span>
                            </td>
                            <td style={styles.td}>
-                             <div
-                               style={{ ...styles.routeText, cursor: 'pointer' }}
-                               onClick={() => setSelectedTruckForRouteMap(truck)}
-                               title="Click to manually update route & view live map"
-                             >
-                               <MapPin size={11} color="var(--primary-400)" />
-                               <span style={{ color: 'var(--primary-400)', fontSize: '12px', textDecoration: 'underline' }}>
-                                 {truck.origin}
-                               </span>
-                               <span style={{ color: 'var(--text-muted)', margin: '0 2px' }}>→</span>
-                               <span style={{ fontSize: '12px', color: '#fff' }}>{truck.destination}</span>
-                             </div>
+                              <div
+                                style={{ ...styles.routeText, cursor: 'pointer' }}
+                                onClick={() => setSelectedTruckForRouteMap(truck)}
+                                title="Click to manually update route & view live map"
+                              >
+                                <MapPin size={11} color="var(--text-muted)" />
+                                <span style={{ color: 'var(--primary-500)', fontSize: '12px', textDecoration: 'underline' }}>
+                                  {truck.origin}
+                                </span>
+                                <span style={{ color: 'var(--text-muted)', margin: '0 2px' }}>→</span>
+                                <span style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{truck.destination}</span>
+                              </div>
                            </td>
                           <td style={styles.td}>
                             <span style={{
