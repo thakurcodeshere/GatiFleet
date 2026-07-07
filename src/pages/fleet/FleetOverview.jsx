@@ -1225,8 +1225,8 @@ function AddVehicleModal({ onClose, onAdd }) {
       if (!formData.rtoCode || !/^\d{2}$/.test(formData.rtoCode)) {
         newErrs.rtoCode = 'Must be 2 digits';
       }
-      if (!formData.series || !/^[A-Z]{1,2}$/i.test(formData.series)) {
-        newErrs.series = '1-2 Letters';
+      if (!formData.series || !/^[A-Z]{1,3}$/i.test(formData.series)) {
+        newErrs.series = '1-3 Letters';
       }
     } else if (step === 2) {
       if (!formData.chassisNumber || formData.chassisNumber.length !== 17) {
@@ -1580,11 +1580,34 @@ function AddVehicleModal({ onClose, onAdd }) {
                   <input
                     style={modalStyles.input}
                     value={formData.series}
-                    maxLength={2}
+                    maxLength={3}
                     placeholder="e.g. AB"
                     onChange={(e) => handleInputChange('series', e.target.value.toUpperCase().replace(/[^A-Z]/g, ''))}
                   />
                   {errors.series && <span style={modalStyles.errorText}>{errors.series}</span>}
+                  
+                  {/* Series Sequence Suggestions */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
+                    {['AA', 'QE', 'BH', 'TR', 'T', 'G'].map(sfx => (
+                      <button
+                        key={sfx}
+                        type="button"
+                        style={{
+                          fontSize: '9px',
+                          padding: '2px 6px',
+                          background: 'rgba(255,255,255,0.04)',
+                          border: '1px solid rgba(255,255,255,0.08)',
+                          borderRadius: '4px',
+                          color: 'var(--text-secondary)',
+                          cursor: 'pointer',
+                          fontFamily: 'var(--font-mono)'
+                        }}
+                        onClick={() => handleInputChange('series', sfx)}
+                      >
+                        {sfx === 'BH' ? 'BH (Bharat)' : sfx === 'TR' ? 'TR (Temp)' : sfx === 'T' ? 'T (Transport)' : sfx === 'G' ? 'G (Govt)' : sfx}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div style={modalStyles.col(6)}>
                   <label style={modalStyles.label}>Unique 4-Digits</label>
