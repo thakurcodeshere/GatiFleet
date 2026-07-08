@@ -800,6 +800,40 @@ const getMetaphorRoleName = (nodeId, metaphor) => {
 };
 
 const KnowledgeGraph = () => {
+  // ---- Filters Panel Height Resize State ----
+  const [filtersHeight, setFiltersHeight] = useState(240);
+  const isFiltersResizingRef = useRef(false);
+
+  const startFiltersResizing = useCallback((e) => {
+    e.preventDefault();
+    isFiltersResizingRef.current = true;
+    document.body.style.cursor = 'ns-resize';
+    document.body.style.userSelect = 'none';
+
+    const startY = e.clientY;
+    const startHeight = filtersHeight;
+
+    const handleMouseMove = (moveEvent) => {
+      if (!isFiltersResizingRef.current) return;
+      const dy = moveEvent.clientY - startY;
+      const newHeight = startHeight + dy;
+      if (newHeight > 100 && newHeight < 600) {
+        setFiltersHeight(newHeight);
+      }
+    };
+
+    const handleMouseUp = () => {
+      isFiltersResizingRef.current = false;
+      document.body.style.cursor = 'default';
+      document.body.style.userSelect = 'auto';
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  }, [filtersHeight]);
+
   // ---- Left Sidebar Resize & Collapse States ----
   const [leftSidebarWidth, setLeftSidebarWidth] = useState(280);
   const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
@@ -2043,9 +2077,17 @@ const KnowledgeGraph = () => {
               </div>
 
               {/* Filters */}
-              <div style={{ ...styles.sidebarSection, flex: 1, overflowY: 'auto' }}>
+              <div style={{
+                ...styles.sidebarSection,
+                height: `${filtersHeight}px`,
+                display: 'flex',
+                flexDirection: 'column',
+                position: 'relative',
+                flexShrink: 0,
+                paddingBottom: '16px'
+              }}>
                 <div
-                  style={{ ...styles.sectionTitle, cursor: 'pointer' }}
+                  style={{ ...styles.sectionTitle, cursor: 'pointer', marginBottom: '8px' }}
                   onClick={() => {
                     const allTrue = Object.values(activeFilters).every(v => v);
                     const nextVal = !allTrue;
@@ -2058,46 +2100,69 @@ const KnowledgeGraph = () => {
                 >
                   <Filter size={12} /> FILTER BY TYPE (Click to Toggle All)
                 </div>
-                {Object.entries(nodeTypeColors).map(([type, color]) => {
-                  const IconComp = nodeTypeIcons[type] || Circle;
-                  return (
-                    <div
-                      key={type}
-                      style={{
-                        ...styles.filterItem,
-                        background: activeFilters[type] ? `${color}08` : 'transparent',
-                      }}
-                      onClick={() => toggleFilter(type)}
-                    >
+
+                {/* Scrollable Checkbox List */}
+                <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px', paddingRight: '4px' }}>
+                  {Object.entries(nodeTypeColors).map(([type, color]) => {
+                    const IconComp = nodeTypeIcons[type] || Circle;
+                    return (
                       <div
+                        key={type}
                         style={{
-                          ...styles.checkbox,
-                          borderColor: color,
-                          background: activeFilters[type] ? color : 'transparent',
+                          ...styles.filterItem,
+                          background: activeFilters[type] ? `${color}08` : 'transparent',
+                          margin: '2px 0'
                         }}
+                        onClick={() => toggleFilter(type)}
                       >
-                        {activeFilters[type] && (
-                          <svg width="10" height="10" viewBox="0 0 10 10">
-                            <path d="M2 5 L4 7 L8 3" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        )}
+                        <div
+                          style={{
+                            ...styles.checkbox,
+                            borderColor: color,
+                            background: activeFilters[type] ? color : 'transparent',
+                          }}
+                        >
+                          {activeFilters[type] && (
+                            <svg width="10" height="10" viewBox="0 0 10 10">
+                              <path d="M2 5 L4 7 L8 3" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          )}
+                        </div>
+                        <IconComp size={14} color={color} />
+                        <span style={{ flex: 1 }}>{nodeTypeLabels[type]}</span>
+                        <span style={{
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          fontFamily: 'var(--font-mono)',
+                          color: 'var(--text-muted)',
+                          background: 'var(--bg-700)',
+                          padding: '2px 8px',
+                          borderRadius: '10px',
+                        }}>
+                          {nodeTypeCounts[type] || 0}
+                        </span>
                       </div>
-                      <IconComp size={14} color={color} />
-                      <span style={{ flex: 1 }}>{nodeTypeLabels[type]}</span>
-                      <span style={{
-                        fontSize: '11px',
-                        fontWeight: 700,
-                        fontFamily: 'var(--font-mono)',
-                        color: 'var(--text-muted)',
-                        background: 'var(--bg-700)',
-                        padding: '2px 8px',
-                        borderRadius: '10px',
-                      }}>
-                        {nodeTypeCounts[type] || 0}
-                      </span>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
+
+                {/* Vertical ns-resize drag-down handle */}
+                <div
+                  onMouseDown={startFiltersResizing}
+                  style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '6px',
+                    cursor: 'ns-resize',
+                    zIndex: 10,
+                    background: isFiltersResizingRef.current ? 'rgba(99, 102, 241, 0.45)' : 'transparent',
+                    transition: 'background 0.2s',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.2)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                />
               </div>
 
               {/* Stats */}
