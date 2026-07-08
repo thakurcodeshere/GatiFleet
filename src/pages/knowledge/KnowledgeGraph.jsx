@@ -2043,7 +2043,7 @@ const KnowledgeGraph = () => {
           )}
 
           {!leftSidebarCollapsed && sidebarTab === 'filters' && (
-            <>
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
               {/* Search */}
               <div style={styles.sidebarSection}>
                 <div
@@ -2303,7 +2303,7 @@ const KnowledgeGraph = () => {
                   })}
                 </div>
               </div>
-            </>
+            </div>
           )}
 
           {!leftSidebarCollapsed && sidebarTab === 'metaphors' && (
