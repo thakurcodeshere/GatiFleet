@@ -5,6 +5,7 @@
 // ============================================================
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTheme } from '../../context/ThemeContext';
 import {
   Search, ZoomIn, ZoomOut, RotateCcw, Tag, Network, GitBranch,
   Download, X, Eye, Edit3, Trash2, Building2, Package, Truck,
@@ -799,7 +800,22 @@ const getMetaphorRoleName = (nodeId, metaphor) => {
   return 'PART';
 };
 
+// Map for darkened colors to provide high contrast in light mode
+const darkenedColors = {
+  business: '#6b21a8',   // dark purple
+  agent: '#3730a3',      // dark indigo
+  shipment: '#1e40af',   // dark blue
+  truck: '#065f46',      // dark green
+  driver: '#92400e',     // dark amber
+  route: '#9d174d',      // dark pink
+  fuel: '#9a3412',       // dark orange
+  toll: '#9f1239',       // dark rose
+  warehouse: '#115e59',  // dark teal
+  checkpoint: '#3f3f46'   // dark grey
+};
+
 const KnowledgeGraph = () => {
+  const { theme } = useTheme();
   // ---- Filters Panel Height Resize State ----
   const [filtersHeight, setFiltersHeight] = useState(240);
   const isFiltersResizingRef = useRef(false);
@@ -2242,36 +2258,49 @@ const KnowledgeGraph = () => {
                   <Layers size={12} /> LEGEND (Click to Flash Map)
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {Object.entries(nodeTypeColors).map(([type, color]) => (
-                    <button
-                      key={type}
-                      onClick={() => {
-                        toggleFilter(type);
-                        logToTerminal(`Toggled filter for node type: ${type}`);
-                        showToast(`${activeFilters[type] ? 'Disabled' : 'Enabled'} type: ${nodeTypeLabels[type]}`);
-                      }}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        padding: '5px 10px',
-                        borderRadius: '12px',
-                        border: activeFilters[type] ? `1px solid ${color}40` : '1px solid rgba(255,255,255,0.06)',
-                        background: activeFilters[type] ? `${color}18` : 'rgba(255,255,255,0.02)',
-                        color: activeFilters[type] ? '#fff' : 'var(--text-muted)',
-                        fontSize: '10px',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        outline: 'none',
-                      }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = `${color}25`; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = activeFilters[type] ? `${color}18` : 'rgba(255,255,255,0.02)'; }}
-                    >
-                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: color }} />
-                      {nodeTypeLabels[type]}
-                    </button>
-                  ))}
+                  {Object.entries(nodeTypeColors).map(([type, color]) => {
+                    const isLight = theme === 'light';
+                    const activeTextCol = isLight ? (darkenedColors[type] || color) : '#fff';
+                    const activeBgCol = isLight ? `${color}20` : `${color}18`;
+                    const activeBorderCol = isLight ? `${color}70` : `${color}40`;
+                    
+                    return (
+                      <button
+                        key={type}
+                        onClick={() => {
+                          toggleFilter(type);
+                          logToTerminal(`Toggled filter for node type: ${type}`);
+                          showToast(`${activeFilters[type] ? 'Disabled' : 'Enabled'} type: ${nodeTypeLabels[type]}`);
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '5px 10px',
+                          borderRadius: '12px',
+                          border: activeFilters[type] ? `1px solid ${activeBorderCol}` : '1px solid var(--surface-border)',
+                          background: activeFilters[type] ? activeBgCol : 'var(--bg-700)',
+                          color: activeFilters[type] ? activeTextCol : 'var(--text-muted)',
+                          fontSize: '10px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          outline: 'none',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = activeFilters[type] 
+                            ? (isLight ? `${color}30` : `${color}25`) 
+                            : 'var(--bg-600)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = activeFilters[type] ? activeBgCol : 'var(--bg-700)';
+                        }}
+                      >
+                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: color }} />
+                        {nodeTypeLabels[type]}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </>
