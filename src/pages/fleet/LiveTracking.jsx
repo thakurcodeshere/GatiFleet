@@ -7,6 +7,7 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
+  ChevronLeft, ChevronRight,
   Truck, Search, MapPin, Navigation, Phone, ShieldAlert,
   Compass, Maximize2, Minimize2, ZoomIn, ZoomOut, RotateCcw,
   Layers, Bell, AlertTriangle, Play, Pause, RefreshCw, X,
@@ -107,6 +108,38 @@ const getCurvedPath = (fromLatLng, toLatLng) => {
 
 export default function LiveTracking() {
   const [activeView, setActiveView] = useState('nation'); // nation | regional | fleet | shipment | driver | decision | executive
+
+  // Resizable & Collapsible Sidebar State
+  const [sidebarWidth, setSidebarWidth] = useState(380);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const isResizingRef = useRef(false);
+
+  const startResizing = useCallback((e) => {
+    e.preventDefault();
+    isResizingRef.current = true;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+
+    const handleMouseMove = (moveEvent) => {
+      if (!isResizingRef.current) return;
+      const newWidth = moveEvent.clientX;
+      if (newWidth > 240 && newWidth < 600) {
+        setSidebarWidth(newWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      isResizingRef.current = false;
+      document.body.style.cursor = 'default';
+      document.body.style.userSelect = 'auto';
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  }, []);
+
   const [trucks, setTrucks] = useState(ALL_TRUCKS);
   const [drivers, setDrivers] = useState(ALL_DRIVERS);
   const [shipments, setShipments] = useState(ALL_SHIPMENTS);
@@ -801,14 +834,46 @@ export default function LiveTracking() {
 
       {/* LEFT SIDE PANEL (MORPHS PER ACTIVE VIEW) */}
       <div style={{
-        width: '380px',
+        width: sidebarCollapsed ? '0px' : `${sidebarWidth}px`,
         background: '#0d1322',
-        borderRight: '1px solid rgba(255, 255, 255, 0.05)',
+        borderRight: sidebarCollapsed ? 'none' : '1px solid rgba(255, 255, 255, 0.05)',
         display: 'flex',
         flexDirection: 'column',
         zIndex: 20,
-        flexShrink: 0
+        flexShrink: 0,
+        position: 'relative',
+        overflow: sidebarCollapsed ? 'hidden' : 'visible',
+        transition: isResizingRef.current ? 'none' : 'width 0.3s ease',
       }}>
+        {/* Panel Header with Collapse Toggle */}
+        {!sidebarCollapsed && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '10px 16px',
+            background: '#070a13',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+          }}>
+            <span style={{ fontSize: '11px', fontWeight: 800, color: '#94a3b8', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+              Command Sidebar
+            </span>
+            <button
+              onClick={() => setSidebarCollapsed(true)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#64748b',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                padding: 2,
+              }}
+            >
+              <ChevronLeft size={16} />
+            </button>
+          </div>
+        )}
         {/* Navigation Selector Tabs */}
         <div style={{
           display: 'grid',
@@ -1429,7 +1494,53 @@ export default function LiveTracking() {
           <span>Telemping: {lastPingTime}</span>
           <span style={{ color: '#38CE3C' }}>System Nominal</span>
         </div>
+
+        {/* Drag-to-Resize Handle */}
+        {!sidebarCollapsed && (
+          <div
+            onMouseDown={startResizing}
+            style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              width: '6px',
+              height: '100%',
+              cursor: 'col-resize',
+              zIndex: 1000,
+              background: isResizingRef.current ? 'rgba(99, 102, 241, 0.45)' : 'transparent',
+              transition: 'background 0.2s',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.2)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+          />
+        )}
       </div>
+
+      {/* Floating Expand Button when collapsed */}
+      {sidebarCollapsed && (
+        <button
+          onClick={() => setSidebarCollapsed(false)}
+          style={{
+            position: 'absolute',
+            left: 12,
+            top: 76,
+            zIndex: 99,
+            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '50%',
+            width: 36,
+            height: 36,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            boxShadow: '0 4px 15px rgba(99, 102, 241, 0.4)',
+          }}
+        >
+          <ChevronRight size={18} />
+        </button>
+      )}
 
 
 

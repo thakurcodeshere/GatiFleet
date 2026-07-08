@@ -1,3 +1,4 @@
+import React, { useState, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import {
@@ -36,15 +37,45 @@ export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const [sidebarWidth, setSidebarWidth] = useState(260);
+  const isResizingRef = useRef(false);
+
+  const startResizing = useCallback((e) => {
+    e.preventDefault();
+    if (sidebarCollapsed) return;
+    isResizingRef.current = true;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+
+    const handleMouseMove = (moveEvent) => {
+      if (!isResizingRef.current) return;
+      const newWidth = moveEvent.clientX;
+      if (newWidth > 180 && newWidth < 500) {
+        setSidebarWidth(newWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      isResizingRef.current = false;
+      document.body.style.cursor = 'default';
+      document.body.style.userSelect = 'auto';
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  }, [sidebarCollapsed]);
+
   const styles = {
     sidebar: {
-      width: sidebarCollapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)',
+      width: sidebarCollapsed ? 'var(--sidebar-collapsed-width)' : `${sidebarWidth}px`,
       height: '100vh',
       background: 'var(--bg-800)',
       borderRight: '1px solid var(--border-subtle)',
       display: 'flex',
       flexDirection: 'column',
-      transition: 'width var(--transition-base)',
+      transition: isResizingRef.current ? 'none' : 'width var(--transition-base)',
       position: 'fixed',
       left: 0,
       top: 0,
@@ -319,6 +350,26 @@ export default function Sidebar() {
         {sidebarCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
         {!sidebarCollapsed && 'Collapse'}
       </button>
+
+      {/* Drag-to-Resize Handle */}
+      {!sidebarCollapsed && (
+        <div
+          onMouseDown={startResizing}
+          style={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            width: '6px',
+            height: '100%',
+            cursor: 'col-resize',
+            zIndex: 1000,
+            background: isResizingRef.current ? 'rgba(99, 102, 241, 0.45)' : 'transparent',
+            transition: 'background 0.2s',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.2)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+        />
+      )}
     </aside>
   );
 }

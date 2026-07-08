@@ -1,9 +1,39 @@
+import React, { useState, useRef, useCallback } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import Topbar from './Topbar';
 import CopilotPanel from '../shared/CopilotPanel';
 
 export default function Layout({ children }) {
   const { copilotOpen, toggleCopilot } = useTheme();
+
+  const [copilotWidth, setCopilotWidth] = useState(420);
+  const isResizingRef = useRef(false);
+
+  const startResizing = useCallback((e) => {
+    e.preventDefault();
+    isResizingRef.current = true;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+
+    const handleMouseMove = (moveEvent) => {
+      if (!isResizingRef.current) return;
+      const newWidth = window.innerWidth - moveEvent.clientX;
+      if (newWidth > 320 && newWidth < 800) {
+        setCopilotWidth(newWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      isResizingRef.current = false;
+      document.body.style.cursor = 'default';
+      document.body.style.userSelect = 'auto';
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  }, []);
 
   const styles = {
     container: {
@@ -29,12 +59,12 @@ export default function Layout({ children }) {
     },
     copilotWrapper: {
       position: 'fixed',
-      right: copilotOpen ? 0 : -420,
+      right: copilotOpen ? 0 : -copilotWidth,
       top: 0,
-      width: 420,
+      width: copilotWidth,
       height: '100vh',
       zIndex: 'var(--z-overlay)',
-      transition: 'right var(--transition-base)',
+      transition: isResizingRef.current ? 'none' : 'right var(--transition-base)',
     },
     copilotOverlay: {
       position: 'fixed',
@@ -63,6 +93,23 @@ export default function Layout({ children }) {
         onClick={toggleCopilot}
       />
       <div style={styles.copilotWrapper}>
+        {/* Left resize handle */}
+        <div
+          onMouseDown={startResizing}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '6px',
+            height: '100%',
+            cursor: 'col-resize',
+            zIndex: 1000,
+            background: isResizingRef.current ? 'rgba(99, 102, 241, 0.45)' : 'transparent',
+            transition: 'background 0.2s',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.2)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+        />
         <CopilotPanel />
       </div>
     </div>

@@ -1,7 +1,7 @@
 /* eslint-disable */
 // ============================================================
 // GatiFleet — Knowledge Graph Visualization
-// The Logistics Brain — Interactive SVG Graph
+// The Logistics Brain — Interactive 3D SVG Graph
 // ============================================================
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,8 +9,9 @@ import {
   Search, ZoomIn, ZoomOut, RotateCcw, Tag, Network, GitBranch,
   Download, X, Eye, Edit3, Trash2, Building2, Package, Truck,
   User, Route, Fuel, CreditCard, FileText, Warehouse, Users,
-  ChevronRight, Filter, BarChart3, Circle, ArrowRight, Layers,
-  Maximize2, Info, Link2, Sparkles, Cpu, Terminal, CheckCircle
+  ChevronLeft, ChevronRight, Filter, BarChart3, Circle, ArrowRight, Layers,
+  Maximize2, Info, Link2, Sparkles, Cpu, Terminal, CheckCircle,
+  Compass, Gauge, ShieldAlert, CircleDot, Lightbulb, Zap
 } from 'lucide-react';
 import {
   knowledgeGraphNodes,
@@ -49,7 +50,6 @@ const nodeTypeLabels = {
 
 // ---- Mock detail data for each node type and ID ----
 const nodeDetailData = {
-  // Type defaults
   business: { revenue: '₹186.7Cr', trucks: 48, drivers: 62, routes: 12, shipments: 234, status: 'Active' },
   agent: { department: 'Operations Control', successRate: '98.2%', tasksCompleted: '4,120 runs', memorySize: '4.2 GB', status: 'Active (Sentinel Mode)' },
   shipment: { weight: '12.4 tonnes', value: '₹4,50,000', status: 'In Transit', eta: '6h 30m', distance: '1,240 km' },
@@ -74,6 +74,201 @@ const nodeDetailData = {
   cus1: { name: 'Reliance Industries', revenue: '₹12.8Cr', strategicScore: 95, activeDisputes: 1, status: 'Fee Dispute' },
   trk4: { id: 'TRK-00019', model: 'Eicher Pro 6049', health: 76, telemetrySync: 'Lagging (68%)', status: 'Telemetry Lag' }
 };
+
+// ---- 3D Mapping of Nodes to Truck Anatomy ----
+const node3DCoords = {
+  // Center Command Node (cabin center)
+  b1: { x: 210, y: 0, z: 0 },
+
+  // AI Agents (Steering, Brakes, Accelerator, etc.)
+  agt1: { x: 170, y: 80, z: -70 },  // Finance Agent -> Brake Caliper (Far side)
+  agt2: { x: 210, y: -45, z: -35 }, // HR Agent -> Brake Control (Cabin safety brake)
+  agt3: { x: 280, y: 20, z: 0 },     // Sales Agent -> Accelerator / Throttle (Engine propulsion)
+  agt4: { x: 160, y: 40, z: 0 },     // Supply Chain Agent -> Fifth Wheel Coupling (Trailer hitch)
+  agt5: { x: 285, y: 60, z: -30 },   // Engineering Agent -> Engine block
+  agt6: { x: 240, y: -30, z: 40 },   // Executive Agent -> Steering Wheel (Windshield view)
+
+  // Customers (Trailer Roof Line - cargo payload source)
+  cus1: { x: -280, y: -90, z: -60 },
+  cus2: { x: -140, y: -90, z: -60 },
+  cus3: { x: 0, y: -90, z: -60 },
+  cus4: { x: 120, y: -90, z: -60 },
+
+  // Shipments (Inside Trailer Cargo Hold)
+  shp1: { x: -220, y: 0, z: 45 },
+  shp2: { x: -110, y: 0, z: 45 },
+  shp3: { x: 0, y: 0, z: 45 },
+  shp4: { x: 110, y: 0, z: 45 },
+
+  // Routes (Headlights projecting forward & beacons)
+  rte1: { x: 330, y: 45, z: -60 }, // Front Headlight Left
+  rte2: { x: 330, y: 45, z: 60 },  // Front Headlight Right
+  rte3: { x: 300, y: -30, z: 0 },   // Roof Warning Beacon
+
+  // Warehouses (Left side tyres / wheels)
+  wh1: { x: 280, y: 95, z: -75 },  // Front Left Wheel
+  wh2: { x: -200, y: 95, z: -80 }, // Rear Trailer Left Wheel 1
+  wh3: { x: -120, y: 95, z: -80 }, // Rear Trailer Left Wheel 2
+
+  // Tolls & Fuel (Right side tyres / wheels)
+  toll1: { x: 280, y: 95, z: 75 },  // Front Right Wheel
+  toll2: { x: -200, y: 95, z: 80 }, // Rear Trailer Right Wheel 1
+  fuel1: { x: -120, y: 95, z: 80 }, // Rear Trailer Right Wheel 2
+  fuel2: { x: 0, y: 95, z: 80 },    // Middle Trailer Right Wheel
+
+  // Drivers (Positioned in seats or rear axles)
+  drv1: { x: 210, y: -15, z: -25 }, // Driver Cabin Seat Left
+  drv2: { x: 210, y: -15, z: 25 },  // Co-driver Cabin Seat Right
+  drv3: { x: -280, y: 40, z: -70 }, // Rear Axle left sensor pack
+  drv4: { x: -280, y: 40, z: 70 },  // Rear Axle right sensor pack
+
+  // Financial Documents (Chassis & Exhaust/Mudguards)
+  inv1: { x: -310, y: 70, z: -50 }, // Exhaust Pipeline
+  inv2: { x: -310, y: 70, z: 50 },  // Mudguard Plate
+
+  // Suspension & Chassis points
+  trk1: { x: -100, y: 50, z: -70 },
+  trk2: { x: -100, y: 50, z: 70 },
+  trk3: { x: 80, y: 50, z: -70 },
+  trk4: { x: 80, y: 50, z: 70 },
+};
+
+// ---- 3D Wireframe Blueprint of the Truck structure ----
+const truckVertices = {
+  // Trailer Box (8 corners)
+  t0: { x: -300, y: -100, z: -80 },
+  t1: { x: 150, y: -100, z: -80 },
+  t2: { x: 150, y: 80, z: -80 },
+  t3: { x: -300, y: 80, z: -80 },
+  t4: { x: -300, y: -100, z: 80 },
+  t5: { x: 150, y: -100, z: 80 },
+  t6: { x: 150, y: 80, z: 80 },
+  t7: { x: -300, y: 80, z: 80 },
+
+  // Cabin Box (8 corners)
+  c0: { x: 170, y: -80, z: -70 },
+  c1: { x: 260, y: -80, z: -70 },
+  c2: { x: 320, y: 10, z: -70 },
+  c3: { x: 320, y: 80, z: -70 },
+  c4: { x: 170, y: 80, z: -70 },
+  c5: { x: 170, y: -80, z: 70 },
+  c6: { x: 260, y: -80, z: 70 },
+  c7: { x: 320, y: 10, z: 70 },
+  c8: { x: 320, y: 80, z: 70 },
+  c9: { x: 170, y: 80, z: 70 },
+  
+  // Fuel Tank (box under trailer)
+  f0: { x: -50, y: 80, z: -75 },
+  f1: { x: 50, y: 80, z: -75 },
+  f2: { x: 50, y: 110, z: -75 },
+  f3: { x: -50, y: 110, z: -75 },
+  f4: { x: -50, y: 80, z: -40 },
+  f5: { x: 50, y: 80, z: -40 },
+  f6: { x: 50, y: 110, z: -40 },
+  f7: { x: -50, y: 110, z: -40 },
+};
+
+// Wireframe edges connecting the corners
+const truckChassisLines = [
+  // Trailer Box outer frames
+  ['t0', 't1'], ['t1', 't2'], ['t2', 't3'], ['t3', 't0'],
+  ['t4', 't5'], ['t5', 't6'], ['t6', 't7'], ['t7', 't4'],
+  ['t0', 't4'], ['t1', 't5'], ['t2', 't6'], ['t3', 't7'],
+  
+  // Cabin Box outer frames
+  ['c0', 'c1'], ['c1', 'c2'], ['c2', 'c3'], ['c3', 'c4'], ['c4', 'c0'],
+  ['c5', 'c6'], ['c6', 'c7'], ['c7', 'c8'], ['c8', 'c9'], ['c9', 'c5'],
+  ['c0', 'c5'], ['c1', 'c6'], ['c2', 'c7'], ['c3', 'c8'], ['c4', 'c9'],
+
+  // Coupling links
+  ['t2', 'c4'], ['t6', 'c9'],
+  
+  // Fuel Tank frames
+  ['f0', 'f1'], ['f1', 'f2'], ['f2', 'f3'], ['f3', 'f0'],
+  ['f4', 'f5'], ['f5', 'f6'], ['f6', 'f7'], ['f7', 'f4'],
+  ['f0', 'f4'], ['f1', 'f5'], ['f2', 'f6'], ['f3', 'f7'],
+];
+
+// Truck 3D Solid Surface Faces
+const truckFaces = [
+  // Trailer Left Face (Far)
+  {
+    type: 'trailer-side',
+    vertices: ['t0', 't1', 't2', 't3'],
+    fill: 'rgba(99, 102, 241, 0.08)',
+    stroke: 'rgba(99, 102, 241, 0.45)',
+    strokeWidth: 2,
+  },
+  // Trailer Right Face (Near)
+  {
+    type: 'trailer-side',
+    vertices: ['t4', 't5', 't6', 't7'],
+    fill: 'rgba(99, 102, 241, 0.08)',
+    stroke: 'rgba(99, 102, 241, 0.45)',
+    strokeWidth: 2,
+  },
+  // Trailer Top
+  {
+    type: 'trailer-top',
+    vertices: ['t0', 't1', 't5', 't4'],
+    fill: 'rgba(99, 102, 241, 0.04)',
+    stroke: 'rgba(99, 102, 241, 0.25)',
+    strokeWidth: 1.5,
+  },
+  // Trailer Back Face
+  {
+    type: 'trailer-back',
+    vertices: ['t0', 't3', 't7', 't4'],
+    fill: 'rgba(99, 102, 241, 0.1)',
+    stroke: 'rgba(99, 102, 241, 0.45)',
+    strokeWidth: 2,
+  },
+  
+  // Cabin Left Side
+  {
+    type: 'cabin-side',
+    vertices: ['c0', 'c1', 'c2', 'c3', 'c4'],
+    fill: 'rgba(168, 85, 247, 0.08)',
+    stroke: 'rgba(168, 85, 247, 0.45)',
+    strokeWidth: 2,
+  },
+  // Cabin Right Side
+  {
+    type: 'cabin-side',
+    vertices: ['c5', 'c6', 'c7', 'c8', 'c9'],
+    fill: 'rgba(168, 85, 247, 0.08)',
+    stroke: 'rgba(168, 85, 247, 0.45)',
+    strokeWidth: 2,
+  },
+  // Windshield (cyan reflective glass)
+  {
+    type: 'windshield',
+    vertices: ['c1', 'c6', 'c7', 'c2'],
+    fill: 'rgba(6, 182, 212, 0.16)',
+    stroke: '#06b6d4',
+    strokeWidth: 2,
+  },
+  // Front Bumper / Grille
+  {
+    type: 'bumper',
+    vertices: ['c2', 'c7', 'c8', 'c3'],
+    fill: 'rgba(148, 163, 184, 0.12)',
+    stroke: '#94a3b8',
+    strokeWidth: 2,
+  },
+];
+
+// Tyres definition
+const wheelsList = [
+  // Left side wheels (Z = -80)
+  { cx: -200, cy: 95, cz: -80, r: 22 },
+  { cx: -120, cy: 95, cz: -80, r: 22 },
+  { cx: 280, cy: 95, cz: -75, r: 22 },
+  // Right side wheels (Z = 80)
+  { cx: -200, cy: 95, cz: 80, r: 22 },
+  { cx: -120, cy: 95, cz: 80, r: 22 },
+  { cx: 280, cy: 95, cz: 75, r: 22 },
+];
 
 // ---- Styles ----
 const styles = {
@@ -286,7 +481,6 @@ const styles = {
     flex: 1,
     position: 'relative',
     overflow: 'hidden',
-    cursor: 'grab',
   },
   detailPanel: {
     width: 320,
@@ -430,6 +624,87 @@ const styles = {
     border: '1px solid #38CE3C',
     boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
   },
+  orbitControls: {
+    position: 'absolute',
+    bottom: '60px',
+    right: '20px',
+    background: 'rgba(15, 23, 42, 0.85)',
+    backdropFilter: 'blur(16px)',
+    border: '1px solid var(--surface-border)',
+    borderRadius: 'var(--radius-md)',
+    padding: '12px',
+    width: '240px',
+    zIndex: 30,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.4)',
+  },
+  controlHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontSize: '12px',
+    fontWeight: 700,
+    color: '#fff',
+    borderBottom: '1px solid rgba(255,255,255,0.06)',
+    paddingBottom: '6px',
+  },
+  controlRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '8px',
+    fontSize: '11px',
+    color: 'var(--text-secondary)',
+  },
+  slider: {
+    flex: 1,
+    height: '4px',
+    borderRadius: '2px',
+    background: 'var(--bg-600)',
+    outline: 'none',
+    cursor: 'pointer',
+  },
+  controlVal: {
+    minWidth: '32px',
+    textAlign: 'right',
+    fontFamily: 'var(--font-mono)',
+    fontSize: '10px',
+  },
+  controlActions: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: '4px',
+    borderTop: '1px solid rgba(255,255,255,0.06)',
+  },
+  metaphorCard: {
+    background: 'var(--bg-700)',
+    border: '1px solid var(--surface-border)',
+    borderRadius: 'var(--radius-sm)',
+    padding: '10px',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+  },
+  metaphorCardActive: {
+    borderColor: '#818cf8',
+    background: 'rgba(99, 102, 241, 0.15)',
+    boxShadow: '0 0 15px rgba(99, 102, 241, 0.1)',
+  },
+  metaphorHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontWeight: 700,
+    fontSize: '12px',
+    marginBottom: '6px',
+  },
+  metaphorDesc: {
+    fontSize: '11px',
+    color: 'var(--text-secondary)',
+    lineHeight: 1.3,
+  },
 };
 
 // ---- Keyframe injection for edge animation ----
@@ -447,7 +722,145 @@ const EDGE_ANIMATION_STYLE = `
   }
 `;
 
+// Helper: 3D Orthographic Projection with Rotation
+const project3D = (x, y, z, yawDeg, pitchDeg, centerX, centerY, scale) => {
+  const yaw = (yawDeg * Math.PI) / 180;
+  const pitch = (pitchDeg * Math.PI) / 180;
+
+  // Yaw rotation (Y-axis)
+  const x1 = x * Math.cos(yaw) - z * Math.sin(yaw);
+  const z1 = x * Math.sin(yaw) + z * Math.cos(yaw);
+  const y1 = y;
+
+  // Pitch rotation (X-axis)
+  const x2 = x1;
+  const y2 = y1 * Math.cos(pitch) - z1 * Math.sin(pitch);
+  const z2 = y1 * Math.sin(pitch) + z1 * Math.cos(pitch);
+
+  return {
+    x: centerX + x2 * scale,
+    y: centerY + y2 * scale,
+    z: z2, // Depth for Z-sorting
+  };
+};
+
+// Helper: Map Node ID to Metaphor group
+const isNodeInMetaphor = (nodeId, metaphor) => {
+  if (metaphor === 'steering') {
+    return nodeId === 'b1' || nodeId === 'agt6';
+  }
+  if (metaphor === 'accelerator') {
+    return nodeId === 'agt3' || nodeId.startsWith('cus') || nodeId.startsWith('shp');
+  }
+  if (metaphor === 'brake') {
+    return nodeId === 'agt1' || nodeId === 'agt2' || nodeId === 'inv2' || nodeId.startsWith('toll');
+  }
+  if (metaphor === 'tyres') {
+    return nodeId.startsWith('wh') || nodeId.startsWith('fuel') || nodeId.startsWith('toll');
+  }
+  if (metaphor === 'headlights') {
+    return nodeId.startsWith('rte');
+  }
+  if (metaphor === 'fuel') {
+    return nodeId.startsWith('fuel');
+  }
+  if (metaphor === 'exhaust') {
+    return nodeId.startsWith('inv');
+  }
+  return false;
+};
+
+const getMetaphorRoleName = (nodeId, metaphor) => {
+  if (metaphor === 'steering') {
+    return nodeId === 'b1' ? 'HELM' : 'NAVIGATOR';
+  }
+  if (metaphor === 'accelerator') {
+    if (nodeId === 'agt3') return 'THROTTLE';
+    if (nodeId.startsWith('cus')) return 'FUEL_INJECT';
+    return 'LOAD_WEIGHT';
+  }
+  if (metaphor === 'brake') {
+    if (nodeId === 'agt1') return 'AUDIT_CALIP';
+    if (nodeId === 'agt2') return 'SAFETY_PAD';
+    return 'DRAG_LINE';
+  }
+  if (metaphor === 'tyres') {
+    return 'AXLE_SPIN';
+  }
+  if (metaphor === 'headlights') {
+    return 'BEAM_LIGHT';
+  }
+  if (metaphor === 'fuel') {
+    return 'ENERGY';
+  }
+  if (metaphor === 'exhaust') {
+    return 'DISCHARGE';
+  }
+  return 'PART';
+};
+
 const KnowledgeGraph = () => {
+  // ---- Left Sidebar Resize & Collapse States ----
+  const [leftSidebarWidth, setLeftSidebarWidth] = useState(280);
+  const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
+  const isLeftResizingRef = useRef(false);
+
+  const startLeftResizing = useCallback((e) => {
+    e.preventDefault();
+    isLeftResizingRef.current = true;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+
+    const handleMouseMove = (moveEvent) => {
+      if (!isLeftResizingRef.current) return;
+      const newWidth = moveEvent.clientX;
+      if (newWidth > 200 && newWidth < 600) {
+        setLeftSidebarWidth(newWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      isLeftResizingRef.current = false;
+      document.body.style.cursor = 'default';
+      document.body.style.userSelect = 'auto';
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  }, []);
+
+  // ---- Right Details Panel Resize State ----
+  const [rightPanelWidth, setRightPanelWidth] = useState(320);
+  const isRightResizingRef = useRef(false);
+
+  const startRightResizing = useCallback((e) => {
+    e.preventDefault();
+    isRightResizingRef.current = true;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+
+    const handleMouseMove = (moveEvent) => {
+      if (!isRightResizingRef.current) return;
+      const newWidth = window.innerWidth - moveEvent.clientX;
+      if (newWidth > 260 && newWidth < 800) {
+        setRightPanelWidth(newWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      isRightResizingRef.current = false;
+      document.body.style.cursor = 'default';
+      document.body.style.userSelect = 'auto';
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  }, []);
+
   // ---- State ----
   const [nodes, setNodes] = useState(() =>
     knowledgeGraphNodes.map(n => ({ ...n, x: n.x * 1.15, y: n.y * 1.05 }))
@@ -455,7 +868,7 @@ const KnowledgeGraph = () => {
   const [selectedNode, setSelectedNode] = useState(null);
   const [hoveredNode, setHoveredNode] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showLabels, setShowLabels] = useState(true);
+  const [showLabels, setShowLabels] = useState(false); // Default hide labels to prevent clutter!
   const [viewMode, setViewMode] = useState('graph');
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -463,7 +876,7 @@ const KnowledgeGraph = () => {
     Object.keys(nodeTypeColors).reduce((acc, type) => ({ ...acc, [type]: true }), {})
   );
 
-  const [sidebarTab, setSidebarTab] = useState('gaps'); // Default to AI Gap Analyzer to highlight anomalies
+  const [sidebarTab, setSidebarTab] = useState('metaphors'); // Default to Metaphors
   const [nodeDetails, setNodeDetails] = useState(nodeDetailData);
   const [actionAlert, setActionAlert] = useState(null);
   const [terminalLogs, setTerminalLogs] = useState([
@@ -483,6 +896,11 @@ const KnowledgeGraph = () => {
     { id: 'gap9', nodeTarget: 'cus1', title: 'Billing SLA Fee Dispute', desc: 'Reliance disputed ₹1.5L late delivery penalty fee.', status: 'open', solution: 'Waive Penalty Dispute', log: 'Approved billing credit waiver. Disputed SLA penalty cleared.' },
     { id: 'gap10', nodeTarget: 'trk4', title: 'IoT Gateway Telemetry Lag', desc: 'TRK-00019 gateway packet drops (loss of edge sync).', status: 'open', solution: 'Push Firmware OTA Update', log: 'Dispatched firmware v3.4.1 patch. p99 telemetry latency restored to 22ms.' }
   ]);
+
+  // ---- 3D Rotation State ----
+  const [rotation, setRotation] = useState({ yaw: 35, pitch: -15 });
+  const [autoRotate, setAutoRotate] = useState(true);
+  const [highlightedMetaphor, setHighlightedMetaphor] = useState(null);
 
   const showToast = (message) => {
     setActionAlert({ message });
@@ -552,6 +970,25 @@ const KnowledgeGraph = () => {
     };
   }, []);
 
+  // ---- Auto Rotation loop ----
+  useEffect(() => {
+    if (!autoRotate) return;
+    let frameId;
+    const tick = () => {
+      setRotation(prev => ({
+        ...prev,
+        yaw: (prev.yaw + 0.3) % 360,
+      }));
+      frameId = requestAnimationFrame(tick);
+    };
+    frameId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frameId);
+  }, [autoRotate]);
+
+  // ---- 3D Projection configuration ----
+  const center3D = { x: 340, y: 260 };
+  const scale3D = 1.35;
+
   // ---- Computed data ----
   const filteredNodes = useMemo(() => {
     return nodes.filter(n => {
@@ -589,6 +1026,16 @@ const KnowledgeGraph = () => {
       .filter(c => c.node);
   }, [getNodeById]);
 
+  // Trace active connections (to keep labels visible)
+  const activeConnections = useMemo(() => {
+    const activeId = hoveredNode || selectedNode;
+    if (!activeId) return new Set();
+    const conns = getNodeConnections(activeId);
+    const ids = new Set([activeId]);
+    conns.forEach(c => ids.add(c.node.id));
+    return ids;
+  }, [hoveredNode, selectedNode, getNodeConnections]);
+
   const hoveredConnections = useMemo(() => {
     if (!hoveredNode) return new Set();
     const connections = getNodeConnections(hoveredNode);
@@ -607,19 +1054,24 @@ const KnowledgeGraph = () => {
   const handleResetView = () => {
     setZoom(1);
     setPan({ x: 0, y: 0 });
+    setRotation({ yaw: 35, pitch: -15 });
   };
 
   const handleNodeMouseDown = (e, nodeId) => {
     e.stopPropagation();
-    const svgEl = svgRef.current;
-    if (!svgEl) return;
-    const rect = svgEl.getBoundingClientRect();
-    draggingRef.current = {
-      nodeId,
-      startX: (e.clientX - rect.left) / zoom - pan.x,
-      startY: (e.clientY - rect.top) / zoom - pan.y,
-    };
-    setIsDraggingNode(true);
+    if (viewMode === 'tree') {
+      const svgEl = svgRef.current;
+      if (!svgEl) return;
+      const rect = svgEl.getBoundingClientRect();
+      draggingRef.current = {
+        nodeId,
+        startX: (e.clientX - rect.left) / zoom - pan.x,
+        startY: (e.clientY - rect.top) / zoom - pan.y,
+      };
+      setIsDraggingNode(true);
+    } else {
+      setSelectedNode(nodeId === selectedNode ? null : nodeId);
+    }
   };
 
   const handleMouseMove = useCallback((e) => {
@@ -628,21 +1080,32 @@ const KnowledgeGraph = () => {
     const rect = svgEl.getBoundingClientRect();
 
     if (draggingRef.current) {
-      const mx = (e.clientX - rect.left) / zoom - pan.x;
-      const my = (e.clientY - rect.top) / zoom - pan.y;
-      const node = getNodeById(draggingRef.current.nodeId);
-      if (!node) return;
-      const dx = mx - draggingRef.current.startX;
-      const dy = my - draggingRef.current.startY;
-      setNodes(prev =>
-        prev.map(n =>
-          n.id === draggingRef.current.nodeId
-            ? { ...n, x: n.x + dx, y: n.y + dy }
-            : n
-        )
-      );
-      draggingRef.current.startX = mx;
-      draggingRef.current.startY = my;
+      if (draggingRef.current.nodeId && viewMode === 'tree') {
+        const mx = (e.clientX - rect.left) / zoom - pan.x;
+        const my = (e.clientY - rect.top) / zoom - pan.y;
+        const node = getNodeById(draggingRef.current.nodeId);
+        if (!node) return;
+        const dx = mx - draggingRef.current.startX;
+        const dy = my - draggingRef.current.startY;
+        setNodes(prev =>
+          prev.map(n =>
+            n.id === draggingRef.current.nodeId
+              ? { ...n, x: n.x + dx, y: n.y + dy }
+              : n
+          )
+        );
+        draggingRef.current.startX = mx;
+        draggingRef.current.startY = my;
+      } else if (draggingRef.current.type === 'canvas-rotate') {
+        const dx = e.clientX - draggingRef.current.startX;
+        const dy = e.clientY - draggingRef.current.startY;
+        const newYaw = (draggingRef.current.startYaw + dx * 0.4) % 360;
+        const newPitch = Math.max(-85, Math.min(85, draggingRef.current.startPitch - dy * 0.4));
+        setRotation({
+          yaw: newYaw < 0 ? newYaw + 360 : newYaw,
+          pitch: newPitch,
+        });
+      }
     } else if (isPanningRef.current) {
       const dx = e.clientX - panStartRef.current.x;
       const dy = e.clientY - panStartRef.current.y;
@@ -651,7 +1114,7 @@ const KnowledgeGraph = () => {
         y: panOffsetRef.current.y + dy / zoom,
       });
     }
-  }, [zoom, pan, getNodeById]);
+  }, [zoom, pan, rotation, viewMode, getNodeById]);
 
   const handleMouseUp = useCallback(() => {
     draggingRef.current = null;
@@ -661,15 +1124,33 @@ const KnowledgeGraph = () => {
 
   const handleCanvasMouseDown = (e) => {
     if (e.target === svgRef.current || e.target.tagName === 'rect') {
-      isPanningRef.current = true;
-      panStartRef.current = { x: e.clientX, y: e.clientY };
-      panOffsetRef.current = { ...pan };
+      if (e.shiftKey || e.button === 2) {
+        // Shift + Drag or Right click drag: PAN
+        isPanningRef.current = true;
+        panStartRef.current = { x: e.clientX, y: e.clientY };
+        panOffsetRef.current = { ...pan };
+      } else {
+        // Normal drag: ROTATE (in graph view) or PAN (in tree view)
+        if (viewMode === 'graph') {
+          draggingRef.current = {
+            type: 'canvas-rotate',
+            startX: e.clientX,
+            startY: e.clientY,
+            startYaw: rotation.yaw,
+            startPitch: rotation.pitch,
+          };
+        } else {
+          isPanningRef.current = true;
+          panStartRef.current = { x: e.clientX, y: e.clientY };
+          panOffsetRef.current = { ...pan };
+        }
+      }
     }
   };
 
   const handleWheel = useCallback((e) => {
     e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.08 : 0.08;
+    const delta = e.deltaY > 0 ? -0.06 : 0.06;
     setZoom(z => Math.max(0.3, Math.min(3, z + delta)));
   }, []);
 
@@ -699,30 +1180,15 @@ const KnowledgeGraph = () => {
     const dx = toNode.x - fromNode.x;
     const dy = toNode.y - fromNode.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
-    const curvature = Math.min(dist * 0.2, 60);
+    const curvature = Math.min(dist * 0.15, 45);
     const mx = (fromNode.x + toNode.x) / 2;
     const my = (fromNode.y + toNode.y) / 2;
-    // Perpendicular offset for curve
-    const nx = -dy / dist;
-    const ny = dx / dist;
+    const nx = -dy / (dist || 1);
+    const ny = dx / (dist || 1);
     const cx = mx + nx * curvature;
     const cy = my + ny * curvature;
     return `M ${fromNode.x} ${fromNode.y} Q ${cx} ${cy} ${toNode.x} ${toNode.y}`;
   };
-
-  // ---- Selected node data ----
-  const selectedNodeData = selectedNode ? getNodeById(selectedNode) : null;
-  const selectedConnections = selectedNode ? getNodeConnections(selectedNode) : [];
-
-  const selectedDetails = useMemo(() => {
-    if (!selectedNodeData) return {};
-    return nodeDetails[selectedNodeData.id] || nodeDetails[selectedNodeData.type] || {};
-  }, [selectedNodeData, nodeDetails]);
-
-  const activeNodeGap = useMemo(() => {
-    if (!selectedNode) return null;
-    return gaps.find(g => g.nodeTarget === selectedNode && g.status === 'open');
-  }, [selectedNode, gaps]);
 
   // ---- Tree layout (simple top-down BFS from business node) ----
   const treeNodes = useMemo(() => {
@@ -750,7 +1216,6 @@ const KnowledgeGraph = () => {
       queue = nextQueue;
     }
 
-    // Place unvisited nodes
     filteredNodes.forEach(n => {
       if (!visited.has(n.id)) {
         levels.push([n.id]);
@@ -780,12 +1245,526 @@ const KnowledgeGraph = () => {
     }));
   }, [viewMode, filteredNodes, filteredNodeIds, getNodeConnections]);
 
-  const displayNodes = viewMode === 'tree' ? treeNodes : filteredNodes;
+  // ---- Projected 3D nodes for Graph view ----
+  const projectedNodes = useMemo(() => {
+    return filteredNodes.map(n => {
+      const coords = node3DCoords[n.id] || { x: 0, y: 0, z: 0 };
+      const proj = project3D(coords.x, coords.y, coords.z, rotation.yaw, rotation.pitch, center3D.x, center3D.y, scale3D);
+      return {
+        ...n,
+        x: proj.x,
+        y: proj.y,
+        depth: proj.z,
+      };
+    });
+  }, [filteredNodes, rotation]);
+
+  const displayNodes = viewMode === 'tree' ? treeNodes : projectedNodes;
+  
   const displayNodeMap = useMemo(() => {
     const map = {};
     displayNodes.forEach(n => { map[n.id] = n; });
     return map;
   }, [displayNodes]);
+
+  // ---- Unified depth-sorted rendering lists (for graph mode) ----
+  const renderOrderList = useMemo(() => {
+    const items = [];
+
+    if (viewMode === 'graph') {
+      // 1. Add Headlight Beams (Left and Right)
+      const h1Source = { x: 330, y: 45, z: -60 };
+      const h1Spread1 = { x: 480, y: 85, z: -110 };
+      const h1Spread2 = { x: 480, y: 5, z: -10 };
+      
+      const h2Source = { x: 330, y: 45, z: 60 };
+      const h2Spread1 = { x: 480, y: 85, z: 10 };
+      const h2Spread2 = { x: 480, y: 5, z: 110 };
+
+      const p1S = project3D(h1Source.x, h1Source.y, h1Source.z, rotation.yaw, rotation.pitch, center3D.x, center3D.y, scale3D);
+      const p1A = project3D(h1Spread1.x, h1Spread1.y, h1Spread1.z, rotation.yaw, rotation.pitch, center3D.x, center3D.y, scale3D);
+      const p1B = project3D(h1Spread2.x, h1Spread2.y, h1Spread2.z, rotation.yaw, rotation.pitch, center3D.x, center3D.y, scale3D);
+
+      const p2S = project3D(h2Source.x, h2Source.y, h2Source.z, rotation.yaw, rotation.pitch, center3D.x, center3D.y, scale3D);
+      const p2A = project3D(h2Spread1.x, h2Spread1.y, h2Spread1.z, rotation.yaw, rotation.pitch, center3D.x, center3D.y, scale3D);
+      const p2B = project3D(h2Spread2.x, h2Spread2.y, h2Spread2.z, rotation.yaw, rotation.pitch, center3D.x, center3D.y, scale3D);
+
+      const beam1GradientId = 'grad-beam-left-kg';
+      const beam2GradientId = 'grad-beam-right-kg';
+
+      items.push({
+        type: 'beam',
+        z: p1S.z - 20, // offset slightly back to overlay properly
+        element: (
+          <g key="beam-left" pointerEvents="none">
+            <defs>
+              <linearGradient id={beam1GradientId} x1={p1S.x} y1={p1S.y} x2={(p1A.x + p1B.x)/2} y2={(p1A.y + p1B.y)/2} gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#fef08a" stopOpacity="0.45" />
+                <stop offset="100%" stopColor="#fef08a" stopOpacity="0.0" />
+              </linearGradient>
+            </defs>
+            <polygon
+              points={`${p1S.x},${p1S.y} ${p1A.x},${p1A.y} ${p1B.x},${p1B.y}`}
+              fill={`url(#${beam1GradientId})`}
+            />
+          </g>
+        )
+      });
+
+      items.push({
+        type: 'beam',
+        z: p2S.z - 20,
+        element: (
+          <g key="beam-right" pointerEvents="none">
+            <defs>
+              <linearGradient id={beam2GradientId} x1={p2S.x} y1={p2S.y} x2={(p2A.x + p2B.x)/2} y2={(p2A.y + p2B.y)/2} gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#fef08a" stopOpacity="0.45" />
+                <stop offset="100%" stopColor="#fef08a" stopOpacity="0.0" />
+              </linearGradient>
+            </defs>
+            <polygon
+              points={`${p2S.x},${p2S.y} ${p2A.x},${p2A.y} ${p2B.x},${p2B.y}`}
+              fill={`url(#${beam2GradientId})`}
+            />
+          </g>
+        )
+      });
+
+      // 2. Add Truck Solid Panels (Faces) in 3D
+      truckFaces.forEach((face, idx) => {
+        const projectedPts = face.vertices.map(vName => {
+          const pt = truckVertices[vName];
+          return project3D(pt.x, pt.y, pt.z, rotation.yaw, rotation.pitch, center3D.x, center3D.y, scale3D);
+        });
+        
+        const avgZ = projectedPts.reduce((sum, p) => sum + p.z, 0) / projectedPts.length;
+        const pointsString = projectedPts.map(p => `${p.x},${p.y}`).join(' ');
+
+        items.push({
+          type: 'face',
+          z: avgZ - 5, // slightly offset behind nodes in similar depth plane
+          element: (
+            <polygon
+              key={`face-${idx}`}
+              points={pointsString}
+              fill={face.fill}
+              stroke={face.stroke}
+              strokeWidth={face.strokeWidth}
+              opacity={0.65}
+              strokeLinejoin="round"
+              pointerEvents="none" // do not block clicks on nodes inside
+            />
+          )
+        });
+      });
+
+      // 3. Add Chassis Outline Lines
+      truckChassisLines.forEach(([v1, v2], idx) => {
+        const pt1 = truckVertices[v1];
+        const pt2 = truckVertices[v2];
+        const proj1 = project3D(pt1.x, pt1.y, pt1.z, rotation.yaw, rotation.pitch, center3D.x, center3D.y, scale3D);
+        const proj2 = project3D(pt2.x, pt2.y, pt2.z, rotation.yaw, rotation.pitch, center3D.x, center3D.y, scale3D);
+        const avgZ = (proj1.z + proj2.z) / 2;
+
+        items.push({
+          type: 'chassis',
+          z: avgZ - 10,
+          element: (
+            <line
+              key={`chassis-${idx}`}
+              x1={proj1.x}
+              y1={proj1.y}
+              x2={proj2.x}
+              y2={proj2.y}
+              stroke="rgba(148, 163, 184, 0.4)"
+              strokeWidth={1.8}
+              pointerEvents="none"
+            />
+          )
+        });
+      });
+
+      // 4. Add Tyres (Wheels) with rotating spokes
+      const rollAngle = (rotation.yaw * 4.5 * Math.PI) / 180;
+      wheelsList.forEach((w, idx) => {
+        const projCenter = project3D(w.cx, w.cy, w.cz, rotation.yaw, rotation.pitch, center3D.x, center3D.y, scale3D);
+        
+        // outer wheel shape points
+        const numTyrePoints = 16;
+        const tyrePathPoints = [];
+        const hubPathPoints = [];
+        const spokeLines = [];
+
+        for (let i = 0; i <= numTyrePoints; i++) {
+          const theta = (i / numTyrePoints) * 2 * Math.PI;
+          const tx = w.cx + w.r * Math.cos(theta);
+          const ty = w.cy + w.r * Math.sin(theta);
+          const tz = w.cz;
+          const ptProj = project3D(tx, ty, tz, rotation.yaw, rotation.pitch, center3D.x, center3D.y, scale3D);
+          tyrePathPoints.push(`${ptProj.x},${ptProj.y}`);
+
+          const hx = w.cx + 5 * Math.cos(theta);
+          const hy = w.cy + 5 * Math.sin(theta);
+          const hz = w.cz;
+          const hubProj = project3D(hx, hy, hz, rotation.yaw, rotation.pitch, center3D.x, center3D.y, scale3D);
+          hubPathPoints.push(`${hubProj.x},${hubProj.y}`);
+        }
+
+        // spoke lines
+        const numSpokes = 5;
+        for (let i = 0; i < numSpokes; i++) {
+          const theta = (i / numSpokes) * 2 * Math.PI + rollAngle;
+          const outerX = w.cx + w.r * Math.cos(theta);
+          const outerY = w.cy + w.r * Math.sin(theta);
+          const outerZ = w.cz;
+          const outerProj = project3D(outerX, outerY, outerZ, rotation.yaw, rotation.pitch, center3D.x, center3D.y, scale3D);
+
+          const innerX = w.cx + 4 * Math.cos(theta);
+          const innerY = w.cy + 4 * Math.sin(theta);
+          const innerZ = w.cz;
+          const innerProj = project3D(innerX, innerY, innerZ, rotation.yaw, rotation.pitch, center3D.x, center3D.y, scale3D);
+
+          spokeLines.push({ x1: innerProj.x, y1: innerProj.y, x2: outerProj.x, y2: outerProj.y });
+        }
+
+        items.push({
+          type: 'wheel',
+          z: projCenter.z,
+          element: (
+            <g key={`wheel-${idx}`} pointerEvents="none">
+              {/* Outer tyre block */}
+              <polygon
+                points={tyrePathPoints.join(' ')}
+                fill="rgba(15, 23, 42, 0.95)"
+                stroke="#334155"
+                strokeWidth={2.5}
+              />
+              <polygon
+                points={tyrePathPoints.join(' ')}
+                fill="none"
+                stroke="rgba(148, 163, 184, 0.4)"
+                strokeWidth={1}
+              />
+              {/* Center Hub */}
+              <polygon
+                points={hubPathPoints.join(' ')}
+                fill="#334155"
+                stroke="#64748b"
+                strokeWidth={1.5}
+              />
+              {/* Spokes */}
+              {spokeLines.map((sp, sIdx) => (
+                <line
+                  key={`spoke-${sIdx}`}
+                  x1={sp.x1}
+                  y1={sp.y1}
+                  x2={sp.x2}
+                  y2={sp.y2}
+                  stroke="#64748b"
+                  strokeWidth={1.5}
+                  opacity={0.7}
+                />
+              ))}
+            </g>
+          )
+        });
+      });
+    }
+
+    // 5. Add Edges
+    filteredEdges.forEach((edge, idx) => {
+      const fromNode = displayNodeMap[edge.from];
+      const toNode = displayNodeMap[edge.to];
+      if (!fromNode || !toNode) return;
+
+      const avgZ = viewMode === 'graph' ? ((fromNode.depth || 0) + (toNode.depth || 0)) / 2 : 0;
+
+      const isHighlighted = hoveredNode && (edge.from === hoveredNode || edge.to === hoveredNode);
+      const isSelected = selectedNode && (edge.from === selectedNode || edge.to === selectedNode);
+      
+      let isMetaphorHighlighted = false;
+      if (highlightedMetaphor) {
+        isMetaphorHighlighted = isNodeInMetaphor(edge.from, highlightedMetaphor) && isNodeInMetaphor(edge.to, highlightedMetaphor);
+      }
+
+      const isDimmed = (hoveredNode && !isHighlighted) || (highlightedMetaphor && !isMetaphorHighlighted);
+      const edgeColor = nodeTypeColors[fromNode.type] || '#64748b';
+      
+      const activeGap = gaps.find(g => (g.nodeTarget === edge.from || g.nodeTarget === edge.to) && g.status === 'open');
+      const displayColor = activeGap ? '#FF4D6B' : edgeColor;
+
+      items.push({
+        type: 'edge',
+        z: avgZ,
+        element: (
+          <g key={`edge-${idx}`}>
+            {/* Glow on hover */}
+            {(isHighlighted || isSelected || isMetaphorHighlighted) && (
+              <path
+                d={getEdgePath(fromNode, toNode)}
+                fill="none"
+                stroke={displayColor}
+                strokeWidth={5}
+                opacity={0.15}
+                strokeLinecap="round"
+              />
+            )}
+            {/* Main edge path */}
+            <path
+              d={getEdgePath(fromNode, toNode)}
+              fill="none"
+              stroke={isHighlighted || isSelected || isMetaphorHighlighted ? displayColor : 'var(--text-muted)'}
+              strokeWidth={isHighlighted || isSelected || isMetaphorHighlighted ? 2 : 1}
+              strokeDasharray={isHighlighted || isSelected || isMetaphorHighlighted ? '8 4' : '6 4'}
+              opacity={isDimmed ? 0.04 : isHighlighted || isSelected || isMetaphorHighlighted ? 0.95 : 0.18}
+              strokeLinecap="round"
+              markerEnd={isHighlighted || isSelected || isMetaphorHighlighted ? `url(#arrow-${fromNode.type})` : 'url(#arrowhead)'}
+              style={{
+                animation: isHighlighted || isSelected || isMetaphorHighlighted
+                  ? 'dashFlow 0.8s linear infinite'
+                  : 'dashFlow 3s linear infinite',
+                transition: 'opacity 0.3s, stroke-width 0.3s',
+              }}
+            />
+            {/* Label */}
+            {showLabels && (isHighlighted || isSelected || isMetaphorHighlighted) && (
+              <text
+                x={(fromNode.x + toNode.x) / 2}
+                y={(fromNode.y + toNode.y) / 2 - 10}
+                textAnchor="middle"
+                fontSize="9"
+                fontFamily="var(--font-sans)"
+                fontWeight="700"
+                fill={displayColor}
+                opacity={0.9}
+              >
+                {edge.label}
+              </text>
+            )}
+          </g>
+        )
+      });
+    });
+
+    // 6. Add Nodes
+    displayNodes.forEach(node => {
+      const activeGap = gaps.find(g => g.nodeTarget === node.id && g.status === 'open');
+      const color = activeGap ? '#FF4D6B' : (nodeTypeColors[node.type] || '#64748b');
+      const IconComp = nodeTypeIcons[node.type] || Circle;
+      const isHovered = hoveredNode === node.id;
+      const isSelected = selectedNode === node.id;
+      
+      let isMetaphorHighlighted = false;
+      if (highlightedMetaphor) {
+        isMetaphorHighlighted = isNodeInMetaphor(node.id, highlightedMetaphor);
+      }
+
+      const isDimmed = (hoveredNode && !hoveredConnections.has(node.id)) || (highlightedMetaphor && !isMetaphorHighlighted);
+      
+      // Node size scaling in graph (3D) mode: make them smaller dots to prevent covering up the truck shape!
+      const baseRadius = viewMode === 'graph' ? (node.size * 0.45) : node.size;
+      const radius = baseRadius * (isHovered || isSelected || isMetaphorHighlighted ? 1.25 : 1);
+
+      // Label visibility criteria: show only on hover, select, connection, search, or metaphor highlight
+      const isLabelVisible = showLabels || (
+        isHovered || 
+        isSelected || 
+        isMetaphorHighlighted || 
+        activeConnections.has(node.id) ||
+        (searchQuery && node.label.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+
+      items.push({
+        type: 'node',
+        z: viewMode === 'graph' ? (node.depth || 0) : 0,
+        element: (
+          <g
+            key={`node-${node.id}`}
+            transform={`translate(${node.x}, ${node.y})`}
+            onMouseDown={e => handleNodeMouseDown(e, node.id)}
+            onMouseEnter={() => setHoveredNode(node.id)}
+            onMouseLeave={() => setHoveredNode(null)}
+            onClick={() => handleNodeClick(node.id)}
+            style={{
+              cursor: 'pointer',
+              opacity: isDimmed ? 0.12 : 1,
+              transition: 'opacity 0.3s, transform 0.2s',
+            }}
+          >
+            {/* Blinking anomaly ring */}
+            {activeGap && (
+              <circle
+                r={radius + 8}
+                fill="none"
+                stroke="#FF4D6B"
+                strokeWidth={2}
+                opacity={0.6}
+                style={{ animation: 'pulseGlow 1.2s ease-in-out infinite' }}
+              />
+            )}
+            {/* Selected glow rings */}
+            {isSelected && (
+              <>
+                <circle
+                  r={radius + 10}
+                  fill="none"
+                  stroke={color}
+                  strokeWidth={2}
+                  opacity={0.2}
+                  style={{ animation: 'pulseGlow 2s ease-in-out infinite' }}
+                />
+                <circle
+                  r={radius + 5}
+                  fill="none"
+                  stroke={color}
+                  strokeWidth={1.5}
+                  opacity={0.4}
+                  style={{ animation: 'pulseGlow 2s ease-in-out infinite 0.5s' }}
+                />
+              </>
+            )}
+
+            {/* Hover / Metaphor glow ring */}
+            {(isHovered || isMetaphorHighlighted) && !isSelected && (
+              <circle
+                r={radius + 6}
+                fill="none"
+                stroke={color}
+                strokeWidth={1.8}
+                opacity={0.35}
+                style={{ animation: 'pulseGlow 1.5s ease-in-out infinite' }}
+              />
+            )}
+
+            {/* Node Background */}
+            <circle
+              r={radius + 2}
+              fill={color}
+              opacity={isHovered || isSelected || isMetaphorHighlighted ? 0.18 : 0.08}
+              style={{ transition: 'all 0.3s' }}
+            />
+
+            {/* Main Outer Circle */}
+            <circle
+              r={radius}
+              fill={`${color}22`}
+              stroke={color}
+              strokeWidth={isHovered || isSelected || isMetaphorHighlighted ? 2.5 : 1.2}
+              filter={isHovered || isSelected || isMetaphorHighlighted ? `url(#glow-${node.type})` : undefined}
+              style={{ transition: 'all 0.3s' }}
+            />
+
+            {/* Inner Ring */}
+            <circle
+              r={radius * 0.65}
+              fill={`${color}25`}
+              style={{ transition: 'all 0.3s' }}
+            />
+
+            {/* Icon */}
+            <foreignObject
+              x={-8}
+              y={-8}
+              width={16}
+              height={16}
+              style={{ overflow: 'visible', pointerEvents: 'none' }}
+            >
+              <div
+                xmlns="http://www.w3.org/1999/xhtml"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 16,
+                  height: 16,
+                }}
+              >
+                <IconComp size={radius * 0.5} color={color} strokeWidth={2.5} />
+              </div>
+            </foreignObject>
+
+            {/* Label (clutter controller) */}
+            {isLabelVisible && (
+              <text
+                y={radius + 15}
+                textAnchor="middle"
+                fontSize="9.5"
+                fontFamily="var(--font-sans)"
+                fontWeight="600"
+                fill="var(--text-secondary)"
+                style={{
+                  textShadow: '0 1px 4px rgba(0,0,0,0.7)',
+                  opacity: isDimmed ? 0.35 : 1,
+                  transition: 'opacity 0.3s',
+                }}
+              >
+                {node.label}
+              </text>
+            )}
+
+            {/* Metaphor Role Badge */}
+            {isMetaphorHighlighted && (
+              <g transform={`translate(0, ${-radius - 16})`}>
+                <rect
+                  x={-35}
+                  y={-8}
+                  width={70}
+                  height={16}
+                  rx={8}
+                  fill={color}
+                  opacity={0.88}
+                />
+                <text
+                  textAnchor="middle"
+                  y={3}
+                  fontSize="8"
+                  fontWeight="800"
+                  fill="#fff"
+                  textTransform="uppercase"
+                  letterSpacing="0.5"
+                >
+                  {getMetaphorRoleName(node.id, highlightedMetaphor)}
+                </text>
+              </g>
+            )}
+
+            {/* Default Type badge */}
+            {(isHovered || isSelected) && !isMetaphorHighlighted && (
+              <text
+                y={-radius - 8}
+                textAnchor="middle"
+                fontSize="9"
+                fontFamily="var(--font-sans)"
+                fontWeight="700"
+                fill={color}
+                textTransform="uppercase"
+                letterSpacing="0.5"
+              >
+                {nodeTypeLabels[node.type]}
+              </text>
+            )}
+          </g>
+        )
+      });
+    });
+
+    // Depth Sorting
+    return items.sort((a, b) => a.z - b.z);
+  }, [viewMode, filteredEdges, displayNodeMap, displayNodes, rotation, hoveredNode, selectedNode, showLabels, highlightedMetaphor, gaps, activeConnections]);
+
+  // ---- Selected node details ----
+  const selectedNodeData = selectedNode ? getNodeById(selectedNode) : null;
+  const selectedConnections = selectedNode ? getNodeConnections(selectedNode) : [];
+
+  const selectedDetails = useMemo(() => {
+    if (!selectedNodeData) return {};
+    return nodeDetails[selectedNodeData.id] || nodeDetails[selectedNodeData.type] || {};
+  }, [selectedNodeData, nodeDetails]);
+
+  const activeNodeGap = useMemo(() => {
+    if (!selectedNode) return null;
+    return gaps.find(g => g.nodeTarget === selectedNode && g.status === 'open');
+  }, [selectedNode, gaps]);
 
   return (
     <div style={styles.page}>
@@ -798,7 +1777,7 @@ const KnowledgeGraph = () => {
             </div>
             <div>
               <div style={styles.titleText}>Knowledge Graph</div>
-              <div style={styles.titleSub}>Logistics Intelligence Network</div>
+              <div style={styles.titleSub}>Logistics Intelligence Network (3D Truck Twin)</div>
             </div>
           </div>
         </div>
@@ -842,9 +1821,9 @@ const KnowledgeGraph = () => {
               background: viewMode === 'graph' ? 'rgba(99,102,241,0.15)' : 'transparent',
               color: viewMode === 'graph' ? '#818cf8' : 'var(--text-muted)',
             }}
-            onClick={() => setViewMode('graph')}
+            onClick={() => { setViewMode('graph'); setSelectedNode(null); }}
           >
-            <Network size={14} /> Graph
+            <Network size={14} /> 3D Truck Graph
           </button>
           <button
             style={{
@@ -852,9 +1831,9 @@ const KnowledgeGraph = () => {
               background: viewMode === 'tree' ? 'rgba(99,102,241,0.15)' : 'transparent',
               color: viewMode === 'tree' ? '#818cf8' : 'var(--text-muted)',
             }}
-            onClick={() => setViewMode('tree')}
+            onClick={() => { setViewMode('tree'); setSelectedNode(null); }}
           >
-            <GitBranch size={14} /> Tree
+            <GitBranch size={14} /> 2D Tree View
           </button>
 
           <div style={{ width: 1, height: 20, background: 'var(--surface-border)' }} />
@@ -869,47 +1848,170 @@ const KnowledgeGraph = () => {
       <div style={styles.mainArea}>
         {/* ---- LEFT SIDEBAR ---- */}
         <motion.div
-          style={styles.sidebar}
+          style={{
+            ...styles.sidebar,
+            width: leftSidebarCollapsed ? 0 : leftSidebarWidth,
+            borderRight: leftSidebarCollapsed ? 'none' : '1px solid var(--surface-border)',
+            position: 'relative',
+            overflow: leftSidebarCollapsed ? 'hidden' : 'visible',
+            transition: isLeftResizingRef.current ? 'none' : 'width 0.3s ease',
+          }}
           initial={{ x: -280 }}
           animate={{ x: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         >
-          {/* Sidebar Tabs Selector */}
-          <div style={{ display: 'flex', borderBottom: '1px solid var(--surface-border)', background: 'var(--bg-900)', flexShrink: 0 }}>
-            <button
-              onClick={() => setSidebarTab('filters')}
-              style={{
-                flex: 1, padding: '12px 0', fontSize: '10px', fontWeight: 700, border: 'none', cursor: 'pointer',
-                background: sidebarTab === 'filters' ? 'var(--bg-800)' : 'transparent',
-                color: sidebarTab === 'filters' ? '#818cf8' : 'var(--text-muted)', outline: 'none', textTransform: 'uppercase', letterSpacing: '0.04em'
-              }}
-            >
-              Filters & Legend
-            </button>
-            <button
-              onClick={() => setSidebarTab('gaps')}
-              style={{
-                flex: 1, padding: '12px 0', fontSize: '10px', fontWeight: 700, border: 'none', cursor: 'pointer',
-                background: sidebarTab === 'gaps' ? 'var(--bg-800)' : 'transparent',
-                color: sidebarTab === 'gaps' ? '#818cf8' : 'var(--text-muted)', outline: 'none',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, textTransform: 'uppercase', letterSpacing: '0.04em'
-              }}
-            >
-              <Sparkles size={11} color={sidebarTab === 'gaps' ? '#818cf8' : 'var(--text-muted)'} />
-              AI Gaps ({gaps.filter(g => g.status === 'open').length})
-            </button>
-          </div>
+          {/* Sidebar Title Block from Photo */}
+          {!leftSidebarCollapsed && (
+            <div style={{
+              padding: '16px 20px',
+              borderBottom: '1px solid var(--surface-border)',
+              background: 'var(--bg-900)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexShrink: 0
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 'var(--radius-sm)',
+                    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 0 10px rgba(99, 102, 241, 0.25)',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => {
+                    handleResetView();
+                    logToTerminal('Command: Reset camera view orientation.');
+                    showToast('Reset camera viewport');
+                  }}
+                  title="Click to Reset View"
+                >
+                  <Network size={16} color="#fff" />
+                </div>
+                <div>
+                  <div
+                    onClick={() => {
+                      handleResetView();
+                      logToTerminal('Command: Reset camera view orientation.');
+                      showToast('Reset camera viewport');
+                    }}
+                    style={{
+                      fontSize: '15px',
+                      fontWeight: 700,
+                      color: '#fff',
+                      cursor: 'pointer',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = '#818cf8'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = '#fff'; }}
+                  >
+                    Knowledge Graph
+                  </div>
+                  <div
+                    onClick={() => {
+                      setAutoRotate(prev => {
+                        const next = !prev;
+                        logToTerminal(`Command: Auto-rotation set to ${next ? 'ON' : 'OFF'}.`);
+                        showToast(`Auto-rotation ${next ? 'enabled' : 'disabled'}`);
+                        return next;
+                      });
+                    }}
+                    style={{
+                      fontSize: '10px',
+                      color: 'var(--text-muted)',
+                      fontWeight: 500,
+                      marginTop: '1px',
+                      cursor: 'pointer',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = '#818cf8'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+                  >
+                    Logistics Intelligence Network
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setLeftSidebarCollapsed(true)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: 4,
+                  borderRadius: 4
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = '#fff'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+              >
+                <ChevronLeft size={16} />
+              </button>
+            </div>
+          )}
 
-          {sidebarTab === 'filters' ? (
+          {/* Sidebar Tabs Selector */}
+          {!leftSidebarCollapsed && (
+            <div style={{ display: 'flex', borderBottom: '1px solid var(--surface-border)', background: 'var(--bg-900)', flexShrink: 0 }}>
+              <button
+                onClick={() => setSidebarTab('filters')}
+                style={{
+                  flex: 1, padding: '12px 0', fontSize: '10px', fontWeight: 700, border: 'none', cursor: 'pointer',
+                  background: sidebarTab === 'filters' ? 'var(--bg-800)' : 'transparent',
+                  color: sidebarTab === 'filters' ? '#818cf8' : 'var(--text-muted)', outline: 'none', textTransform: 'uppercase', letterSpacing: '0.04em'
+                }}
+              >
+                FILTERS & LEGEND
+              </button>
+              <button
+                onClick={() => setSidebarTab('metaphors')}
+                style={{
+                  flex: 1, padding: '12px 0', fontSize: '10px', fontWeight: 700, border: 'none', cursor: 'pointer',
+                  background: sidebarTab === 'metaphors' ? 'var(--bg-800)' : 'transparent',
+                  color: sidebarTab === 'metaphors' ? '#818cf8' : 'var(--text-muted)', outline: 'none', textTransform: 'uppercase', letterSpacing: '0.04em'
+                }}
+              >
+                METAPHORS
+              </button>
+              <button
+                onClick={() => setSidebarTab('gaps')}
+                style={{
+                  flex: 1, padding: '12px 0', fontSize: '10px', fontWeight: 700, border: 'none', cursor: 'pointer',
+                  background: sidebarTab === 'gaps' ? 'var(--bg-800)' : 'transparent',
+                  color: sidebarTab === 'gaps' ? '#818cf8' : 'var(--text-muted)', outline: 'none',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, textTransform: 'uppercase', letterSpacing: '0.04em'
+                }}
+              >
+                <Sparkles size={11} color={sidebarTab === 'gaps' ? '#818cf8' : 'var(--text-muted)'} />
+                AI Gaps ({gaps.filter(g => g.status === 'open').length})
+              </button>
+            </div>
+          )}
+
+          {!leftSidebarCollapsed && sidebarTab === 'filters' && (
             <>
               {/* Search */}
               <div style={styles.sidebarSection}>
-                <div style={styles.sectionTitle}>
-                  <Search size={12} /> Search Nodes
+                <div
+                  style={{ ...styles.sectionTitle, cursor: 'pointer' }}
+                  onClick={() => {
+                    const input = document.getElementById('kg-search-input');
+                    if (input) input.focus();
+                    logToTerminal('Command: Search input focused.');
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = '#818cf8'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+                >
+                  <Search size={12} /> SEARCH NODES
                 </div>
                 <div style={styles.searchBox}>
                   <Search size={14} color="var(--text-muted)" />
                   <input
+                    id="kg-search-input"
                     type="text"
                     placeholder="Search nodes..."
                     value={searchQuery}
@@ -925,15 +2027,36 @@ const KnowledgeGraph = () => {
                     </button>
                   )}
                 </div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '8px' }}>
-                  Showing {filteredNodes.length} of {nodes.length} nodes
+                <div
+                  onClick={() => {
+                    setSearchQuery('');
+                    setActiveFilters(Object.keys(nodeTypeColors).reduce((acc, type) => ({ ...acc, [type]: true }), {}));
+                    logToTerminal('Filters and search reset.');
+                    showToast('Reset all filters to show all nodes');
+                  }}
+                  style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '8px', cursor: 'pointer' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = '#818cf8'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+                >
+                  Showing {filteredNodes.length} of {nodes.length} nodes (Click to Reset)
                 </div>
               </div>
 
               {/* Filters */}
               <div style={{ ...styles.sidebarSection, flex: 1, overflowY: 'auto' }}>
-                <div style={styles.sectionTitle}>
-                  <Filter size={12} /> Filter by Type
+                <div
+                  style={{ ...styles.sectionTitle, cursor: 'pointer' }}
+                  onClick={() => {
+                    const allTrue = Object.values(activeFilters).every(v => v);
+                    const nextVal = !allTrue;
+                    setActiveFilters(Object.keys(nodeTypeColors).reduce((acc, type) => ({ ...acc, [type]: nextVal }), {}));
+                    logToTerminal(`All type filters toggled: ${nextVal ? 'ON' : 'OFF'}`);
+                    showToast(nextVal ? 'Enabled all filters' : 'Disabled all filters');
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = '#818cf8'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+                >
+                  <Filter size={12} /> FILTER BY TYPE (Click to Toggle All)
                 </div>
                 {Object.entries(nodeTypeColors).map(([type, color]) => {
                   const IconComp = nodeTypeIcons[type] || Circle;
@@ -979,54 +2102,240 @@ const KnowledgeGraph = () => {
 
               {/* Stats */}
               <div style={styles.sidebarSection}>
-                <div style={styles.sectionTitle}>
-                  <BarChart3 size={12} /> Graph Stats
+                <div
+                  style={{ ...styles.sectionTitle, cursor: 'pointer' }}
+                  onClick={() => {
+                    logToTerminal(`Network Density Report: ${(filteredEdges.length / (filteredNodes.length || 1)).toFixed(2)} edges/node. 10 Open gaps diagnostics active.`);
+                    showToast('Printed Network Density Report');
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = '#818cf8'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+                >
+                  <BarChart3 size={12} /> GRAPH STATS (Click for Report)
                 </div>
-                <div style={styles.statRow}>
+                <div
+                  style={{ ...styles.statRow, cursor: 'pointer', padding: '4px 6px', borderRadius: 4 }}
+                  onClick={() => {
+                    logToTerminal(`Highlight command: Traced total ${nodes.length} node models.`);
+                    showToast(`Selected all ${nodes.length} nodes`);
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                >
                   <span style={styles.statLabel}>Total Nodes</span>
                   <span style={{ ...styles.statValue, color: '#818cf8' }}>{nodes.length}</span>
                 </div>
-                <div style={styles.statRow}>
+                <div
+                  style={{ ...styles.statRow, cursor: 'pointer', padding: '4px 6px', borderRadius: 4 }}
+                  onClick={() => {
+                    logToTerminal(`Pulse command: Simulating high speed edge flow across all ${knowledgeGraphEdges.length} connections.`);
+                    showToast(`Flow sync active on all ${knowledgeGraphEdges.length} edges`);
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                >
                   <span style={styles.statLabel}>Total Edges</span>
                   <span style={{ ...styles.statValue, color: '#38CE3C' }}>{knowledgeGraphEdges.length}</span>
                 </div>
-                <div style={styles.statRow}>
+                <div
+                  style={{ ...styles.statRow, cursor: 'pointer', padding: '4px 6px', borderRadius: 4 }}
+                  onClick={() => {
+                    logToTerminal(`Highlight command: Visible subset is ${filteredNodes.length} nodes.`);
+                    showToast(`Highlighting ${filteredNodes.length} visible nodes`);
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                >
                   <span style={styles.statLabel}>Visible Nodes</span>
                   <span style={{ ...styles.statValue, color: '#f59e0b' }}>{filteredNodes.length}</span>
                 </div>
-                <div style={styles.statRow}>
+                <div
+                  style={{ ...styles.statRow, cursor: 'pointer', padding: '4px 6px', borderRadius: 4 }}
+                  onClick={() => {
+                    logToTerminal(`Highlight command: Visible subset is ${filteredEdges.length} edges.`);
+                    showToast(`Highlighting ${filteredEdges.length} visible edges`);
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                >
                   <span style={styles.statLabel}>Visible Edges</span>
                   <span style={{ ...styles.statValue, color: '#ec4899' }}>{filteredEdges.length}</span>
                 </div>
               </div>
 
-              {/* Legend */}
-              <div style={styles.sidebarSection}>
-                <div style={styles.sectionTitle}>
-                  <Layers size={12} /> Legend
+              {/* Legend (from photo) */}
+              <div style={{ ...styles.sidebarSection, borderBottom: 'none' }}>
+                <div
+                  style={{ ...styles.sectionTitle, cursor: 'pointer' }}
+                  onClick={() => {
+                    logToTerminal('Command: Flashed all node twins on network.');
+                    showToast('Flashed all network nodes');
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = '#818cf8'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+                >
+                  <Layers size={12} /> LEGEND (Click to Flash Map)
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                   {Object.entries(nodeTypeColors).map(([type, color]) => (
-                    <div key={type} style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                      padding: '3px 8px',
-                      background: `${color}10`,
-                      borderRadius: '12px',
-                      border: `1px solid ${color}30`,
-                      fontSize: '10px',
-                      fontWeight: 600,
-                      color: color,
-                    }}>
-                      <div style={{ ...styles.legendDot, background: color }} />
+                    <button
+                      key={type}
+                      onClick={() => {
+                        toggleFilter(type);
+                        logToTerminal(`Toggled filter for node type: ${type}`);
+                        showToast(`${activeFilters[type] ? 'Disabled' : 'Enabled'} type: ${nodeTypeLabels[type]}`);
+                      }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '5px 10px',
+                        borderRadius: '12px',
+                        border: activeFilters[type] ? `1px solid ${color}40` : '1px solid rgba(255,255,255,0.06)',
+                        background: activeFilters[type] ? `${color}18` : 'rgba(255,255,255,0.02)',
+                        color: activeFilters[type] ? '#fff' : 'var(--text-muted)',
+                        fontSize: '10px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        outline: 'none',
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = `${color}25`; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = activeFilters[type] ? `${color}18` : 'rgba(255,255,255,0.02)'; }}
+                    >
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: color }} />
                       {nodeTypeLabels[type]}
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
             </>
-          ) : (
+          )}
+
+          {!leftSidebarCollapsed && sidebarTab === 'metaphors' && (
+            <div style={{ ...styles.sidebarSection, flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={styles.sectionTitle}>
+                <Sparkles size={12} color="#818cf8" /> Operational Metaphors
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px', lineHeight: '1.4' }}>
+                Select a truck metaphor component below to isolate and trace its corresponding ledger nodes.
+              </div>
+
+              {/* Steering Wheel Card */}
+              <div
+                onClick={() => setHighlightedMetaphor(highlightedMetaphor === 'steering' ? null : 'steering')}
+                style={{
+                  ...styles.metaphorCard,
+                  ...(highlightedMetaphor === 'steering' ? styles.metaphorCardActive : {})
+                }}
+              >
+                <div style={{ ...styles.metaphorHeader, color: '#6366f1' }}>
+                  <Compass size={14} /> Steering (Executive Control)
+                </div>
+                <div style={styles.metaphorDesc}>
+                  The GatiFleet Ops Hub and Executive Advisor nodes direct routing, consensus algorithms, and corporate priorities.
+                </div>
+              </div>
+
+              {/* Accelerator Card */}
+              <div
+                onClick={() => setHighlightedMetaphor(highlightedMetaphor === 'accelerator' ? null : 'accelerator')}
+                style={{
+                  ...styles.metaphorCard,
+                  ...(highlightedMetaphor === 'accelerator' ? styles.metaphorCardActive : {})
+                }}
+              >
+                <div style={{ ...styles.metaphorHeader, color: '#10b981' }}>
+                  <Gauge size={14} /> Accelerator (Velocity & Growth)
+                </div>
+                <div style={styles.metaphorDesc}>
+                  Sales agents, active bookings, and cargo shipment flows act as the accelerator pedal that boosts dispatch speed.
+                </div>
+              </div>
+
+              {/* Brakes Card */}
+              <div
+                onClick={() => setHighlightedMetaphor(highlightedMetaphor === 'brake' ? null : 'brake')}
+                style={{
+                  ...styles.metaphorCard,
+                  ...(highlightedMetaphor === 'brake' ? styles.metaphorCardActive : {})
+                }}
+              >
+                <div style={{ ...styles.metaphorHeader, color: '#FF4D6B' }}>
+                  <ShieldAlert size={14} /> Brakes (Compliance & Auditing)
+                </div>
+                <div style={styles.metaphorDesc}>
+                  Finance auditors (stopping tax leaks) and HR safety policies (restricting tired drivers) act as calipers preventing failures.
+                </div>
+              </div>
+
+              {/* Wheels Card */}
+              <div
+                onClick={() => setHighlightedMetaphor(highlightedMetaphor === 'tyres' ? null : 'tyres')}
+                style={{
+                  ...styles.metaphorCard,
+                  ...(highlightedMetaphor === 'tyres' ? styles.metaphorCardActive : {})
+                }}
+              >
+                <div style={{ ...styles.metaphorHeader, color: '#06b6d4' }}>
+                  <CircleDot size={14} /> Tyres (Ground Telemetry Loops)
+                </div>
+                <div style={styles.metaphorDesc}>
+                  Warehouses, toll networks, and refuel gates provide tire contact with the physical road and verify digital twin data.
+                </div>
+              </div>
+
+              {/* Headlights Card */}
+              <div
+                onClick={() => setHighlightedMetaphor(highlightedMetaphor === 'headlights' ? null : 'headlights')}
+                style={{
+                  ...styles.metaphorCard,
+                  ...(highlightedMetaphor === 'headlights' ? styles.metaphorCardActive : {})
+                }}
+              >
+                <div style={{ ...styles.metaphorHeader, color: '#ec4899' }}>
+                  <Lightbulb size={14} /> Headlights (Route Forecasting)
+                </div>
+                <div style={styles.metaphorDesc}>
+                  Active freight corridors look ahead, lighting paths and forecasting weather blockages or traffic delays.
+                </div>
+              </div>
+
+              {/* Fuel Tank Card */}
+              <div
+                onClick={() => setHighlightedMetaphor(highlightedMetaphor === 'fuel' ? null : 'fuel')}
+                style={{
+                  ...styles.metaphorCard,
+                  ...(highlightedMetaphor === 'fuel' ? styles.metaphorCardActive : {})
+                }}
+              >
+                <div style={{ ...styles.metaphorHeader, color: '#f97316' }}>
+                  <Fuel size={14} /> Fuel Tank (Treasury & Wallets)
+                </div>
+                <div style={styles.metaphorDesc}>
+                  Fuel card wallets and billing accounts store the financial liquidity required to maintain operations.
+                </div>
+              </div>
+
+              {/* Exhaust Card */}
+              <div
+                onClick={() => setHighlightedMetaphor(highlightedMetaphor === 'exhaust' ? null : 'exhaust')}
+                style={{
+                  ...styles.metaphorCard,
+                  ...(highlightedMetaphor === 'exhaust' ? styles.metaphorCardActive : {})
+                }}
+              >
+                <div style={{ ...styles.metaphorHeader, color: '#8b5cf6' }}>
+                  <Zap size={14} /> Exhaust (Dispute Discharging)
+                </div>
+                <div style={styles.metaphorDesc}>
+                  E-Invoices and credit disputes reconcile differences, venting financial anomalies out of the active ledger.
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!leftSidebarCollapsed && sidebarTab === 'gaps' && (
             <>
               {/* AI Gaps Checklist tab */}
               <div style={{ ...styles.sidebarSection, flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -1042,8 +2351,8 @@ const KnowledgeGraph = () => {
                       onClick={() => {
                         setSelectedNode(gap.nodeTarget);
                         if (node) {
-                          // Center node inside SVG view
-                          setPan({ x: -node.x + 180, y: -node.y + 200 });
+                          const coords = node3DCoords[gap.nodeTarget] || { x: 0, y: 0, z: 0 };
+                          setPan({ x: -coords.x * scale3D + 200, y: -coords.y * scale3D + 200 });
                         }
                       }}
                       style={{
@@ -1099,7 +2408,53 @@ const KnowledgeGraph = () => {
               </div>
             </>
           )}
+
+          {/* Left Resize Handle */}
+          {!leftSidebarCollapsed && (
+            <div
+              onMouseDown={startLeftResizing}
+              style={{
+                position: 'absolute',
+                top: 0,
+                right: 0,
+                width: '6px',
+                height: '100%',
+                cursor: 'col-resize',
+                zIndex: 1000,
+                background: isLeftResizingRef.current ? 'rgba(99, 102, 241, 0.45)' : 'transparent',
+                transition: 'background 0.2s',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.2)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+            />
+          )}
         </motion.div>
+
+        {/* Floating Left Expand Button when collapsed */}
+        {leftSidebarCollapsed && (
+          <button
+            onClick={() => setLeftSidebarCollapsed(false)}
+            style={{
+              position: 'absolute',
+              left: 16,
+              top: 76,
+              zIndex: 99,
+              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '50%',
+              width: 36,
+              height: 36,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 4px 15px rgba(99, 102, 241, 0.4)',
+            }}
+          >
+            <ChevronRight size={18} />
+          </button>
+        )}
 
         {/* ---- SVG CANVAS ---- */}
         <div
@@ -1149,7 +2504,7 @@ const KnowledgeGraph = () => {
                   <feMergeNode in="SourceGraphic" />
                 </feMerge>
               </filter>
-              {/* Arrow marker */}
+              {/* Arrow markers */}
               <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
                 <path d="M0,0 L8,3 L0,6" fill="var(--text-muted)" opacity="0.5" />
               </marker>
@@ -1161,227 +2516,84 @@ const KnowledgeGraph = () => {
             </defs>
 
             <g transform={`scale(${zoom}) translate(${pan.x}, ${pan.y})`}>
-              {/* ---- EDGES ---- */}
-              {filteredEdges.map((edge, i) => {
-                const fromNode = displayNodeMap[edge.from];
-                const toNode = displayNodeMap[edge.to];
-                if (!fromNode || !toNode) return null;
-
-                const isHighlighted =
-                  hoveredNode &&
-                  (edge.from === hoveredNode || edge.to === hoveredNode);
-                const isSelected =
-                  selectedNode &&
-                  (edge.from === selectedNode || edge.to === selectedNode);
-                const isDimmed = hoveredNode && !isHighlighted;
-                const edgeColor = nodeTypeColors[fromNode.type] || '#64748b';
-
-                return (
-                  <g key={`edge-${i}`}>
-                    {/* Edge glow on hover */}
-                    {(isHighlighted || isSelected) && (
-                      <path
-                        d={getEdgePath(fromNode, toNode)}
-                        fill="none"
-                        stroke={edgeColor}
-                        strokeWidth={4}
-                        opacity={0.15}
-                        strokeLinecap="round"
-                      />
-                    )}
-                    {/* Main edge */}
-                    <path
-                      d={getEdgePath(fromNode, toNode)}
-                      fill="none"
-                      stroke={isHighlighted || isSelected ? edgeColor : 'var(--text-muted)'}
-                      strokeWidth={isHighlighted || isSelected ? 2 : 1.2}
-                      strokeDasharray={isHighlighted || isSelected ? '8 4' : '6 4'}
-                      opacity={isDimmed ? 0.1 : isHighlighted || isSelected ? 0.9 : 0.3}
-                      strokeLinecap="round"
-                      markerEnd={isHighlighted || isSelected ? `url(#arrow-${fromNode.type})` : 'url(#arrowhead)'}
-                      style={{
-                        animation: isHighlighted || isSelected
-                          ? 'dashFlow 0.8s linear infinite'
-                          : 'dashFlow 3s linear infinite',
-                        transition: 'opacity 0.3s, stroke-width 0.3s',
-                      }}
-                    />
-                    {/* Edge label */}
-                    {showLabels && (isHighlighted || isSelected) && (
-                      <text
-                        x={(fromNode.x + toNode.x) / 2}
-                        y={(fromNode.y + toNode.y) / 2 - 10}
-                        textAnchor="middle"
-                        fontSize="10"
-                        fontFamily="var(--font-sans)"
-                        fontWeight="600"
-                        fill={edgeColor}
-                        opacity={0.9}
-                      >
-                        {edge.label}
-                      </text>
-                    )}
-                  </g>
-                );
-              })}
-
-              {/* ---- NODES ---- */}
-              {displayNodes.map(node => {
-                const activeGap = gaps.find(g => g.nodeTarget === node.id && g.status === 'open');
-                const color = activeGap ? '#FF4D6B' : (nodeTypeColors[node.type] || '#64748b');
-                const IconComp = nodeTypeIcons[node.type] || Circle;
-                const isHovered = hoveredNode === node.id;
-                const isSelected = selectedNode === node.id;
-                const isDimmed =
-                  hoveredNode &&
-                  !hoveredConnections.has(node.id);
-                const radius = (node.size || 25) * (isHovered || isSelected ? 1.15 : 1);
-
-                return (
-                  <g
-                    key={node.id}
-                    transform={`translate(${node.x}, ${node.y})`}
-                    onMouseDown={e => handleNodeMouseDown(e, node.id)}
-                    onMouseEnter={() => setHoveredNode(node.id)}
-                    onMouseLeave={() => setHoveredNode(null)}
-                    onClick={() => handleNodeClick(node.id)}
-                    style={{
-                      cursor: 'pointer',
-                      opacity: isDimmed ? 0.15 : 1,
-                      transition: 'opacity 0.3s',
-                    }}
-                  >
-                    {/* Anomaly blinking halo ring */}
-                    {activeGap && (
-                      <circle
-                        r={radius + 8}
-                        fill="none"
-                        stroke="#FF4D6B"
-                        strokeWidth={2}
-                        opacity={0.6}
-                        style={{ animation: 'pulseGlow 1.2s ease-in-out infinite' }}
-                      />
-                    )}
-                    {/* Outer ring pulse on selected */}
-                    {isSelected && (
-                      <>
-                        <circle
-                          r={radius + 12}
-                          fill="none"
-                          stroke={color}
-                          strokeWidth={2}
-                          opacity={0.2}
-                          style={{ animation: 'pulseGlow 2s ease-in-out infinite' }}
-                        />
-                        <circle
-                          r={radius + 6}
-                          fill="none"
-                          stroke={color}
-                          strokeWidth={1.5}
-                          opacity={0.4}
-                          style={{ animation: 'pulseGlow 2s ease-in-out infinite 0.5s' }}
-                        />
-                      </>
-                    )}
-
-                    {/* Glow ring on hover */}
-                    {isHovered && !isSelected && (
-                      <circle
-                        r={radius + 8}
-                        fill="none"
-                        stroke={color}
-                        strokeWidth={2}
-                        opacity={0.3}
-                        style={{ animation: 'pulseGlow 1.5s ease-in-out infinite' }}
-                      />
-                    )}
-
-                    {/* Node background glow */}
-                    <circle
-                      r={radius + 3}
-                      fill={color}
-                      opacity={isHovered || isSelected ? 0.15 : 0.06}
-                      style={{ transition: 'all 0.3s' }}
-                    />
-
-                    {/* Main circle */}
-                    <circle
-                      r={radius}
-                      fill={`${color}18`}
-                      stroke={color}
-                      strokeWidth={isHovered || isSelected ? 2.5 : 1.5}
-                      filter={isHovered || isSelected ? `url(#glow-${node.type})` : undefined}
-                      style={{ transition: 'all 0.3s' }}
-                    />
-
-                    {/* Inner gradient circle */}
-                    <circle
-                      r={radius * 0.7}
-                      fill={`${color}25`}
-                      style={{ transition: 'all 0.3s' }}
-                    />
-
-                    {/* Icon (rendered as text since we can't use React components inside SVG foreignObject reliably) */}
-                    <foreignObject
-                      x={-10}
-                      y={-10}
-                      width={20}
-                      height={20}
-                      style={{ overflow: 'visible', pointerEvents: 'none' }}
-                    >
-                      <div
-                        xmlns="http://www.w3.org/1999/xhtml"
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          width: 20,
-                          height: 20,
-                        }}
-                      >
-                        <IconComp size={radius * 0.5} color={color} strokeWidth={2.2} />
-                      </div>
-                    </foreignObject>
-
-                    {/* Label */}
-                    {showLabels && (
-                      <text
-                        y={radius + 16}
-                        textAnchor="middle"
-                        fontSize="11"
-                        fontFamily="var(--font-sans)"
-                        fontWeight="600"
-                        fill="var(--text-secondary)"
-                        style={{
-                          textShadow: '0 1px 4px rgba(0,0,0,0.5)',
-                          opacity: isDimmed ? 0.3 : 1,
-                          transition: 'opacity 0.3s',
-                        }}
-                      >
-                        {node.label}
-                      </text>
-                    )}
-
-                    {/* Type badge */}
-                    {(isHovered || isSelected) && (
-                      <text
-                        y={-radius - 8}
-                        textAnchor="middle"
-                        fontSize="9"
-                        fontFamily="var(--font-sans)"
-                        fontWeight="700"
-                        fill={color}
-                        textTransform="uppercase"
-                        letterSpacing="0.5"
-                      >
-                        {nodeTypeLabels[node.type]}
-                      </text>
-                    )}
-                  </g>
-                );
-              })}
+              {/* Depth sorted items */}
+              {viewMode === 'graph' ? (
+                renderOrderList.map(item => item.element)
+              ) : (
+                <>
+                  {/* Edges in 2D Tree */}
+                  {renderOrderList.filter(item => item.type === 'edge').map(item => item.element)}
+                  {/* Nodes in 2D Tree */}
+                  {renderOrderList.filter(item => item.type === 'node').map(item => item.element)}
+                </>
+              )}
             </g>
           </svg>
+
+          {/* Orbit Control Box (Floating on Canvas) */}
+          {viewMode === 'graph' && (
+            <div style={styles.orbitControls}>
+              <div style={styles.controlHeader}>
+                <Compass size={14} color="#818cf8" />
+                <span>3D Orbit Controls</span>
+              </div>
+              
+              <div style={styles.controlRow}>
+                <label style={{ fontSize: '10px' }}>Yaw (Turntable)</label>
+                <input
+                  type="range"
+                  min="0"
+                  max="360"
+                  value={Math.round(rotation.yaw)}
+                  onChange={e => {
+                    setRotation(prev => ({ ...prev, yaw: parseFloat(e.target.value) }));
+                    setAutoRotate(false); // pause auto-rotate on manual change
+                  }}
+                  style={styles.slider}
+                />
+                <span style={styles.controlVal}>{Math.round(rotation.yaw)}°</span>
+              </div>
+
+              <div style={styles.controlRow}>
+                <label style={{ fontSize: '10px' }}>Pitch (Height)</label>
+                <input
+                  type="range"
+                  min="-80"
+                  max="80"
+                  value={Math.round(rotation.pitch)}
+                  onChange={e => {
+                    setRotation(prev => ({ ...prev, pitch: parseFloat(e.target.value) }));
+                    setAutoRotate(false);
+                  }}
+                  style={styles.slider}
+                />
+                <span style={styles.controlVal}>{Math.round(rotation.pitch)}°</span>
+              </div>
+
+              <div style={styles.controlActions}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '11px', color: 'var(--text-secondary)' }}>
+                  <input
+                    type="checkbox"
+                    checked={autoRotate}
+                    onChange={e => setAutoRotate(e.target.checked)}
+                    style={{ cursor: 'pointer' }}
+                  />
+                  Auto-Rotate
+                </label>
+                
+                <button
+                  onClick={handleResetView}
+                  style={{
+                    background: 'var(--bg-700)', border: '1px solid var(--surface-border)',
+                    borderRadius: 4, padding: '2px 8px', fontSize: '9px', color: 'var(--text-secondary)',
+                    cursor: 'pointer', fontFamily: 'monospace'
+                  }}
+                >
+                  RESET
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Canvas info overlay */}
           <div style={{
@@ -1422,7 +2634,7 @@ const KnowledgeGraph = () => {
               gap: '6px',
             }}>
               <Info size={12} />
-              Scroll to zoom · Drag to pan · Click nodes for details
+              {viewMode === 'graph' ? 'Drag to Orbit · Shift+Drag to Pan · Wheel to Zoom' : 'Drag nodes · Drag background to Pan · Wheel to Zoom'}
             </div>
           </div>
         </div>
@@ -1431,12 +2643,35 @@ const KnowledgeGraph = () => {
         <AnimatePresence>
           {selectedNodeData && (
             <motion.div
-              style={styles.detailPanel}
+              style={{
+                ...styles.detailPanel,
+                width: rightPanelWidth,
+                position: 'relative',
+                overflow: 'visible',
+                transition: isRightResizingRef.current ? 'none' : 'width 0.3s ease',
+              }}
               initial={{ x: 320, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: 320, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             >
+              {/* Left resize handle */}
+              <div
+                onMouseDown={startRightResizing}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '6px',
+                  height: '100%',
+                  cursor: 'col-resize',
+                  zIndex: 1000,
+                  background: isRightResizingRef.current ? 'rgba(99, 102, 241, 0.45)' : 'transparent',
+                  transition: 'background 0.2s',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.2)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+              />
               {/* Header */}
               <div style={styles.detailHeader}>
                 <div style={styles.detailHeaderLeft}>
