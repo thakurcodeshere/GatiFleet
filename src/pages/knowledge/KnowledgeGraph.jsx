@@ -911,6 +911,66 @@ const KnowledgeGraph = () => {
     window.addEventListener('mouseup', handleMouseUp);
   }, []);
 
+  // ---- View, Edit, Remove Modal States ----
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
+
+  // Temporary edit states
+  const [editLabel, setEditLabel] = useState('');
+  const [editType, setEditType] = useState('');
+  const [editProperties, setEditProperties] = useState({});
+
+  // Temporary remove states
+  const [removeReasonCategory, setRemoveReasonCategory] = useState('Completed Operational Lifecycle');
+  const [removeReasonCustom, setRemoveReasonCustom] = useState('');
+
+  const handleOpenEdit = () => {
+    if (!selectedNodeData) return;
+    setEditLabel(selectedNodeData.label);
+    setEditType(selectedNodeData.type);
+    setEditProperties({ ...selectedDetails });
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (!selectedNode) return;
+
+    // Update nodes list
+    setNodes(prev => prev.map(n => {
+      if (n.id === selectedNode) {
+        return { ...n, label: editLabel, type: editType };
+      }
+      return n;
+    }));
+
+    // Update nodeDetails dictionary
+    setNodeDetails(prev => ({
+      ...prev,
+      [selectedNode]: editProperties
+    }));
+
+    setIsEditModalOpen(false);
+    logToTerminal(`System event: Updated metadata properties for twin node ${selectedNode}.`);
+    showToast('Saved node changes successfully');
+  };
+
+  const handleConfirmRemove = () => {
+    if (!selectedNode) return;
+
+    const finalReason = removeReasonCustom.trim() 
+      ? `${removeReasonCategory}: ${removeReasonCustom.trim()}` 
+      : removeReasonCategory;
+
+    // Remove the node from state
+    setNodes(prev => prev.filter(n => n.id !== selectedNode));
+    setIsRemoveModalOpen(false);
+    setSelectedNode(null); // deselect
+
+    logToTerminal(`System event: Removed node twin ${selectedNode}. Reason: ${finalReason}`);
+    showToast(`Removed node ${selectedNode}`);
+  };
+
   // ---- State ----
   const [nodes, setNodes] = useState(() =>
     knowledgeGraphNodes.map(n => ({ ...n, x: n.x * 1.15, y: n.y * 1.05 }))
@@ -2771,21 +2831,24 @@ const KnowledgeGraph = () => {
                 <div style={styles.detailHeaderLeft}>
                   <div style={{
                     ...styles.detailIcon,
+                    width: 32,
+                    height: 32,
+                    borderRadius: 'var(--radius-sm)',
                     background: `${nodeTypeColors[selectedNodeData.type]}20`,
                     border: `2px solid ${nodeTypeColors[selectedNodeData.type]}40`,
                     boxShadow: `0 0 20px ${nodeTypeColors[selectedNodeData.type]}20`,
                   }}>
                     {(() => {
                       const Icon = nodeTypeIcons[selectedNodeData.type] || Circle;
-                      return <Icon size={22} color={nodeTypeColors[selectedNodeData.type]} />;
+                      return <Icon size={16} color={nodeTypeColors[selectedNodeData.type]} />;
                     })()}
                   </div>
                   <div>
-                    <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                    <div style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-primary)' }}>
                       {selectedNodeData.label}
                     </div>
                     <div style={{
-                      fontSize: '11px',
+                      fontSize: '8px',
                       fontWeight: 600,
                       color: nodeTypeColors[selectedNodeData.type],
                       textTransform: 'uppercase',
@@ -2797,32 +2860,32 @@ const KnowledgeGraph = () => {
                   </div>
                 </div>
                 <button
-                  style={styles.closeBtn}
+                  style={{ ...styles.closeBtn, width: 24, height: 24 }}
                   onClick={() => setSelectedNode(null)}
                 >
-                  <X size={16} />
+                  <X size={12} />
                 </button>
               </div>
 
               {/* Body */}
-              <div style={styles.detailBody}>
+              <div style={{ ...styles.detailBody, padding: '12px 15px' }}>
                 {/* Active Anomaly Warning Panel */}
                 {activeNodeGap && (
                   <div style={{
                     background: 'rgba(255, 77, 107, 0.1)',
                     border: '1px solid rgba(255, 77, 107, 0.3)',
                     borderRadius: 'var(--radius-sm)',
-                    padding: '12px 14px',
-                    marginBottom: '16px',
+                    padding: '8px 10px',
+                    marginBottom: '12px',
                     boxShadow: '0 0 15px rgba(255, 77, 107, 0.1)'
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#FF4D6B', fontWeight: 700, fontSize: '11px', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#FF4D6B', fontWeight: 700, fontSize: '8px', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                       <span>🚨</span> Active Operational Gap
                     </div>
-                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>
+                    <div style={{ fontSize: '10px', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>
                       {activeNodeGap.title}
                     </div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)', lineHeight: 1.3, marginBottom: '10px' }}>
+                    <div style={{ fontSize: '8px', color: 'var(--text-secondary)', lineHeight: 1.3, marginBottom: '8px' }}>
                       {activeNodeGap.desc}
                     </div>
                     <button
@@ -2832,8 +2895,8 @@ const KnowledgeGraph = () => {
                         color: '#fff',
                         border: 'none',
                         borderRadius: 'var(--radius-sm)',
-                        padding: '8px 12px',
-                        fontSize: '11px',
+                        padding: '6px 10px',
+                        fontSize: '8px',
                         fontWeight: 700,
                         cursor: 'pointer',
                         width: '100%',
@@ -2842,32 +2905,32 @@ const KnowledgeGraph = () => {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        gap: '6px'
+                        gap: '4px'
                       }}
                       onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.1)'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.filter = 'brightness(1)'; }}
                     >
-                      <Sparkles size={12} /> Authorize: {activeNodeGap.solution}
+                      <Sparkles size={10} /> Authorize: {activeNodeGap.solution}
                     </button>
                   </div>
                 )}
 
                 {/* Metrics */}
-                <div style={{ ...styles.sectionTitle, marginTop: activeNodeGap ? '8px' : 0 }}>
-                  <BarChart3 size={12} /> Properties
+                <div style={{ ...styles.sectionTitle, fontSize: '8px', marginTop: activeNodeGap ? '8px' : 0 }}>
+                  <BarChart3 size={10} /> Properties
                 </div>
                 {Object.entries(selectedDetails).map(([key, value]) => (
-                  <div key={key} style={styles.detailMetric}>
-                    <span style={styles.detailMetricLabel}>
+                  <div key={key} style={{ ...styles.detailMetric, padding: '8px 10px' }}>
+                    <span style={{ ...styles.detailMetricLabel, fontSize: '9px' }}>
                       {key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}
                     </span>
-                    <span style={styles.detailMetricValue}>{value}</span>
+                    <span style={{ ...styles.detailMetricValue, fontSize: '10.5px' }}>{value}</span>
                   </div>
                 ))}
 
                 {/* Connections */}
-                <div style={{ ...styles.sectionTitle, marginTop: '20px' }}>
-                  <Link2 size={12} /> Connections ({selectedConnections.length})
+                <div style={{ ...styles.sectionTitle, fontSize: '8px', marginTop: '14px' }}>
+                  <Link2 size={10} /> Connections ({selectedConnections.length})
                 </div>
                 {selectedConnections.map((conn, i) => {
                   const connColor = nodeTypeColors[conn.node.type] || '#64748b';
@@ -2875,31 +2938,31 @@ const KnowledgeGraph = () => {
                   return (
                     <div
                       key={i}
-                      style={styles.connectionItem}
+                      style={{ ...styles.connectionItem, padding: '6px 10px' }}
                       onClick={() => setSelectedNode(conn.node.id)}
                     >
-                      <div style={{ ...styles.connectionDot, background: connColor, boxShadow: `0 0 6px ${connColor}60` }} />
-                      <ConnIcon size={14} color={connColor} />
+                      <div style={{ ...styles.connectionDot, width: 6, height: 6, background: connColor, boxShadow: `0 0 6px ${connColor}60` }} />
+                      <ConnIcon size={12} color={connColor} />
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                        <div style={{ fontSize: '9px', fontWeight: 600, color: 'var(--text-primary)' }}>
                           {conn.node.label}
                         </div>
-                        <div style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                        <div style={{ fontSize: '7.5px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '2px' }}>
                           {conn.direction === 'outgoing' ? (
                             <>
-                              <ArrowRight size={10} /> {conn.edge.label}
+                              <ArrowRight size={8} /> {conn.edge.label}
                             </>
                           ) : (
                             <>
-                              <ChevronRight size={10} style={{ transform: 'rotate(180deg)' }} /> {conn.edge.label}
+                              <ChevronRight size={8} style={{ transform: 'rotate(180deg)' }} /> {conn.edge.label}
                             </>
                           )}
                         </div>
                       </div>
                       <div style={{
-                        fontSize: '9px',
-                        padding: '2px 6px',
-                        borderRadius: '8px',
+                        fontSize: '7px',
+                        padding: '2px 5px',
+                        borderRadius: '6px',
                         background: `${connColor}15`,
                         color: connColor,
                         fontWeight: 600,
@@ -2913,19 +2976,24 @@ const KnowledgeGraph = () => {
               </div>
 
               {/* Actions */}
-              <div style={styles.actionBtns}>
-                <button style={styles.actionBtnPrimary}>
-                  <Eye size={14} /> View
+              <div style={{ ...styles.actionBtns, padding: '12px 15px' }}>
+                <button style={{ ...styles.actionBtnPrimary, fontSize: '9px', padding: '8px' }} onClick={() => setIsViewModalOpen(true)}>
+                  <Eye size={12} /> View
                 </button>
-                <button style={styles.actionBtn}>
-                  <Edit3 size={14} /> Edit
+                <button style={{ ...styles.actionBtn, fontSize: '9px', padding: '8px' }} onClick={handleOpenEdit}>
+                  <Edit3 size={12} /> Edit
                 </button>
-                <button style={{
-                  ...styles.actionBtn,
-                  borderColor: 'rgba(255,77,107,0.3)',
-                  color: '#FF4D6B',
-                }}>
-                  <Trash2 size={14} /> Remove
+                <button 
+                  style={{
+                    ...styles.actionBtn,
+                    fontSize: '9px',
+                    padding: '8px',
+                    borderColor: 'rgba(255,77,107,0.3)',
+                    color: '#FF4D6B',
+                  }}
+                  onClick={() => setIsRemoveModalOpen(true)}
+                >
+                  <Trash2 size={12} /> Remove
                 </button>
               </div>
             </motion.div>
@@ -2942,19 +3010,374 @@ const KnowledgeGraph = () => {
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             style={styles.toastAlert}
           >
-            <CheckCircle size={16} color="#38CE3C" />
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 11, color: '#fff' }}>Remediation Completed</div>
-              <div style={{ fontSize: '9px', color: 'var(--text-secondary)', marginTop: 2 }}>{actionAlert.message}</div>
-            </div>
-            <button onClick={() => setActionAlert(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex', marginLeft: 8 }}>
-              <X size={12} color="var(--text-muted)" />
-            </button>
+            <span style={{ fontSize: '12px' }}>{actionAlert.icon}</span>
+            <span style={{ fontSize: '10px', fontWeight: 600 }}>{actionAlert.message}</span>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ---- View Modal ---- */}
+      {isViewModalOpen && selectedNodeData && (
+        <div style={modalStyles.overlay}>
+          <div style={modalStyles.container}>
+            <div style={modalStyles.header}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Network size={14} color={nodeTypeColors[selectedNodeData.type]} />
+                <span style={modalStyles.title}>Detailed Node Inspection</span>
+              </div>
+              <button style={modalStyles.closeBtn} onClick={() => setIsViewModalOpen(false)}>
+                <X size={14} />
+              </button>
+            </div>
+            <div style={modalStyles.body}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: '8px', 
+                  background: `${nodeTypeColors[selectedNodeData.type]}15`,
+                  border: `2px solid ${nodeTypeColors[selectedNodeData.type]}30`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>
+                  {(() => {
+                    const Icon = nodeTypeIcons[selectedNodeData.type] || Circle;
+                    return <Icon size={20} color={nodeTypeColors[selectedNodeData.type]} />;
+                  })()}
+                </div>
+                <div>
+                  <h4 style={{ margin: 0, color: '#fff', fontSize: '13px', fontWeight: 700 }}>{selectedNodeData.label}</h4>
+                  <p style={{ margin: '4px 0 0 0', fontSize: '9px', color: nodeTypeColors[selectedNodeData.type], fontWeight: 700, textTransform: 'uppercase' }}>
+                    {nodeTypeLabels[selectedNodeData.type]} (ID: {selectedNodeData.id})
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={modalStyles.infoSection}>
+                  <h5 style={modalStyles.sectionHeader}>Operational Brain Status</h5>
+                  <p style={modalStyles.sectionDesc}>Active digital twin tracking is operational. Telemetry latency is healthy at 22ms. Consensus validation verified.</p>
+                </div>
+                
+                <div style={modalStyles.infoSection}>
+                  <h5 style={modalStyles.sectionHeader}>Properties Dictionary</h5>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {Object.entries(selectedDetails).map(([k, v]) => (
+                      <div key={k} style={modalStyles.propRow}>
+                        <span style={modalStyles.propKey}>{k.charAt(0).toUpperCase() + k.slice(1).replace(/([A-Z])/g, ' $1')}:</span>
+                        <span style={modalStyles.propVal}>{v}</span>
+                      </div>
+                    ))}
+                    {Object.keys(selectedDetails).length === 0 && (
+                      <p style={{ margin: 0, fontSize: '10px', color: 'var(--text-muted)' }}>No additional metadata properties registered.</p>
+                    )}
+                  </div>
+                </div>
+
+                <div style={modalStyles.infoSection}>
+                  <h5 style={modalStyles.sectionHeader}>Strategic Value Index</h5>
+                  <p style={modalStyles.sectionDesc}>This component maps to active GatiFleet CRM logistics intelligence pathways. Removal can trigger operational simulation failures in downstream engines.</p>
+                </div>
+              </div>
+            </div>
+            <div style={modalStyles.footer}>
+              <button style={modalStyles.btnPrimary} onClick={() => setIsViewModalOpen(false)}>Close Inspection</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ---- Edit Modal ---- */}
+      {isEditModalOpen && selectedNodeData && (
+        <div style={modalStyles.overlay}>
+          <div style={modalStyles.container}>
+            <div style={modalStyles.header}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Edit3 size={14} color="#818cf8" />
+                <span style={modalStyles.title}>Edit Node Properties</span>
+              </div>
+              <button style={modalStyles.closeBtn} onClick={() => setIsEditModalOpen(false)}>
+                <X size={14} />
+              </button>
+            </div>
+            <div style={modalStyles.body}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div>
+                  <label style={modalStyles.inputLabel}>Node Name / Label</label>
+                  <input
+                    type="text"
+                    style={modalStyles.input}
+                    value={editLabel}
+                    onChange={e => setEditLabel(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label style={modalStyles.inputLabel}>Node Type</label>
+                  <select
+                    style={modalStyles.select}
+                    value={editType}
+                    onChange={e => setEditType(e.target.value)}
+                  >
+                    {Object.keys(nodeTypeLabels).map(type => (
+                      <option key={type} value={type}>
+                        {nodeTypeLabels[type]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '14px', marginTop: '4px' }}>
+                  <h5 style={{ ...modalStyles.sectionHeader, marginBottom: '10px' }}>Custom Properties</h5>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {Object.entries(editProperties).map(([key, val]) => (
+                      <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ width: '120px', fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'capitalize' }}>
+                          {key.replace(/([A-Z])/g, ' $1')}:
+                        </span>
+                        <input
+                          type="text"
+                          style={{ ...modalStyles.input, flex: 1, margin: 0 }}
+                          value={val}
+                          onChange={e => {
+                            const nextProps = { ...editProperties };
+                            nextProps[key] = e.target.value;
+                            setEditProperties(nextProps);
+                          }}
+                        />
+                      </div>
+                    ))}
+                    {Object.keys(editProperties).length === 0 && (
+                      <p style={{ margin: 0, fontSize: '10px', color: 'var(--text-muted)' }}>No editable properties.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style={modalStyles.footer}>
+              <button style={modalStyles.btnSecondary} onClick={() => setIsEditModalOpen(false)}>Cancel</button>
+              <button style={modalStyles.btnPrimary} onClick={handleSaveEdit}>Save Changes</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ---- Remove Modal ---- */}
+      {isRemoveModalOpen && selectedNodeData && (
+        <div style={modalStyles.overlay}>
+          <div style={modalStyles.container}>
+            <div style={modalStyles.header}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Trash2 size={14} color="#FF4D6B" />
+                <span style={modalStyles.title}>Safe Node Decommissioning</span>
+              </div>
+              <button style={modalStyles.closeBtn} onClick={() => setIsRemoveModalOpen(false)}>
+                <X size={14} />
+              </button>
+            </div>
+            <div style={modalStyles.body}>
+              <div style={{ background: 'rgba(255, 77, 107, 0.08)', border: '1px solid rgba(255, 77, 107, 0.25)', borderRadius: '6px', padding: '12px', marginBottom: '16px', display: 'flex', gap: '10px' }}>
+                <span style={{ fontSize: '14px' }}>⚠️</span>
+                <div style={{ fontSize: '10px', color: '#ff8a9e', lineHeight: 1.4 }}>
+                  <strong>Caution:</strong> You are removing node <strong>{selectedNodeData.label}</strong> ({selectedNodeData.id}) from the active digital twin network. All associated routing relationships and live simulation edges will be deleted immediately.
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div>
+                  <label style={modalStyles.inputLabel}>Reason for Decommissioning</label>
+                  <select
+                    style={modalStyles.select}
+                    value={removeReasonCategory}
+                    onChange={e => setRemoveReasonCategory(e.target.value)}
+                  >
+                    <option value="Completed Operational Lifecycle">Completed Operational Lifecycle</option>
+                    <option value="Duplicate/Incorrect Node Matching">Duplicate/Incorrect Node Matching</option>
+                    <option value="Manual Override (Operator Verification)">Manual Override (Operator Verification)</option>
+                    <option value="System Disruption/Corrupt Telemetry">System Disruption/Corrupt Telemetry</option>
+                    <option value="Resolved via Alternative Route">Resolved via Alternative Route</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={modalStyles.inputLabel}>Additional Operator Comments / Log (Optional)</label>
+                  <textarea
+                    style={modalStyles.textarea}
+                    rows={3}
+                    placeholder="Enter details or notes regarding this removal for the double-timeline audit ledger..."
+                    value={removeReasonCustom}
+                    onChange={e => setRemoveReasonCustom(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+            <div style={modalStyles.footer}>
+              <button style={modalStyles.btnSecondary} onClick={() => setIsRemoveModalOpen(false)}>Cancel</button>
+              <button style={{ ...modalStyles.btnPrimary, background: '#FF4D6B' }} onClick={handleConfirmRemove}>Decommission Node</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
+};
+
+// Styles for custom modals
+const modalStyles = {
+  overlay: {
+    position: 'fixed',
+    inset: 0,
+    zIndex: 9999,
+    background: 'rgba(5, 8, 22, 0.75)',
+    backdropFilter: 'blur(12px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '20px',
+  },
+  container: {
+    background: 'rgba(15, 23, 42, 0.95)',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    borderRadius: '12px',
+    boxShadow: '0 20px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)',
+    width: '100%',
+    maxWidth: '520px',
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
+  },
+  header: {
+    padding: '16px 20px',
+    borderBottom: '1px solid rgba(255,255,255,0.08)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    background: 'rgba(0,0,0,0.1)',
+  },
+  title: {
+    fontSize: '13px',
+    fontWeight: 700,
+    color: '#fff',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+  },
+  closeBtn: {
+    background: 'transparent',
+    border: 'none',
+    color: 'var(--text-muted)',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    padding: '4px',
+    borderRadius: '4px',
+  },
+  body: {
+    padding: '20px',
+    maxHeight: '450px',
+    overflowY: 'auto',
+  },
+  footer: {
+    padding: '12px 20px',
+    borderTop: '1px solid rgba(255,255,255,0.08)',
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: '10px',
+    background: 'rgba(0,0,0,0.2)',
+  },
+  btnPrimary: {
+    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '6px',
+    padding: '8px 16px',
+    fontSize: '11px',
+    fontWeight: 700,
+    cursor: 'pointer',
+  },
+  btnSecondary: {
+    background: 'rgba(255, 255, 255, 0.05)',
+    color: 'var(--text-muted)',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    borderRadius: '6px',
+    padding: '8px 16px',
+    fontSize: '11px',
+    fontWeight: 600,
+    cursor: 'pointer',
+  },
+  infoSection: {
+    background: 'rgba(255,255,255,0.02)',
+    border: '1px solid rgba(255,255,255,0.04)',
+    borderRadius: '8px',
+    padding: '12px',
+    marginBottom: '12px',
+  },
+  sectionHeader: {
+    margin: '0 0 6px 0',
+    fontSize: '11px',
+    fontWeight: 700,
+    color: '#818cf8',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+  },
+  sectionDesc: {
+    margin: 0,
+    fontSize: '11px',
+    color: 'var(--text-secondary)',
+    lineHeight: 1.4,
+  },
+  propRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    padding: '4px 0',
+    borderBottom: '1px solid rgba(255,255,255,0.03)',
+  },
+  propKey: {
+    fontSize: '11px',
+    color: 'var(--text-muted)',
+    fontWeight: 500,
+  },
+  propVal: {
+    fontSize: '11px',
+    color: 'var(--text-primary)',
+    fontWeight: 600,
+  },
+  inputLabel: {
+    display: 'block',
+    fontSize: '11px',
+    fontWeight: 600,
+    color: 'var(--text-secondary)',
+    marginBottom: '6px',
+    textTransform: 'uppercase',
+    letterSpacing: '0.3px',
+  },
+  input: {
+    width: '100%',
+    background: 'rgba(0,0,0,0.2)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: '6px',
+    padding: '8px 12px',
+    color: '#fff',
+    fontSize: '12px',
+    outline: 'none',
+  },
+  select: {
+    width: '100%',
+    background: 'rgba(15, 23, 42, 0.95)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: '6px',
+    padding: '8px 12px',
+    color: '#fff',
+    fontSize: '12px',
+    outline: 'none',
+  },
+  textarea: {
+    width: '100%',
+    background: 'rgba(0,0,0,0.2)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: '6px',
+    padding: '8px 12px',
+    color: '#fff',
+    fontSize: '12px',
+    outline: 'none',
+    resize: 'none',
+  }
 };
 
 export default KnowledgeGraph;
