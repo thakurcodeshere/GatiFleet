@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { useNavigate } from 'react-router-dom';
 import { generateTrucks, generateDrivers, generateShipments, CITIES } from '../../data/mockData';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -64,6 +65,7 @@ const REGIONAL_HUBS = [
 ];
 
 export default function LiveTracking() {
+  const navigate = useNavigate();
   const { copilotOpen, toggleCopilot } = useTheme();
 
   // Navigation View Tab State: 'nation' | 'regional' | 'fleet' | 'shipment' | 'driver' | 'decision' | 'executive'
@@ -196,7 +198,7 @@ export default function LiveTracking() {
     <div style={styles.container}>
       {/* Top Navbar Header */}
       <header style={styles.header}>
-        <div style={styles.headerLeft}>
+        <div style={{ ...styles.headerLeft, cursor: 'pointer' }} onClick={() => navigate('/')} title="Go to GatiFleet Homepage">
           <div style={styles.logoBadge}>
             <Truck size={18} color="white" />
           </div>
