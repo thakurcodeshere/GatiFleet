@@ -286,65 +286,7 @@ export default function Sidebar() {
         </div>
       )}
 
-      <div 
-        onClick={() => navigate('/profile')}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          padding: sidebarCollapsed ? '10px 0' : '12px 16px',
-          margin: '8px 12px',
-          borderRadius: 'var(--radius-md)',
-          background: 'rgba(255,255,255,0.02)',
-          border: '1px solid var(--border-subtle)',
-          cursor: 'pointer',
-          justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
-          transition: 'all 0.3s ease',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'rgba(99, 102, 241, 0.08)';
-          e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.2)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.02)';
-          e.currentTarget.style.borderColor = 'var(--border-subtle)';
-        }}
-        title={sidebarCollapsed ? "Arjun Kapoor (CEO) - View Profile" : undefined}
-      >
-        <div style={{
-          position: 'relative',
-          width: 32,
-          height: 32,
-          borderRadius: '50%',
-          background: 'linear-gradient(135deg, var(--primary-500), #ff007f)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontWeight: 700,
-          fontSize: '11px',
-          color: 'var(--text-primary)',
-          flexShrink: 0
-        }}>
-          AK
-          <span style={{
-            position: 'absolute',
-            bottom: 0,
-            right: 0,
-            width: 8,
-            height: 8,
-            borderRadius: '50%',
-            background: 'var(--success-500)',
-            border: '1.5px solid var(--bg-800)',
-            boxShadow: '0 0 6px var(--success-500)',
-          }} />
-        </div>
-        {!sidebarCollapsed && (
-          <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', color: 'var(--text-primary)', lineHeight: 1.2 }}>Arjun Kapoor</div>
-            <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>CEO · View Profile</div>
-          </div>
-        )}
-      </div>
+
 
       <button
         style={styles.collapseBtn}
