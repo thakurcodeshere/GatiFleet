@@ -11,14 +11,14 @@ import { generateAlerts } from '../../data/mockData';
 
 // Permission Matrix mapping roles to allowed paths
 const ROLE_PERMISSIONS = {
-  OPERATIONS: ['/', '/fleet', '/tracking', '/knowledge-graph', '/portals', '/erp', '/copilot', '/profile'],
-  FINANCE: ['/', '/analytics', '/erp', '/copilot', '/profile'],
-  HR: ['/', '/hcm', '/profile', '/copilot'],
+  OPERATIONS: ['/', '/customer-portal', '/fleet', '/tracking', '/knowledge-graph', '/portals', '/erp', '/copilot', '/profile'],
+  FINANCE: ['/', '/customer-portal', '/analytics', '/erp', '/copilot', '/profile'],
+  HR: ['/', '/customer-portal', '/hcm', '/profile', '/copilot'],
   CEO: ['/', '/customer-portal', '/analytics', '/crm', '/copilot', '/agents', '/knowledge-graph', '/profile'],
-  ADVISOR: ['/', '/analytics', '/crm', '/copilot', '/knowledge-graph', '/profile'],
-  CFO: ['/', '/analytics', '/erp', '/copilot', '/profile'],
-  CTO: ['/', '/knowledge-graph', '/copilot', '/agents', '/security', '/profile'],
-  CRO: ['/', '/analytics', '/crm', '/security', '/copilot', '/profile'],
+  ADVISOR: ['/', '/customer-portal', '/analytics', '/crm', '/copilot', '/knowledge-graph', '/profile'],
+  CFO: ['/', '/customer-portal', '/analytics', '/erp', '/copilot', '/profile'],
+  CTO: ['/', '/customer-portal', '/knowledge-graph', '/copilot', '/agents', '/security', '/profile'],
+  CRO: ['/', '/customer-portal', '/analytics', '/crm', '/security', '/copilot', '/profile'],
   ADMIN: ['/', '/customer-portal', '/analytics', '/fleet', '/tracking', '/knowledge-graph', '/portals', '/erp', '/crm', '/hcm', '/copilot', '/agents', '/security', '/profile']
 };
 

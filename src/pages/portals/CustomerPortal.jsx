@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { RealityEngine } from '../../data/RealityEngine';
 import { CITIES, formatCurrency } from '../../data/mockData';
+import { useTheme } from '../../context/ThemeContext';
 
 // Role-based adaptations
 const ROLE_DETAILS = {
@@ -45,6 +46,64 @@ const ROLE_DETAILS = {
       "Can we support 30% growth next quarter?",
       "Review Q3 strategic profit margins",
       "What is our corporate carbon risk?"
+    ]
+  },
+  ADMIN: {
+    title: "Super Admin System Command",
+    description: "Complete platform orchestration, multi-agent consensus control, permission bounds, and infrastructure health.",
+    kpis: {
+      revProtected: "₹58.4 Cr",
+      revProtectedTrend: "+11.2%",
+      revAtRisk: "₹0.4 Cr",
+      revAtRiskTrend: "-22.1%",
+      inventoryValue: "₹210.0 Cr",
+      workingCapital: "₹45.0 Cr",
+      costVariance: "0.0%",
+      slaPredict: "99.2%",
+      netHealth: "Optimal (100%)",
+      cashImpact: "₹18.5 Cr"
+    },
+    alerts: [
+      { id: 'admin-1', title: 'PM2 Cluster Load', desc: 'Node-2 worker CPU utilization hit 88% during peak telemetry ingestion.', type: 'warning' },
+      { id: 'admin-2', title: 'API Gateway Rate Guard', desc: 'Restricted 14 unauthorized webhook attempts from external carrier domain.', type: 'danger' }
+    ],
+    actions: [
+      { label: "Rebalance PM2 Clusters", detail: "Trigger automatic load balancing across 4 node worker processes.", event: "CLUSTER_REBALANCE", desc: "Rebalanced 4 PM2 worker instances" },
+      { label: "Audit Global Security Logs", detail: "Generate SOC2 audit trail for active session tokens.", event: "SOC2_AUDIT", desc: "SOC2 compliance audit log generated" }
+    ],
+    presets: [
+      "Show live API gateway throughput",
+      "Verify system SOC2 security state",
+      "Check PM2 worker memory health"
+    ]
+  },
+  OPERATIONS: {
+    title: "Operations & Dispatch Command",
+    description: "Live trailer positioning, driver hours-of-service compliance, depot gate queues, and OTD SLA protection.",
+    kpis: {
+      revProtected: "₹36.8 Cr",
+      revProtectedTrend: "+6.2%",
+      revAtRisk: "₹2.9 Cr",
+      revAtRiskTrend: "-4.2%",
+      inventoryValue: "₹152.0 Cr",
+      workingCapital: "₹24.0 Cr",
+      costVariance: "+0.8%",
+      slaPredict: "97.8%",
+      netHealth: "Nominal (99.2%)",
+      cashImpact: "₹11.5 Cr"
+    },
+    alerts: [
+      { id: 'ops-1', title: 'JNPT Port congestion delay', desc: 'Container dwell average spikes to 14.2 hours. 8 inbound trailers affected.', type: 'danger' },
+      { id: 'ops-2', title: 'Driver Shift allocation shortage', desc: 'NCR hub registry flags 14 driver roster vacancies for night shifts.', type: 'warning' }
+    ],
+    actions: [
+      { label: "Auto-reallocate shift roster", detail: "Trigger standby driver roster pool via HR HCM integrations.", event: "ROSTER_FILL", desc: "Dispatched 14 standby drivers" },
+      { label: "Reroute JNPT inbound trailers", detail: "Divert container queue to secondary customs warehouse depot.", event: "PORT_DIVERT", desc: "Diverted 8 trucks to Panvel hub" }
+    ],
+    presets: [
+      "Show active warehouse dock congestion",
+      "Optimize driver fatigue roster schedules",
+      "Which regional hubs are operating at capacity?"
     ]
   },
   CFO: {
@@ -103,6 +162,32 @@ const ROLE_DETAILS = {
       "Show active warehouse dock congestion",
       "Optimize driver fatigue roster schedules",
       "Which regional hubs are operating at capacity?"
+    ]
+  },
+  FINANCE: {
+    title: "Financial Controller & Billing",
+    description: "Rating engines, accessorial billing, credit line approvals, and cashflow velocity forecasting.",
+    kpis: {
+      revProtected: "₹31.2 Cr",
+      revProtectedTrend: "+5.1%",
+      revAtRisk: "₹2.1 Cr",
+      revAtRiskTrend: "-2.4%",
+      inventoryValue: "₹110.0 Cr",
+      workingCapital: "₹19.5 Cr",
+      costVariance: "+1.1%",
+      slaPredict: "97.2%",
+      netHealth: "Balanced",
+      cashImpact: "₹8.9 Cr"
+    },
+    alerts: [
+      { id: 'fin-1', title: 'Credit Limit Exposure', desc: 'Reliance Retail account approaches 88% of approved ₹2.5 Cr credit limit.', type: 'warning' }
+    ],
+    actions: [
+      { label: "Approve temporary credit extension", detail: "Extend credit ceiling by ₹50L for active Q3 shipments.", event: "CREDIT_EXTENDED", desc: "Extended Reliance credit limit" }
+    ],
+    presets: [
+      "What is our DSO average this month?",
+      "Review disputed carrier accessorial claims"
     ]
   },
   CONSIGNER: {
@@ -191,7 +276,38 @@ const ROLE_DETAILS = {
       "Show driver safety radar compliance charts",
       "Audit active trucks diagnostic trouble codes"
     ]
+  },
+  ADVISOR: {
+    title: "Strategic Intelligence Advisor",
+    description: "Multi-agent consensus metrics, predictive churn models, digital twin scenario simulations, and policy evolution audits.",
+    kpis: {
+      revProtected: "₹45.0 Cr",
+      revProtectedTrend: "+9.0%",
+      revAtRisk: "₹1.2 Cr",
+      revAtRiskTrend: "-10.0%",
+      inventoryValue: "₹160.0 Cr",
+      workingCapital: "₹30.0 Cr",
+      costVariance: "-0.4%",
+      slaPredict: "99.0%",
+      netHealth: "Optimal",
+      cashImpact: "₹12.8 Cr"
+    },
+    alerts: [
+      { id: 'adv-1', title: 'Consensus Divergence Detected', desc: 'Logistics Brain vs Financial Brain disagree on spot market premium by 4.2%.', type: 'warning' }
+    ],
+    actions: [
+      { label: "Trigger Agent Consensus Voting", detail: "Re-run multi-agent policy consensus evaluation loop.", event: "CONSENSUS_RUN", desc: "Evaluated 6 neural agent policies" }
+    ],
+    presets: [
+      "Simulate Q4 network disruption scenarios",
+      "What is our multi-agent prediction accuracy rate?"
+    ]
   }
+};
+
+// Safe helper to get role details without throwing
+const getRoleDetails = (role) => {
+  return ROLE_DETAILS[role] || ROLE_DETAILS.CEO;
 };
 
 const TRACE_STEPS = [
@@ -208,8 +324,9 @@ const TRACE_STEPS = [
 ];
 
 export default function CustomerPortal() {
+  const { userRole } = useTheme();
   const [viewMode, setViewMode] = useState('workspace'); // workspace | engine
-  const [currentRole, setCurrentRole] = useState('CEO');
+  const [currentRole, setCurrentRole] = useState(() => userRole || 'CEO');
   const [activeTab, setActiveTab] = useState('command'); // command | planning | twins | market | cfo
   const [activeLayer, setActiveLayer] = useState(1); // 1 to 10
   const [engineState, setEngineState] = useState(RealityEngine.getState());
@@ -227,7 +344,6 @@ export default function CustomerPortal() {
   const [bookingOrigin, setBookingOrigin] = useState('Delhi');
   const [bookingDest, setBookingDest] = useState('Chennai');
   const [selectedObjective, setSelectedObjective] = useState('minimize_cost'); // minimize_cost | maximize_speed | zero_carbon | high_reliability
-  const [costSpeedModifiers, setCostSpeedModifiers] = useState({ cheaper: 50, safter: 50, greener: 50 });
 
   // Booking loop traceback state
   const [activeTraceStep, setActiveTraceStep] = useState(null); // null or 1 to 10
@@ -241,6 +357,13 @@ export default function CustomerPortal() {
   // Stateful Alerts list
   const [roleAlerts, setRoleAlerts] = useState({});
 
+  // Sync with global userRole when context updates
+  useEffect(() => {
+    if (userRole && ROLE_DETAILS[userRole]) {
+      setCurrentRole(userRole);
+    }
+  }, [userRole]);
+
   // Sync state with RealityEngine singleton
   useEffect(() => {
     const unsubscribe = RealityEngine.subscribe((state) => {
@@ -251,9 +374,10 @@ export default function CustomerPortal() {
 
   // Update alerts on role switch
   useEffect(() => {
+    const roleConfig = getRoleDetails(currentRole);
     setRoleAlerts(prev => ({
       ...prev,
-      [currentRole]: ROLE_DETAILS[currentRole].alerts
+      [currentRole]: roleConfig.alerts || []
     }));
     RealityEngine.events = [{
       id: `ev-${Date.now()}`,
@@ -268,7 +392,7 @@ export default function CustomerPortal() {
   const handleResolveAlert = (alertId, alertTitle) => {
     setRoleAlerts(prev => ({
       ...prev,
-      [currentRole]: prev[currentRole].filter(a => a.id !== alertId)
+      [currentRole]: (prev[currentRole] || []).filter(a => a.id !== alertId)
     }));
     RealityEngine.events = [{
       id: `ev-${Date.now()}`,
@@ -319,7 +443,7 @@ export default function CustomerPortal() {
       }
       setCopilotMsgs(prev => [...prev, { sender: 'copilot', text: reply }]);
       setIsTyping(false);
-    }, 1200);
+    }, 1000);
   };
 
   // Cost speed plan calculations
@@ -367,13 +491,13 @@ export default function CustomerPortal() {
     }
 
     return [
-      { name: 'Road Corridor (NH44)', cost: Math.floor(roadCost), hours: roadHours.toFixed(1), carbon: roadCarbon.toFixed(1), reliability: roadReliability.toFixed(1), risk: 'Medium', confidence: '94%' },
-      { name: 'Dedicated Rail DFC Line', cost: Math.floor(railCost), hours: railHours.toFixed(1), carbon: railCarbon.toFixed(1), reliability: railReliability.toFixed(1), risk: 'Low', confidence: '98%' },
-      { name: 'Multimodal (Road + Rail)', cost: Math.floor(multiCost), hours: multiHours.toFixed(1), carbon: multiCarbon.toFixed(1), reliability: multiReliability.toFixed(1), risk: 'Low', confidence: '96%' },
-      { name: 'Dedicated Fleet (Gati Motors)', cost: Math.floor(dedCost), hours: dedHours.toFixed(1), carbon: dedCarbon.toFixed(1), reliability: dedReliability.toFixed(1), risk: 'Low', confidence: '99%' },
-      { name: 'Shared LTL Consolidated', cost: Math.floor(sharedCost), hours: sharedHours.toFixed(1), carbon: sharedCarbon.toFixed(1), reliability: sharedReliability.toFixed(1), risk: 'High', confidence: '88%' }
+      { id: 'road', name: `Road Corridor (${bookingOrigin} ➔ ${bookingDest})`, cost: Math.floor(roadCost), hours: roadHours.toFixed(1), carbon: roadCarbon.toFixed(1), reliability: roadReliability.toFixed(1), risk: 'Medium', confidence: '94%' },
+      { id: 'rail', name: `Dedicated Rail DFC Line`, cost: Math.floor(railCost), hours: railHours.toFixed(1), carbon: railCarbon.toFixed(1), reliability: railReliability.toFixed(1), risk: 'Low', confidence: '98%' },
+      { id: 'multi', name: `Multimodal (Road + Rail Hub)`, cost: Math.floor(multiCost), hours: multiHours.toFixed(1), carbon: multiCarbon.toFixed(1), reliability: multiReliability.toFixed(1), risk: 'Low', confidence: '96%' },
+      { id: 'ded', name: `Dedicated Fleet (Gati Motors Express)`, cost: Math.floor(dedCost), hours: dedHours.toFixed(1), carbon: dedCarbon.toFixed(1), reliability: dedReliability.toFixed(1), risk: 'Low', confidence: '99%' },
+      { id: 'shared', name: `Shared LTL Consolidated Express`, cost: Math.floor(sharedCost), hours: sharedHours.toFixed(1), carbon: sharedCarbon.toFixed(1), reliability: sharedReliability.toFixed(1), risk: 'High', confidence: '88%' }
     ];
-  }, [tonsInput, selectedObjective]);
+  }, [tonsInput, selectedObjective, bookingOrigin, bookingDest]);
 
   // Run book shipment loop simulation
   const handleBookOption = (optionName, optionCost) => {
@@ -387,7 +511,7 @@ export default function CustomerPortal() {
       id: `ev-${Date.now()}`,
       timestamp: new Date().toISOString(),
       type: 'SHIPMENT_CREATED',
-      desc: `Booked ${tonsInput} Tons via ${optionName}. Loop initialized.`,
+      desc: `Booked ${tonsInput} Tons (${bookingOrigin} ➔ ${bookingDest}) via ${optionName}. Loop initialized.`,
       source: 'ORDER/CLIENT'
     }, ...RealityEngine.events];
     RealityEngine.notify();
@@ -413,10 +537,10 @@ export default function CustomerPortal() {
         setTimeout(() => {
           setActiveTraceStep(null);
           setTraceLogs([]);
-          alert(`Ecosystem Loop Complete!\n\nPlan Booked: ${optionName}\nCost: ₹${optionCost.toLocaleString()}\nOutcome logged in Evolution Matrix.`);
-        }, 1000);
+          alert(`Ecosystem Loop Complete!\n\nPlan Booked: ${optionName}\nRoute: ${bookingOrigin} ➔ ${bookingDest}\nCost: ₹${optionCost.toLocaleString()}\nOutcome logged in Evolution Matrix.`);
+        }, 800);
       }
-    }, 1500);
+    }, 1200);
   };
 
   const handleManualEventInject = () => {
@@ -440,7 +564,8 @@ export default function CustomerPortal() {
   };
 
   const getAlertsForCurrentRole = () => {
-    return roleAlerts[currentRole] || ROLE_DETAILS[currentRole].alerts;
+    const roleConfig = getRoleDetails(currentRole);
+    return roleAlerts[currentRole] || roleConfig.alerts || [];
   };
 
   // Node Positions for Connected SVG Graph
@@ -480,6 +605,8 @@ export default function CustomerPortal() {
     return impacted.includes(nodeId);
   };
 
+  const activeRoleDetails = getRoleDetails(currentRole);
+
   return (
     <div style={{
       padding: 'var(--space-6)',
@@ -499,22 +626,24 @@ export default function CustomerPortal() {
         justifyContent: 'space-between',
         alignItems: 'center',
         borderBottom: '1px solid rgba(255,255,255,0.05)',
-        paddingBottom: 'var(--space-4)'
+        paddingBottom: 'var(--space-4)',
+        flexWrap: 'wrap',
+        gap: 12
       }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Building2 size={24} color="#6366f1" />
             <h1 style={{ fontSize: 'var(--text-xl)', fontWeight: 800, background: 'linear-gradient(90deg, #6366f1, #06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              GatiFleet Transportation Reality Engine (TRE)
+              Customer Workspace • Shipper Digital Twin & Reality Engine (TRE)
             </h1>
           </div>
           <p style={{ color: '#9ca3af', fontSize: 'var(--text-xs)', marginTop: 4 }}>
-            Strategic Decision Tower • Predictable Outcomes & 10 Core Architectural Engine Layers
+            {activeRoleDetails.title} — {activeRoleDetails.description}
           </p>
         </div>
 
         {/* Stateful Controls Panel */}
-        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
           
           {/* Workspace Mode Switcher */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
@@ -526,8 +655,8 @@ export default function CustomerPortal() {
               <button
                 onClick={() => setViewMode('workspace')}
                 style={{
-                  padding: '3px 8px', borderRadius: 2, border: 'none', cursor: 'pointer',
-                  fontSize: '8px', fontWeight: 800, textTransform: 'uppercase',
+                  padding: '4px 10px', borderRadius: 2, border: 'none', cursor: 'pointer',
+                  fontSize: '9px', fontWeight: 800, textTransform: 'uppercase',
                   background: viewMode === 'workspace' ? 'rgba(99,102,241,0.2)' : 'transparent',
                   color: viewMode === 'workspace' ? '#818cf8' : '#6b7280'
                 }}
@@ -537,23 +666,23 @@ export default function CustomerPortal() {
               <button
                 onClick={() => setViewMode('engine')}
                 style={{
-                  padding: '3px 8px', borderRadius: 2, border: 'none', cursor: 'pointer',
-                  fontSize: '8px', fontWeight: 800, textTransform: 'uppercase',
+                  padding: '4px 10px', borderRadius: 2, border: 'none', cursor: 'pointer',
+                  fontSize: '9px', fontWeight: 800, textTransform: 'uppercase',
                   background: viewMode === 'engine' ? 'rgba(99,102,241,0.2)' : 'transparent',
                   color: viewMode === 'engine' ? '#818cf8' : '#6b7280'
                 }}
               >
-                10-Layer Engine
+                10-Layer Core Engine
               </button>
             </div>
           </div>
 
           {/* Role Selector */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
-            <span style={{ fontSize: '9px', color: '#6b7280', textTransform: 'uppercase', fontWeight: 700 }}>Ecosystem Role</span>
+            <span style={{ fontSize: '9px', color: '#6b7280', textTransform: 'uppercase', fontWeight: 700 }}>Ecosystem Persona</span>
             <div style={{
               display: 'flex', gap: 2, background: 'rgba(255,255,255,0.02)',
-              border: '1px solid rgba(255,255,255,0.05)', padding: 2, borderRadius: 4
+              border: '1px solid rgba(255,255,255,0.05)', padding: 2, borderRadius: 4, flexWrap: 'wrap'
             }}>
               {Object.keys(ROLE_DETAILS).map(role => (
                 <button
@@ -581,9 +710,9 @@ export default function CustomerPortal() {
         borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)', display: 'flex',
         flexDirection: 'column', gap: 10
       }}>
-        <div style={{ display: 'flex', justify: 'space-between', align: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 6 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 6 }}>
           <h2 style={{ fontSize: 'var(--text-xs)', fontWeight: 800, color: '#818cf8', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Brain size={12} /> Live Operational Certainty Index (OCI)
+            <Brain size={12} /> Live Operational Certainty Index (OCI) • Dynamic Twin Hydration
           </h2>
           <span style={{ fontSize: 'var(--text-lg)', fontWeight: 900, color: getCertaintyColor(engineState.oci.globalCertainty) }}>
             {engineState.oci.globalCertainty}%
@@ -591,7 +720,7 @@ export default function CustomerPortal() {
         </div>
 
         {/* Certainty Meter Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 8 }}>
           {[
             { label: 'ETA Certainty', val: engineState.oci.etaCertainty },
             { label: 'Cost Certainty', val: engineState.oci.costCertainty },
@@ -604,7 +733,7 @@ export default function CustomerPortal() {
           ].map((c, idx) => (
             <div key={idx} style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', padding: '6px 8px', borderRadius: 4 }}>
               <div style={{ fontSize: '8px', color: '#9ca3af', textTransform: 'uppercase', marginBottom: 4 }}>{c.label}</div>
-              <div style={{ height: 2, background: 'rgba(255,255,255,0.05)', borderRadius: 1, overflow: 'hidden' }}>
+              <div style={{ height: 3, background: 'rgba(255,255,255,0.05)', borderRadius: 1.5, overflow: 'hidden' }}>
                 <div style={{ width: `${c.val}%`, height: '100%', background: getCertaintyColor(c.val) }} />
               </div>
             </div>
@@ -619,7 +748,7 @@ export default function CustomerPortal() {
           padding: 'var(--space-4)', borderRadius: 'var(--radius-lg)', display: 'flex', flexDirection: 'column', gap: 10,
           boxShadow: '0 0 20px rgba(99,102,241,0.4)', marginBottom: 10
         }}>
-          <div style={{ display: 'flex', justify: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '11px', fontWeight: 800, color: '#818cf8', display: 'flex', alignItems: 'center', gap: 6 }}>
               <Brain size={12} className="animate-spin" /> CLOSED-LOOP SELF-IMPROVING BOOKING SIMULATOR ACTIVATED
             </span>
@@ -655,7 +784,7 @@ export default function CustomerPortal() {
           {/* Stateful Tabs selectors */}
           <div style={{
             display: 'flex', gap: 4, background: 'rgba(255,255,255,0.01)',
-            border: '1px solid rgba(255,255,255,0.05)', padding: 4, borderRadius: 'var(--radius-md)'
+            border: '1px solid rgba(255,255,255,0.05)', padding: 4, borderRadius: 'var(--radius-md)', flexWrap: 'wrap'
           }}>
             {[
               { id: 'command', label: 'Command Center & Graph', icon: Compass },
@@ -698,38 +827,48 @@ export default function CustomerPortal() {
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--space-4)' }}>
                     <div style={kpiCardStyle}>
                       <div style={kpiLabelStyle}>Protected Revenue</div>
-                      <div style={kpiValStyle}>{ROLE_DETAILS[currentRole].kpis.revProtected} <span style={{ fontSize: '9px', color: '#10b981' }}>{ROLE_DETAILS[currentRole].kpis.revProtectedTrend}</span></div>
+                      <div style={kpiValStyle}>{activeRoleDetails.kpis.revProtected} <span style={{ fontSize: '9px', color: '#10b981' }}>{activeRoleDetails.kpis.revProtectedTrend}</span></div>
                     </div>
                     <div style={kpiCardStyle}>
                       <div style={kpiLabelStyle}>At-Risk Revenue</div>
-                      <div style={{ ...kpiValStyle, color: '#ef4444' }}>{ROLE_DETAILS[currentRole].kpis.revAtRisk} <span style={{ fontSize: '9px', color: '#ef4444' }}>{ROLE_DETAILS[currentRole].kpis.revAtRiskTrend}</span></div>
+                      <div style={{ ...kpiValStyle, color: '#ef4444' }}>{activeRoleDetails.kpis.revAtRisk} <span style={{ fontSize: '9px', color: '#ef4444' }}>{activeRoleDetails.kpis.revAtRiskTrend}</span></div>
                     </div>
                     <div style={kpiCardStyle}>
                       <div style={kpiLabelStyle}>SLA Performance</div>
-                      <div style={kpiValStyle}>{ROLE_DETAILS[currentRole].kpis.slaPredict}</div>
+                      <div style={kpiValStyle}>{activeRoleDetails.kpis.slaPredict}</div>
                     </div>
                     <div style={kpiCardStyle}>
                       <div style={kpiLabelStyle}>Working Capital</div>
-                      <div style={kpiValStyle}>{ROLE_DETAILS[currentRole].kpis.workingCapital}</div>
+                      <div style={kpiValStyle}>{activeRoleDetails.kpis.workingCapital}</div>
                     </div>
                   </div>
 
                   {/* SVG Map and SVG Graph */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.1fr', gap: 'var(--space-4)' }}>
                     <div style={{ background: 'rgba(17,24,39,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)' }}>
-                      <h3 style={{ fontSize: 'var(--text-xs)', fontWeight: 800, marginBottom: 8 }}>Transportation Control Tower</h3>
-                      <div style={{ background: '#02040a', borderRadius: 4, height: '150px', display: 'flex', alignItems: 'center', justify: 'center' }}>
-                        <svg width="220" height="130" style={{ overflow: 'visible' }}>
-                          <path d="M 30,20 Q 70,60 30,100" fill="none" stroke="rgba(99,102,241,0.2)" strokeWidth="3" />
-                          <circle cx="40" cy="50" r="4" fill={engineState.entities.truck.state === 'broken_down' ? '#ef4444' : '#10b981'} />
+                      <h3 style={{ fontSize: 'var(--text-xs)', fontWeight: 800, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <MapPin size={12} color="#6366f1" /> Transportation Control Tower Map
+                      </h3>
+                      <div style={{ background: '#02040a', borderRadius: 6, height: '170px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+                        <svg width="280" height="150" style={{ overflow: 'visible' }}>
+                          <path d="M 30,20 Q 90,70 40,130" fill="none" stroke="rgba(99,102,241,0.2)" strokeWidth="3" />
+                          <path d="M 40,20 Q 180,60 240,120" fill="none" stroke="rgba(6,182,212,0.3)" strokeWidth="2" strokeDasharray="4 4" />
+                          <circle cx="40" cy="50" r="5" fill={engineState.entities.truck.state === 'broken_down' ? '#ef4444' : '#10b981'} />
+                          <circle cx="180" cy="65" r="4" fill="#6366f1" />
+                          <circle cx="240" cy="120" r="4" fill="#f59e0b" />
+                          <text x="50" y="52" fill="#fff" fontSize="9px" fontWeight="700">TRK-90482 (NH48)</text>
+                          <text x="190" y="67" fill="#818cf8" fontSize="9px">Panvel Hub</text>
+                          <text x="245" y="123" fill="#f59e0b" fontSize="9px">Bengaluru DC</text>
                         </svg>
                       </div>
                     </div>
 
                     <div style={{ background: 'rgba(17,24,39,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column' }}>
-                      <h3 style={{ fontSize: 'var(--text-xs)', fontWeight: 800, marginBottom: 4 }}>connected Knowledge Graph</h3>
-                      <div style={{ height: '110px', display: 'flex', alignItems: 'center', justify: 'center' }}>
-                        <svg width="220" height="110" style={{ overflow: 'visible' }}>
+                      <h3 style={{ fontSize: 'var(--text-xs)', fontWeight: 800, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Database size={12} color="#06b6d4" /> Connected Knowledge Graph
+                      </h3>
+                      <div style={{ height: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <svg width="260" height="120" style={{ overflow: 'visible' }}>
                           {graphEdges.map((edge, idx) => {
                             const fromNode = graphNodes.find(n => n.id === edge.from);
                             const toNode = graphNodes.find(n => n.id === edge.to);
@@ -738,24 +877,29 @@ export default function CustomerPortal() {
                             return (
                               <line
                                 key={idx}
-                                x1={fromNode.cx / 2.2} y1={fromNode.cy / 2}
-                                x2={toNode.cx / 2.2} y2={toNode.cy / 2}
-                                stroke={isImpactedEdge ? '#ef4444' : 'rgba(255,255,255,0.05)'}
-                                strokeWidth="1"
+                                x1={fromNode.cx / 2.0} y1={fromNode.cy / 1.8}
+                                x2={toNode.cx / 2.0} y2={toNode.cy / 1.8}
+                                stroke={isImpactedEdge ? '#ef4444' : 'rgba(255,255,255,0.1)'}
+                                strokeWidth={isImpactedEdge ? "1.5" : "1"}
                               />
                             );
                           })}
                           {graphNodes.map(node => (
                             <circle
-                              key={node.id} cx={node.cx / 2.2} cy={node.cy / 2} r={selectedGraphNode?.id === node.id ? 5 : 3.5}
+                              key={node.id} cx={node.cx / 2.0} cy={node.cy / 1.8} r={selectedGraphNode?.id === node.id ? 6 : 4}
                               fill={isNodeImpacted(node.id) ? '#ef4444' : node.color}
+                              style={{ cursor: 'pointer' }}
                               onMouseEnter={() => setSelectedGraphNode(node)} onMouseLeave={() => setSelectedGraphNode(null)}
                             />
                           ))}
                         </svg>
                       </div>
-                      <div style={{ fontSize: '8px', color: '#9ca3af', height: '12px' }}>
-                        {selectedGraphNode && <span>Node: {selectedGraphNode.label} • {selectedGraphNode.desc}</span>}
+                      <div style={{ fontSize: '9px', color: '#9ca3af', minHeight: '14px' }}>
+                        {selectedGraphNode ? (
+                          <span style={{ color: '#818cf8', fontWeight: 700 }}>Node: {selectedGraphNode.label} • {selectedGraphNode.desc}</span>
+                        ) : (
+                          <span>Hover over graph nodes to inspect real-time topological links</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -765,32 +909,47 @@ export default function CustomerPortal() {
                 {/* Right columns: Alerts & Copilot */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
                   <div style={{ background: 'rgba(17,24,39,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)' }}>
-                    <h3 style={{ fontSize: 'var(--text-xs)', fontWeight: 800, marginBottom: 8 }}>AI Alerts & Actions</h3>
+                    <h3 style={{ fontSize: 'var(--text-xs)', fontWeight: 800, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <AlertTriangle size={12} color="#f59e0b" /> AI Alerts & Strategic Actions
+                    </h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       {getAlertsForCurrentRole().map(alert => (
-                        <div key={alert.id} style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', padding: 6, borderRadius: 4, borderLeft: `3px solid ${alert.type === 'danger' ? '#ef4444' : '#f59e0b'}` }}>
-                          <div style={{ display: 'flex', justify: 'space-between', align: 'center' }}>
-                            <span style={{ fontSize: '9px', fontWeight: 800, color: '#fff' }}>{alert.title}</span>
-                            <button onClick={() => handleResolveAlert(alert.id, alert.title)} style={{ background: 'transparent', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: '8px' }}>RESOLVE</button>
+                        <div key={alert.id} style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', padding: 8, borderRadius: 4, borderLeft: `3px solid ${alert.type === 'danger' ? '#ef4444' : '#f59e0b'}` }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: '9.5px', fontWeight: 800, color: '#fff' }}>{alert.title}</span>
+                            <button onClick={() => handleResolveAlert(alert.id, alert.title)} style={{ background: 'transparent', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: '8px', fontWeight: 700 }}>RESOLVE</button>
                           </div>
+                          <div style={{ fontSize: '8.5px', color: '#9ca3af', marginTop: 2 }}>{alert.desc}</div>
                         </div>
                       ))}
-                      {ROLE_DETAILS[currentRole].actions.map((act, idx) => (
-                        <div key={idx} style={{ background: 'rgba(99,102,241,0.03)', padding: 6, borderRadius: 4, display: 'flex', justify: 'space-between', align: 'center' }}>
-                          <span style={{ fontSize: '9px', color: '#818cf8', fontWeight: 700 }}>{act.label}</span>
-                          <button onClick={() => handleActionClick(act)} style={{ background: '#6366f1', border: 'none', color: '#fff', padding: '2px 6px', borderRadius: 2, fontSize: '8px', cursor: 'pointer' }}>EXECUTE</button>
+                      {(activeRoleDetails.actions || []).map((act, idx) => (
+                        <div key={idx} style={{ background: 'rgba(99,102,241,0.04)', border: '1px solid rgba(99,102,241,0.1)', padding: 8, borderRadius: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                            <div style={{ fontSize: '9px', color: '#818cf8', fontWeight: 700 }}>{act.label}</div>
+                            <div style={{ fontSize: '8px', color: '#9ca3af' }}>{act.detail}</div>
+                          </div>
+                          <button onClick={() => handleActionClick(act)} style={{ background: '#6366f1', border: 'none', color: '#fff', padding: '3px 8px', borderRadius: 3, fontSize: '8px', fontWeight: 800, cursor: 'pointer' }}>EXECUTE</button>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  <div style={{ background: 'rgba(17,24,39,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 'var(--radius-lg)', display: 'flex', flexDirection: 'column', height: '170px' }}>
-                    <div style={{ flex: 1, overflowY: 'auto', padding: 6, fontSize: '9px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      {copilotMsgs.map((m, idx) => <div key={idx} style={{ padding: 4, borderRadius: 2, background: m.sender === 'user' ? 'rgba(99,102,241,0.1)' : 'rgba(255,255,255,0.01)' }}>{m.text}</div>)}
+                  <div style={{ background: 'rgba(17,24,39,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 'var(--radius-lg)', display: 'flex', flexDirection: 'column', height: '220px' }}>
+                    <div style={{ padding: '8px 10px', borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: '10px', fontWeight: 800, color: '#818cf8', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Sparkles size={11} /> Shipper Copilot Assistant
                     </div>
-                    <div style={{ padding: 4, display: 'flex', gap: 2, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                      <input type="text" placeholder="Ask copilot..." value={copilotInput} onChange={e => setCopilotInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handleCopilotSubmit(copilotInput); }} style={{ flex: 1, background: '#090d16', border: '1px solid rgba(255,255,255,0.05)', color: '#fff', fontSize: '9px', padding: 4 }} />
-                      <button onClick={() => handleCopilotSubmit(copilotInput)} style={{ background: '#6366f1', border: 'none', color: '#fff', padding: '0 6px', borderRadius: 2 }}><Send size={8} /></button>
+                    <div style={{ flex: 1, overflowY: 'auto', padding: 8, fontSize: '9px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {copilotMsgs.map((m, idx) => (
+                        <div key={idx} style={{ padding: 6, borderRadius: 4, background: m.sender === 'user' ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.03)' }}>
+                          <span style={{ fontWeight: 700, color: m.sender === 'user' ? '#818cf8' : '#10b981', display: 'block', marginBottom: 2 }}>{m.sender === 'user' ? 'You' : 'GatiFleet TRE Advisor'}</span>
+                          {m.text}
+                        </div>
+                      ))}
+                      {isTyping && <div style={{ color: '#6b7280', fontSize: '8px', fontStyle: 'italic' }}>AI is formulating response...</div>}
+                    </div>
+                    <div style={{ padding: 6, display: 'flex', gap: 4, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                      <input type="text" placeholder="Ask about routes, rates, or risks..." value={copilotInput} onChange={e => setCopilotInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handleCopilotSubmit(copilotInput); }} style={{ flex: 1, background: '#090d16', border: '1px solid rgba(255,255,255,0.05)', color: '#fff', fontSize: '9px', padding: '4px 8px', borderRadius: 3, outline: 'none' }} />
+                      <button onClick={() => handleCopilotSubmit(copilotInput)} style={{ background: '#6366f1', border: 'none', color: '#fff', padding: '0 8px', borderRadius: 3, cursor: 'pointer' }}><Send size={10} /></button>
                     </div>
                   </div>
                 </div>
@@ -803,59 +962,221 @@ export default function CustomerPortal() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 'var(--space-5)' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
                   <div style={{ background: 'rgba(17,24,39,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)' }}>
-                    <h3 style={{ fontSize: 'var(--text-xs)', fontWeight: 800, marginBottom: 8 }}>AI Route Designer</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 12 }}>
+                    <h3 style={{ fontSize: 'var(--text-xs)', fontWeight: 800, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Sliders size={13} color="#6366f1" /> Autonomous AI Route & Corridor Designer
+                    </h3>
+                    
+                    {/* Form Controls */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 14 }}>
                       <div>
-                        <label style={{ fontSize: '8px', color: '#6b7280', display: 'block', marginBottom: 2 }}>Tons</label>
-                        <input type="number" value={tonsInput} onChange={e => setTonsInput(parseInt(e.target.value) || 0)} style={formInputStyle} />
+                        <label style={{ fontSize: '8.5px', color: '#9ca3af', display: 'block', marginBottom: 3, textTransform: 'uppercase', fontWeight: 700 }}>Origin City</label>
+                        <select value={bookingOrigin} onChange={e => setBookingOrigin(e.target.value)} style={formInputStyle}>
+                          {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '8.5px', color: '#9ca3af', display: 'block', marginBottom: 3, textTransform: 'uppercase', fontWeight: 700 }}>Destination City</label>
+                        <select value={bookingDest} onChange={e => setBookingDest(e.target.value)} style={formInputStyle}>
+                          {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '8.5px', color: '#9ca3af', display: 'block', marginBottom: 3, textTransform: 'uppercase', fontWeight: 700 }}>Cargo Volume (Tons)</label>
+                        <input type="number" min="1" max="5000" value={tonsInput} onChange={e => setTonsInput(parseInt(e.target.value) || 0)} style={formInputStyle} />
                       </div>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {planningPlans.slice(0, 3).map((opt, idx) => (
-                        <div key={idx} style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', padding: 8, borderRadius: 4, display: 'flex', justify: 'space-between', align: 'center' }}>
-                          <span style={{ fontSize: '10px', color: '#fff' }}>{opt.name}</span>
-                          <button onClick={() => handleBookOption(opt.name, opt.cost)} style={{ background: '#10b981', border: 'none', color: '#fff', fontSize: '8px', padding: '3px 8px', borderRadius: 2 }}>Book</button>
+
+                    {/* Strategic Objective Selector */}
+                    <div style={{ marginBottom: 14 }}>
+                      <label style={{ fontSize: '8.5px', color: '#9ca3af', display: 'block', marginBottom: 4, textTransform: 'uppercase', fontWeight: 700 }}>Optimization Objective</label>
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        {[
+                          { id: 'minimize_cost', label: 'Lowest Freight Tariff' },
+                          { id: 'maximize_speed', label: 'Fastest Transit ETA' },
+                          { id: 'zero_carbon', label: 'Zero Carbon / Green' },
+                          { id: 'high_reliability', label: '99.9% SLA Guarantee' }
+                        ].map(obj => (
+                          <button
+                            key={obj.id}
+                            onClick={() => setSelectedObjective(obj.id)}
+                            style={{
+                              padding: '4px 10px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.05)',
+                              fontSize: '8.5px', fontWeight: 700, cursor: 'pointer',
+                              background: selectedObjective === obj.id ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.01)',
+                              color: selectedObjective === obj.id ? '#818cf8' : '#9ca3af'
+                            }}
+                          >
+                            {obj.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* All 5 Generated Plans */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <span style={{ fontSize: '9px', color: '#6b7280', textTransform: 'uppercase', fontWeight: 700 }}>Evaluated Route Options ({planningPlans.length})</span>
+                      {planningPlans.map((opt, idx) => (
+                        <div key={idx} style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', padding: 10, borderRadius: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                            <div style={{ fontSize: '10px', fontWeight: 800, color: '#fff' }}>{opt.name}</div>
+                            <div style={{ display: 'flex', gap: 12, marginTop: 4, fontSize: '8.5px', color: '#9ca3af' }}>
+                              <span>ETA: <strong style={{ color: '#fff' }}>{opt.hours}h</strong></span>
+                              <span>Cost: <strong style={{ color: '#10b981' }}>₹{opt.cost.toLocaleString()}</strong></span>
+                              <span>CO2: <strong style={{ color: '#06b6d4' }}>{opt.carbon}T</strong></span>
+                              <span>Reliability: <strong style={{ color: '#818cf8' }}>{opt.reliability}%</strong></span>
+                            </div>
+                          </div>
+                          <button onClick={() => handleBookOption(opt.name, opt.cost)} style={{ background: '#10b981', border: 'none', color: '#fff', fontSize: '9px', fontWeight: 800, padding: '5px 12px', borderRadius: 4, cursor: 'pointer' }}>Book Corridor</button>
                         </div>
                       ))}
                     </div>
+
                   </div>
                 </div>
+
                 {/* Sandbox */}
-                <div style={{ background: 'rgba(17,24,39,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <h3 style={{ fontSize: 'var(--text-xs)', fontWeight: 800 }}>Simulation Sandbox</h3>
+                <div style={{ background: 'rgba(17,24,39,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <h3 style={{ fontSize: 'var(--text-xs)', fontWeight: 800 }}>Corridor Impact Sandbox</h3>
                   <div>
-                    <label style={{ fontSize: '9px', color: '#9ca3af', display: 'block', marginBottom: 2 }}>Diesel price spike: +{engineState.simulationState.dieselIncrease}%</label>
+                    <label style={{ fontSize: '9px', color: '#9ca3af', display: 'block', marginBottom: 4 }}>Diesel Rate Sensitivity: +{engineState.simulationState.dieselIncrease}%</label>
                     <input type="range" min="0" max="50" value={engineState.simulationState.dieselIncrease} onChange={e => RealityEngine.setDieselSimulation(parseInt(e.target.value))} style={{ width: '100%' }} />
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.01)', padding: 8, borderRadius: 4, fontSize: '8.5px', color: '#9ca3af' }}>
+                    <div>Projected Tariff Surge: <strong style={{ color: '#ef4444' }}>+{(engineState.simulationState.dieselIncrease * 0.45).toFixed(1)}%</strong></div>
+                    <div>Recommended Action: Lock 30-day DFC rail forward contract to hedge road fuel variance.</div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* TAB 3: twins */}
+            {/* TAB 3: Twins */}
             {activeTab === 'twins' && (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 'var(--space-5)' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
                   <div style={{ background: 'rgba(17,24,39,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)' }}>
-                    <div style={{ display: 'flex', justify: 'space-between', marginBottom: 8 }}>
-                      <span style={{ fontSize: '10px', fontWeight: 800 }}>Digital Twins</span>
+                    
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                      <span style={{ fontSize: '11px', fontWeight: 800, color: '#818cf8', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Activity size={12} /> Digital Twins & Causality State Machine
+                      </span>
                       <div style={{ display: 'flex', gap: 4 }}>
-                        {['shipment', 'driver', 'route'].map(t => (
-                          <button key={t} onClick={() => setSelectedTwin(t)} style={{ fontSize: '8px', color: selectedTwin === t ? '#818cf8' : '#6b7280', background: 'none', border: 'none', cursor: 'pointer' }}>{t}</button>
+                        {['shipment', 'driver', 'route', 'customer'].map(t => (
+                          <button
+                            key={t}
+                            onClick={() => setSelectedTwin(t)}
+                            style={{
+                              fontSize: '8.5px', fontWeight: 700, textTransform: 'uppercase',
+                              padding: '3px 8px', borderRadius: 3, border: 'none', cursor: 'pointer',
+                              background: selectedTwin === t ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.02)',
+                              color: selectedTwin === t ? '#818cf8' : '#6b7280'
+                            }}
+                          >
+                            {t}
+                          </button>
                         ))}
                       </div>
                     </div>
-                    {selectedTwin === 'shipment' && <div style={twinGridStyle}><div>Reefer: {engineState.twins.shipment.physical}</div><div>Operational: {engineState.twins.shipment.operational}</div></div>}
-                    {selectedTwin === 'driver' && <div style={twinGridStyle}><div>Fatigue: {engineState.twins.driver.risk}</div><div>Operational: {engineState.twins.driver.operational}</div></div>}
-                    {selectedTwin === 'route' && <div style={twinGridStyle}><div>Operational: {engineState.twins.route.operational}</div><div>Theft risk: {engineState.twins.route.risk}</div></div>}
+
+                    {/* Time Machine Slider */}
+                    <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', padding: 10, borderRadius: 6, marginBottom: 14 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', marginBottom: 4 }}>
+                        <span style={{ color: '#9ca3af', fontWeight: 700 }}>Future Digital Twin Projection Time-Machine</span>
+                        <span style={{ color: '#818cf8', fontWeight: 800 }}>+{futureSlider} Hours Horizon</span>
+                      </div>
+                      <input type="range" min="0" max="24" value={futureSlider} onChange={e => setFutureSlider(parseInt(e.target.value))} style={{ width: '100%' }} />
+                    </div>
+
+                    {/* Twin State Render */}
+                    {selectedTwin === 'shipment' && (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+                        <div style={twinBoxStyle}>
+                          <span style={twinHeaderStyle}>Physical Brain</span>
+                          <div>Cabinet Temp: 2.1°C (Reefer Active)</div>
+                          <div>Location: 82km North of Panvel</div>
+                        </div>
+                        <div style={twinBoxStyle}>
+                          <span style={twinHeaderStyle}>Operational Brain</span>
+                          <div>ETA: {(42.5 - futureSlider * 0.9).toFixed(1)} Hours</div>
+                          <div>SLA Status: On-Time (99.2%)</div>
+                        </div>
+                        <div style={twinBoxStyle}>
+                          <span style={twinHeaderStyle}>Financial Brain</span>
+                          <div>Freight Tariff: ₹96,000</div>
+                          <div>FASTag Toll Accrued: ₹4,200</div>
+                        </div>
+                        <div style={twinBoxStyle}>
+                          <span style={twinHeaderStyle}>Risk Brain</span>
+                          <div>Theft Vulnerability: 2.1% (Low)</div>
+                          <div>Breakdown Probability: 1.4%</div>
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedTwin === 'driver' && (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+                        <div style={twinBoxStyle}>
+                          <span style={twinHeaderStyle}>Physical Brain</span>
+                          <div>Driver: Rajesh Kumar (ID #8924)</div>
+                          <div>Continuous Duty: {(6.2 + futureSlider * 0.8).toFixed(1)} Hours</div>
+                        </div>
+                        <div style={twinBoxStyle}>
+                          <span style={twinHeaderStyle}>Behavioral Brain</span>
+                          <div>Safety Score: 98.4/100</div>
+                          <div>Fatigue Index: {futureSlider > 12 ? 'HIGH (Rest Required)' : 'LOW (Optimal)'}</div>
+                        </div>
+                        <div style={twinBoxStyle}>
+                          <span style={twinHeaderStyle}>Operational Brain</span>
+                          <div>Route Familiarity: 98% (NH48)</div>
+                          <div>License Status: Active (Verified)</div>
+                        </div>
+                        <div style={twinBoxStyle}>
+                          <span style={twinHeaderStyle}>Financial Brain</span>
+                          <div>Safety Bonus Accrued: ₹1,450</div>
+                          <div>Fuel Efficiency Incentive: +₹820</div>
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedTwin === 'route' && (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+                        <div style={twinBoxStyle}>
+                          <span style={twinHeaderStyle}>Physical Brain</span>
+                          <div>Corridor: Delhi-Mumbai NH48</div>
+                          <div>Toll Checkpoints: 14 Active</div>
+                        </div>
+                        <div style={twinBoxStyle}>
+                          <span style={twinHeaderStyle}>Operational Brain</span>
+                          <div>Transit Congestion: Medium</div>
+                          <div>Monsoon Delay Risk: 12%</div>
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedTwin === 'customer' && (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+                        <div style={twinBoxStyle}>
+                          <span style={twinHeaderStyle}>Commercial Brain</span>
+                          <div>Account: Tata Motors Logistics</div>
+                          <div>LTV Projections: ₹42.9 Cr</div>
+                        </div>
+                        <div style={twinBoxStyle}>
+                          <span style={twinHeaderStyle}>Financial Brain</span>
+                          <div>Credit Line Approved: ₹5.0 Cr</div>
+                          <div>Outstanding AR: ₹1.8 Cr</div>
+                        </div>
+                      </div>
+                    )}
+
                   </div>
                 </div>
+
                 {/* Autonomy breakdown */}
                 <div style={{ background: 'rgba(17,24,39,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)' }}>
-                  <h3 style={{ fontSize: 'var(--text-xs)', fontWeight: 800, marginBottom: 8 }}>Autonomy Resolver</h3>
+                  <h3 style={{ fontSize: 'var(--text-xs)', fontWeight: 800, marginBottom: 10 }}>Autonomy Event Injector</h3>
                   {engineState.entities.truck.state === 'broken_down' ? (
-                    <button onClick={() => RealityEngine.resolveIncidentBreakdown()} style={{ width: '100%', padding: '6px 0', border: 'none', borderRadius: 4, background: '#10b981', color: '#fff', fontSize: '9px', fontWeight: 800, cursor: 'pointer' }}>Resolve Breakdown</button>
+                    <button onClick={() => RealityEngine.resolveIncidentBreakdown()} style={{ width: '100%', padding: '8px 0', border: 'none', borderRadius: 4, background: '#10b981', color: '#fff', fontSize: '9px', fontWeight: 800, cursor: 'pointer' }}>Resolve Mechanical Breakdown</button>
                   ) : (
-                    <button onClick={() => RealityEngine.triggerIncidentBreakdown()} style={{ width: '100%', padding: '6px 0', border: '1px solid #ef4444', color: '#ef4444', background: 'transparent', borderRadius: 4, fontSize: '9px', fontWeight: 800, cursor: 'pointer' }}>Trigger Breakdown</button>
+                    <button onClick={() => RealityEngine.triggerIncidentBreakdown()} style={{ width: '100%', padding: '8px 0', border: '1px solid #ef4444', color: '#ef4444', background: 'transparent', borderRadius: 4, fontSize: '9px', fontWeight: 800, cursor: 'pointer' }}>Simulate Mechanical Breakdown</button>
                   )}
                 </div>
               </div>
@@ -865,10 +1186,50 @@ export default function CustomerPortal() {
             {activeTab === 'market' && (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 'var(--space-5)' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+                  
                   <div style={{ background: 'rgba(17,24,39,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)' }}>
-                    <span style={{ fontSize: '10px', fontWeight: 800 }}>Capacity & Demand Forecast</span>
-                    <div style={{ fontSize: '9px', color: '#9ca3af', marginTop: 6 }}>Forecast: {engineState.predictions.capacity.reason}</div>
+                    <h3 style={{ fontSize: 'var(--text-xs)', fontWeight: 800, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Globe size={13} color="#06b6d4" /> Regional Freight Capacity & Demand Index
+                    </h3>
+
+                    {/* Corridor Density Cards */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 14 }}>
+                      {[
+                        { name: 'NH48 Western Corridor (DEL-BOM)', density: 'High (89%)', tariffTrend: '+2.4%', availability: 'Tight', rec: 'Book DFC Rail' },
+                        { name: 'NH44 North-South (DEL-BLR)', density: 'Optimal (72%)', tariffTrend: '-0.8%', availability: 'Surplus', rec: 'Road Freight' },
+                        { name: 'Dedicated Freight Rail Line', density: 'Moderate (54%)', tariffTrend: '-24.0%', availability: 'Abundant', rec: 'Primary Recommended' },
+                        { name: 'Eastern Maritime Hub (CCU-MAS)', density: 'Balanced (68%)', tariffTrend: '+1.1%', availability: 'Stable', rec: 'Multimodal' }
+                      ].map((c, i) => (
+                        <div key={i} style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', padding: 10, borderRadius: 6 }}>
+                          <div style={{ fontSize: '9.5px', fontWeight: 800, color: '#fff' }}>{c.name}</div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '8.5px', color: '#9ca3af', marginTop: 4 }}>
+                            <span>Capacity Density: <strong style={{ color: '#818cf8' }}>{c.density}</strong></span>
+                            <span>Tariff Rate: <strong style={{ color: c.tariffTrend.startsWith('+') ? '#f59e0b' : '#10b981' }}>{c.tariffTrend}</strong></span>
+                          </div>
+                          <div style={{ fontSize: '8px', color: '#06b6d4', marginTop: 4, fontWeight: 700 }}>Strategy: {c.rec}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div style={{ fontSize: '9px', color: '#9ca3af' }}>
+                      AI Market Forecast: <strong style={{ color: '#fff' }}>{engineState.predictions.capacity.reason}</strong>
+                    </div>
                   </div>
+
+                </div>
+
+                <div style={{ background: 'rgba(17,24,39,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <h3 style={{ fontSize: 'var(--text-xs)', fontWeight: 800 }}>Equipment Availability</h3>
+                  {[
+                    { type: '32ft Multi-Axle Trailer', count: '142 Units', status: 'Available' },
+                    { type: 'Cold-Chain Reefer (-20°C)', count: '28 Units', status: 'High Demand' },
+                    { type: '40ft Container High Cube', count: '89 Units', status: 'Available' }
+                  ].map((e, idx) => (
+                    <div key={idx} style={{ background: 'rgba(255,255,255,0.01)', padding: 8, borderRadius: 4, fontSize: '8.5px', display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#fff', fontWeight: 700 }}>{e.type}</span>
+                      <span style={{ color: '#10b981' }}>{e.count}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -877,10 +1238,50 @@ export default function CustomerPortal() {
             {activeTab === 'cfo' && (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 'var(--space-5)' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+                  
                   <div style={{ background: 'rgba(17,24,39,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)' }}>
-                    <span style={{ fontSize: '10px', fontWeight: 800 }}>CFO Ledger</span>
-                    <div style={{ fontSize: '11px', marginTop: 6 }}>Accrued Spend: {engineState.twins.customer.financial}</div>
+                    <h3 style={{ fontSize: 'var(--text-xs)', fontWeight: 800, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Landmark size={13} color="#10b981" /> Financial Ledger & Closed-Loop Reinforcement Intelligence
+                    </h3>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 14 }}>
+                      <div style={kpiCardStyle}>
+                        <div style={kpiLabelStyle}>Accrued Customer Spend</div>
+                        <div style={kpiValStyle}>{engineState.twins.customer.financial}</div>
+                      </div>
+                      <div style={kpiCardStyle}>
+                        <div style={kpiLabelStyle}>GST ITC Reconciled</div>
+                        <div style={{ ...kpiValStyle, color: '#10b981' }}>99.4%</div>
+                      </div>
+                      <div style={kpiCardStyle}>
+                        <div style={kpiLabelStyle}>Demurrage Leakage</div>
+                        <div style={{ ...kpiValStyle, color: '#ef4444' }}>₹0.00 (Zero Leakage)</div>
+                      </div>
+                    </div>
+
+                    <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', padding: 10, borderRadius: 6 }}>
+                      <span style={{ fontSize: '9px', fontWeight: 800, color: '#818cf8', display: 'block', marginBottom: 6 }}>Closed-Loop Model Evolution Matrix (Prediction vs Reality)</span>
+                      <div style={{ fontSize: '8.5px', color: '#9ca3af', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <div>Identified Weakness: <strong style={{ color: '#ef4444' }}>{engineState.evolutionMatrix.selfUpgrades.weakness}</strong></div>
+                        <div>Root Cause: <strong>{engineState.evolutionMatrix.selfUpgrades.rootCause}</strong></div>
+                        <div>Corrective Policy Upgrade: <strong style={{ color: '#10b981' }}>{engineState.evolutionMatrix.selfUpgrades.newRequirement}</strong></div>
+                        <div>Model Status: <strong style={{ color: '#10b981' }}>{engineState.evolutionMatrix.selfUpgrades.modelStatus}</strong></div>
+                      </div>
+                    </div>
+
                   </div>
+
+                </div>
+
+                <div style={{ background: 'rgba(17,24,39,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <h3 style={{ fontSize: 'var(--text-xs)', fontWeight: 800 }}>Audit Memory Ledger</h3>
+                  {engineState.lessons.slice(0, 3).map((l, i) => (
+                    <div key={i} style={{ background: 'rgba(255,255,255,0.01)', padding: 8, borderRadius: 4, fontSize: '8.5px', color: '#9ca3af' }}>
+                      <strong style={{ color: '#fff' }}>{l.event}</strong>
+                      <div style={{ marginTop: 2 }}>{l.factors}</div>
+                      <div style={{ color: '#10b981', marginTop: 2 }}>{l.recovery}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -942,8 +1343,8 @@ export default function CustomerPortal() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <h4 style={{ fontSize: '11px', fontWeight: 800 }}>Layer 1: Event Capture</h4>
                 <div style={{ display: 'flex', gap: 4 }}>
-                  <input type="text" placeholder="Inject event..." value={customEventText} onChange={e => setCustomEventText(e.target.value)} style={{ flex: 1, background: '#090d16', border: '1px solid rgba(255,255,255,0.05)', color: '#fff', fontSize: '9px', padding: 6 }} />
-                  <button onClick={handleManualEventInject} style={{ background: '#6366f1', border: 'none', color: '#fff', padding: '0 10px', fontSize: '9px', borderRadius: 2, cursor: 'pointer' }}>Inject</button>
+                  <input type="text" placeholder="Inject custom L1 event..." value={customEventText} onChange={e => setCustomEventText(e.target.value)} style={{ flex: 1, background: '#090d16', border: '1px solid rgba(255,255,255,0.05)', color: '#fff', fontSize: '9px', padding: 6 }} />
+                  <button onClick={handleManualEventInject} style={{ background: '#6366f1', border: 'none', color: '#fff', padding: '0 10px', fontSize: '9px', borderRadius: 2, cursor: 'pointer' }}>Inject Event</button>
                 </div>
               </div>
             )}
@@ -962,7 +1363,7 @@ export default function CustomerPortal() {
               </div>
             )}
 
-            {/* L3 twins */}
+            {/* L3 Twins */}
             {activeLayer === 3 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <h4 style={{ fontSize: '11px', fontWeight: 800, marginBottom: 6 }}>Layer 3: 5-Dimension Digital Twins</h4>
@@ -982,7 +1383,7 @@ export default function CustomerPortal() {
             {/* L4 Memory */}
             {activeLayer === 4 && (
               <div>
-                <h4 style={{ fontSize: '11px', fontWeight: 800, marginBottom: 6 }}>Layer 4: Memory lessons</h4>
+                <h4 style={{ fontSize: '11px', fontWeight: 800, marginBottom: 6 }}>Layer 4: Memory Lessons</h4>
                 {engineState.lessons.map((l, i) => (
                   <div key={i} style={{ fontSize: '9px', color: '#9ca3af', marginBottom: 6, background: 'rgba(255,255,255,0.01)', padding: 6, borderRadius: 2 }}>
                     <strong>{l.event}</strong>: Factors: {l.factors}
@@ -1084,7 +1485,7 @@ export default function CustomerPortal() {
         borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)', display: 'flex',
         flexDirection: 'column', gap: 8
       }}>
-        <div style={{ display: 'flex', justify: 'space-between', align: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 6 }}>
+        <div style={{ display: 'flex', justify: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 6 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <Activity size={12} color="#10b981" />
             <h3 style={{ fontSize: 'var(--text-xs)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Ecosystem Event Stream Ledger (Layer 1)</h3>
@@ -1095,11 +1496,11 @@ export default function CustomerPortal() {
           background: '#02040a', border: '1px solid rgba(255,255,255,0.03)',
           borderRadius: 'var(--radius-md)', padding: 8, fontFamily: 'var(--font-mono)',
           fontSize: '9px', display: 'flex', flexDirection: 'column', gap: 4,
-          height: '90px', overflowY: 'auto', color: '#10b981'
+          height: '95px', overflowY: 'auto', color: '#10b981'
         }}>
           {engineState.events.map((e, idx) => (
             <div key={e.id || idx} style={{ display: 'flex', gap: 6, alignItems: 'flex-start' }}>
-              <span style={{ color: '#6b7280', flexShrink: 0 }}>[{e.timestamp.substring(11, 19)}]</span>
+              <span style={{ color: '#6b7280', flexShrink: 0 }}>[{e.timestamp ? e.timestamp.substring(11, 19) : ''}]</span>
               <span style={{ color: '#818cf8', fontWeight: 700, flexShrink: 0 }}>[{e.type}]</span>
               <span style={{ color: '#fff', flexShrink: 0 }}>{e.source}:</span>
               <span style={{ color: '#10b981' }}>{e.desc}</span>
@@ -1115,7 +1516,7 @@ export default function CustomerPortal() {
 // ---- STYLES ----
 const formInputStyle = {
   background: '#090d16',
-  border: '1px solid rgba(255,255,255,0.05)',
+  border: '1px solid rgba(255,255,255,0.08)',
   color: '#fff',
   padding: '6px 10px',
   fontSize: 'var(--text-xs)',
@@ -1144,11 +1545,21 @@ const kpiValStyle = {
   color: '#fff'
 };
 
-const twinGridStyle = {
-  display: 'grid',
-  gridTemplateColumns: '1fr 1fr',
-  gap: '6px 10px',
+const twinBoxStyle = {
+  background: 'rgba(255,255,255,0.01)',
+  border: '1px solid rgba(255,255,255,0.04)',
+  padding: 10,
+  borderRadius: 6,
   fontSize: '9px',
   color: '#9ca3af',
-  marginTop: 8
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 3
+};
+
+const twinHeaderStyle = {
+  fontSize: '9.5px',
+  fontWeight: 800,
+  color: '#818cf8',
+  marginBottom: 2
 };
