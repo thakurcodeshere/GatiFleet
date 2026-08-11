@@ -6,6 +6,8 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import SegmentArchitectureModal from '../components/SegmentArchitectureModal';
+import SegmentDeepDiveCockpit from '../components/SegmentDeepDiveCockpit';
 import {
   TrendingUp, TrendingDown, Truck, Gauge, Clock, Users, Fuel,
   IndianRupee, Brain, Lightbulb, ShieldAlert, AlertTriangle,
@@ -493,7 +495,7 @@ const formatKPIValue = (value, format) => {
   }
 };
 
-const KPICard = ({ config, index }) => {
+const KPICard = ({ config, index, isSelected, onClick, onOpenModal }) => {
   const animatedVal = useAnimatedValue(config.value, 1400 + index * 100);
   const Icon = config.icon;
 
@@ -502,17 +504,41 @@ const KPICard = ({ config, index }) => {
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.07, ease: [0.22, 1, 0.36, 1] }}
-      whileHover={{ y: -3, scale: 1.015 }}
-      style={styles.kpiCard}
+      whileHover={{ y: -4, scale: 1.02 }}
+      onClick={() => onClick && config.key && onClick(config.key)}
+      style={{
+        ...styles.kpiCard,
+        border: isSelected ? `1.5px solid ${config.sparkColor || '#6366f1'}` : '1px solid var(--surface-border)',
+        boxShadow: isSelected
+          ? `0 0 20px ${config.sparkColor || '#6366f1'}40, 0 8px 24px rgba(0,0,0,0.3)`
+          : '0 4px 12px rgba(0,0,0,0.1)',
+        transform: isSelected ? 'translateY(-2px)' : 'none',
+      }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div
-          style={{
-            ...styles.kpiIconBox,
-            background: config.gradient,
-          }}
-        >
-          <Icon size={18} color="#fff" strokeWidth={2} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div
+            style={{
+              ...styles.kpiIconBox,
+              background: config.gradient,
+            }}
+          >
+            <Icon size={18} color="#fff" strokeWidth={2} />
+          </div>
+          {isSelected && (
+            <span style={{
+              fontSize: 9,
+              fontWeight: 700,
+              color: '#fff',
+              background: config.gradient,
+              padding: '2px 6px',
+              borderRadius: 4,
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase'
+            }}>
+              Active
+            </span>
+          )}
         </div>
         <Sparkline data={config.sparkData} color={config.sparkColor} />
       </div>
@@ -531,6 +557,43 @@ const KPICard = ({ config, index }) => {
             {config.trendUp ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
             {config.trend}%
           </span>
+        </div>
+
+        {/* Hover / Active Click Hint */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginTop: 10,
+          paddingTop: 8,
+          borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+          fontSize: 10,
+          color: isSelected ? config.sparkColor || 'var(--primary-400)' : 'var(--text-muted)',
+          fontWeight: isSelected ? 600 : 400
+        }}>
+          <span>{isSelected ? '✓ Viewing Scalable Graph' : 'Click to expand graph'}</span>
+          {config.key && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenModal && onOpenModal(config.key);
+              }}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'inherit',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
+                fontSize: 10,
+                fontWeight: 600,
+                textDecoration: 'underline'
+              }}
+            >
+              Blueprint
+            </button>
+          )}
         </div>
       </div>
     </motion.div>
@@ -1217,6 +1280,10 @@ const Dashboard = () => {
     { id: 'alerts', label: 'Operational Alerts Feed', icon: AlertTriangle },
   ];
 
+  // --- Stateful variables for segment selection & modal views ---
+  const [selectedSegmentKey, setSelectedSegmentKey] = useState('revenueToday');
+  const [architectureModalSegment, setArchitectureModalSegment] = useState(null);
+
   // --- Stateful variables for platform metrics ---
   const [kpis, setKpis] = useState({
     revenueToday: platformKPIs.revenue.today,
@@ -1521,6 +1588,7 @@ const Dashboard = () => {
   const kpiConfigs = useMemo(() => {
     const allConfigs = [
       {
+        key: 'revenueToday',
         label: 'Revenue Today',
         value: kpis.revenueToday,
         format: 'currency',
@@ -1533,6 +1601,7 @@ const Dashboard = () => {
         roles: ['ADMIN', 'CEO', 'FINANCE', 'CFO', 'ADVISOR', 'CRO']
       },
       {
+        key: 'fleetUtilization',
         label: 'Fleet Utilization',
         value: kpis.fleetUtilization,
         format: 'percent',
@@ -1545,6 +1614,7 @@ const Dashboard = () => {
         roles: ['ADMIN', 'CEO', 'OPERATIONS']
       },
       {
+        key: 'onTimeDelivery',
         label: 'On-Time Delivery',
         value: kpis.onTimeDelivery,
         format: 'percent',
@@ -1557,6 +1627,7 @@ const Dashboard = () => {
         roles: ['ADMIN', 'CEO', 'OPERATIONS']
       },
       {
+        key: 'activeTrucks',
         label: 'Active Trucks',
         value: kpis.activeTrucks,
         format: 'number',
@@ -1569,6 +1640,7 @@ const Dashboard = () => {
         roles: ['ADMIN', 'CEO', 'OPERATIONS']
       },
       {
+        key: 'fuelEfficiency',
         label: 'Fuel Efficiency',
         value: kpis.fuelEfficiency,
         format: 'kmpl',
@@ -1581,6 +1653,7 @@ const Dashboard = () => {
         roles: ['ADMIN', 'CEO', 'OPERATIONS', 'FINANCE', 'CFO']
       },
       {
+        key: 'customerGrowth',
         label: 'Customer Growth',
         value: kpis.customerGrowth,
         format: 'growth',
@@ -1763,9 +1836,23 @@ const Dashboard = () => {
           {/* Row 1: KPI Strip */}
           {kpiConfigs.map((config, i) => (
             <div key={config.label} style={{ gridColumn: 'span 2' }}>
-              <KPICard config={config} index={i} />
+              <KPICard
+                config={config}
+                index={i}
+                isSelected={selectedSegmentKey === config.key}
+                onClick={(key) => setSelectedSegmentKey(key)}
+                onOpenModal={(key) => setArchitectureModalSegment(key)}
+              />
             </div>
           ))}
+
+          {/* Interactive Scalable Graph Cockpit & Feature Deep-Dive */}
+          {selectedSegmentKey && (
+            <SegmentDeepDiveCockpit
+              segmentKey={selectedSegmentKey}
+              onOpenArchitecture={(key) => setArchitectureModalSegment(key)}
+            />
+          )}
 
           {/* Row 2: Operations Section (Only for Ops, CEO, Admin) */}
           {(userRole === 'ADMIN' || userRole === 'CEO' || userRole === 'OPERATIONS') && <FleetMapSection dispatched={dispatchedActive} />}
@@ -2134,6 +2221,14 @@ const Dashboard = () => {
           ))}
         </AnimatePresence>
       </div>
+
+      {/* Architecture Blueprint Modal */}
+      {architectureModalSegment && (
+        <SegmentArchitectureModal
+          segmentKey={architectureModalSegment}
+          onClose={() => setArchitectureModalSegment(null)}
+        />
+      )}
 
       {/* Pulse animation keyframes injected via style tag */}
       <style>{`
