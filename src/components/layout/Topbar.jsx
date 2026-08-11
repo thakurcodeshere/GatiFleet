@@ -516,18 +516,7 @@ export default function Topbar() {
           )}
         </div>
 
-        {/* AI Copilot Toggle Button */}
-        <button
-          style={styles.copilotBtn}
-          onClick={toggleCopilot}
-          onMouseEnter={(e) => {
-            if (!copilotOpen) e.currentTarget.style.transform = 'translateY(-1px)';
-          }}
-          onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; }}
-        >
-          <Sparkles size={12} />
-          {copilotOpen ? 'Close Copilot' : 'Fleet Copilot'}
-        </button>
+
 
         {/* Theme Toggle Button */}
         <button

@@ -11,11 +11,12 @@ import {
   Activity, PauseCircle, Wrench, WifiOff, Fuel, Heart,
   Clock, MapPin, Gauge, ArrowUpRight, ArrowDownRight,
   AlertTriangle, BarChart3, Route, Calendar, ChevronLeft, ChevronRight, X,
-  FileText
+  FileText, Sparkles
 } from 'lucide-react';
 import { generateTrucks, formatCurrency } from '../../data/mockData';
 import { RealityEngine } from '../../data/RealityEngine';
 import FastagEwayHub from '../../components/fleet/FastagEwayHub';
+import { useTheme } from '../../context/ThemeContext';
 
 // ---- Generate stable data at module level ----
 const ALL_TRUCKS = generateTrucks(50);
@@ -443,6 +444,7 @@ const styles = {
 
 // ---- Component ----
 export default function FleetOverview() {
+  const { copilotOpen, toggleCopilot } = useTheme();
   const [trucks, setTrucks] = useState(() => ALL_TRUCKS);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [showFastagEway, setShowFastagEway] = useState(false);
@@ -692,6 +694,24 @@ export default function FleetOverview() {
           </p>
         </div>
         <div style={styles.headerActions}>
+          {/* Fleet Copilot Launcher */}
+          <motion.button
+            style={{
+              ...styles.btnPrimary,
+              background: copilotOpen ? 'rgba(99, 102, 241, 0.2)' : 'linear-gradient(135deg, #6366f1, #a855f7)',
+              color: '#ffffff',
+              border: copilotOpen ? '1px solid #818cf8' : 'none',
+              boxShadow: copilotOpen ? 'none' : '0 4px 16px rgba(168, 85, 247, 0.35)',
+              fontWeight: 600
+            }}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={toggleCopilot}
+          >
+            <Sparkles size={16} color="#fff" />
+            <span>{copilotOpen ? 'Close Fleet Copilot' : 'Fleet Copilot'}</span>
+          </motion.button>
+
           <motion.button
             style={{ ...styles.btnSecondary, borderColor: '#10b981', color: '#6ee7b7', background: 'rgba(16, 185, 129, 0.1)' }}
             whileHover={{ scale: 1.02 }}
