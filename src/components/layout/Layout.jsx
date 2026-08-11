@@ -1,17 +1,20 @@
-import React, { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import Topbar from './Topbar';
+import Sidebar from './Sidebar';
 import CopilotPanel from '../shared/CopilotPanel';
 
 export default function Layout({ children }) {
-  const { copilotOpen, toggleCopilot } = useTheme();
+  const { copilotOpen, toggleCopilot, sidebarCollapsed } = useTheme();
 
   const [copilotWidth, setCopilotWidth] = useState(420);
+  const [isResizing, setIsResizing] = useState(false);
   const isResizingRef = useRef(false);
 
   const startResizing = useCallback((e) => {
     e.preventDefault();
     isResizingRef.current = true;
+    setIsResizing(true);
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
 
@@ -25,6 +28,7 @@ export default function Layout({ children }) {
 
     const handleMouseUp = () => {
       isResizingRef.current = false;
+      setIsResizing(false);
       document.body.style.cursor = 'default';
       document.body.style.userSelect = 'auto';
       window.removeEventListener('mousemove', handleMouseMove);
@@ -35,6 +39,8 @@ export default function Layout({ children }) {
     window.addEventListener('mouseup', handleMouseUp);
   }, []);
 
+  const sidebarWidth = sidebarCollapsed ? 72 : 260;
+
   const styles = {
     container: {
       display: 'flex',
@@ -43,13 +49,14 @@ export default function Layout({ children }) {
     },
     main: {
       flex: 1,
-      marginLeft: 0,
-      width: '100%',
+      marginLeft: `${sidebarWidth}px`,
+      width: `calc(100% - ${sidebarWidth}px)`,
       display: 'flex',
       flexDirection: 'column',
       minHeight: '100vh',
       position: 'relative',
       overflow: 'hidden',
+      transition: 'margin-left var(--transition-base), width var(--transition-base)',
     },
     content: {
       flex: 1,
@@ -64,7 +71,7 @@ export default function Layout({ children }) {
       width: copilotWidth,
       height: '100vh',
       zIndex: 'var(--z-overlay)',
-      transition: isResizingRef.current ? 'none' : 'right var(--transition-base)',
+      transition: isResizing ? 'none' : 'right var(--transition-base)',
     },
     copilotOverlay: {
       position: 'fixed',
@@ -79,6 +86,7 @@ export default function Layout({ children }) {
 
   return (
     <div style={styles.container}>
+      <Sidebar />
       <div style={styles.main}>
         <Topbar />
         <main style={styles.content}>
@@ -104,7 +112,7 @@ export default function Layout({ children }) {
             height: '100%',
             cursor: 'col-resize',
             zIndex: 1000,
-            background: isResizingRef.current ? 'rgba(99, 102, 241, 0.45)' : 'transparent',
+            background: isResizing ? 'rgba(99, 102, 241, 0.45)' : 'transparent',
             transition: 'background 0.2s',
           }}
           onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.2)'; }}

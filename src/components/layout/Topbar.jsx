@@ -9,50 +9,20 @@ import {
 } from 'lucide-react';
 import { generateAlerts } from '../../data/mockData';
 
-const menuSections = [
-  {
-    key: 'overview',
-    label: 'Overview',
-    items: [
-      { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-      { path: '/customer-portal', label: 'Customer Workspace', icon: Building2, badge: 'AI' },
-      { path: '/analytics', label: 'Analytics', icon: BarChart3 }
-    ]
-  },
-  {
-    key: 'operations',
-    label: 'Operations',
-    items: [
-      { path: '/fleet', label: 'Fleet Management', icon: Truck },
-      { path: '/tracking', label: 'Live Tracking', icon: MapPin },
-      { path: '/knowledge-graph', label: 'Knowledge Graph', icon: Network },
-      { path: '/portals', label: 'Partner Portals', icon: Users, badge: '6' }
-    ]
-  },
-  {
-    key: 'enterprise',
-    label: 'Enterprise',
-    items: [
-      { path: '/erp', label: 'ERP', icon: IndianRupee },
-      { path: '/crm', label: 'CRM', icon: UserCircle },
-      { path: '/hcm', label: 'HCM', icon: Users }
-    ]
-  },
-  {
-    key: 'intelligence',
-    label: 'AI Intelligence',
-    items: [
-      { path: '/copilot', label: 'AI Copilot', icon: Sparkles, badge: 'AI' },
-      { path: '/agents', label: 'AI Agents', icon: Bot }
-    ]
-  },
-  {
-    key: 'security',
-    label: 'Security',
-    items: [
-      { path: '/security', label: 'Security Fortress', icon: ShieldCheck, badge: 'SOC' }
-    ]
-  }
+const menuItems = [
+  { path: '/agents', label: 'AI Agents', icon: Bot },
+  { path: '/copilot', label: 'AI Copilot', icon: Sparkles, badge: 'AI' },
+  { path: '/analytics', label: 'Analytics', icon: BarChart3 },
+  { path: '/crm', label: 'CRM', icon: UserCircle },
+  { path: '/customer-portal', label: 'Customer Workspace', icon: Building2, badge: 'AI' },
+  { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/erp', label: 'ERP', icon: IndianRupee },
+  { path: '/fleet', label: 'Fleet Management', icon: Truck },
+  { path: '/hcm', label: 'HCM', icon: Users },
+  { path: '/knowledge-graph', label: 'Knowledge Graph', icon: Network },
+  { path: '/tracking', label: 'Live Tracking', icon: MapPin },
+  { path: '/portals', label: 'Partner Portals', icon: Users, badge: '6' },
+  { path: '/security', label: 'Security Fortress', icon: ShieldCheck, badge: 'SOC' },
 ];
 
 // Permission Matrix mapping roles to allowed paths
@@ -71,7 +41,7 @@ const ROLE_PERMISSIONS = {
 export default function Topbar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { theme, toggleTheme, toggleCopilot, copilotOpen, userRole, logoutUser } = useTheme();
+  const { theme, toggleTheme, toggleSidebar, toggleCopilot, copilotOpen, userRole, logoutUser } = useTheme();
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
@@ -80,10 +50,7 @@ export default function Topbar() {
   const alerts = generateAlerts().slice(0, 5);
 
   const allowedPaths = ROLE_PERMISSIONS[userRole] || [];
-  const filteredMenuSections = menuSections.map(sec => {
-    const filteredItems = sec.items.filter(item => allowedPaths.includes(item.path));
-    return { ...sec, items: filteredItems };
-  }).filter(sec => sec.items.length > 0);
+  const filteredMenuItems = menuItems.filter(item => allowedPaths.includes(item.path));
 
   const styles = {
     topbar: {
@@ -456,64 +423,50 @@ export default function Topbar() {
         {/* Vertical divider */}
         <div style={{ width: '1px', height: '24px', background: 'var(--border-subtle)', margin: '0 12px' }} />
 
-        {/* Horizontal Navigation Strip */}
+        {/* Navigation Dropdown (Alphabetical, Uncategorized Vertical Bar) */}
         <nav style={styles.navStrip}>
-          {filteredMenuSections.map((sec) => {
-            const isSecActive = sec.items.some(item => location.pathname === item.path);
-            const isOpen = activeMenu === sec.key;
-            
-            return (
-              <div
-                key={sec.key}
-                style={{ position: 'relative' }}
-                onMouseEnter={() => setActiveMenu(sec.key)}
-                onMouseLeave={() => setActiveMenu(null)}
-              >
-                <button 
-                  style={styles.navHeaderBtn(isSecActive, isOpen)}
-                  onMouseEnter={(e) => {
-                    if (!isSecActive && !isOpen) e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isSecActive && !isOpen) e.currentTarget.style.background = 'transparent';
-                  }}
-                >
-                  <span>{sec.label}</span>
-                  <span style={styles.arrow(isOpen)}>▼</span>
-                  {isSecActive && <span style={styles.activeDot} />}
-                </button>
+          <div
+            style={{ position: 'relative' }}
+            onMouseEnter={() => setActiveMenu('modules')}
+            onMouseLeave={() => setActiveMenu(null)}
+          >
+            <button 
+              style={styles.navHeaderBtn(false, activeMenu === 'modules')}
+              onClick={() => setActiveMenu(activeMenu === 'modules' ? null : 'modules')}
+            >
+              <span>All Modules</span>
+              <span style={styles.arrow(activeMenu === 'modules')}>▼</span>
+            </button>
 
-                {isOpen && (
-                  <div style={styles.navDropdown}>
-                    {sec.items.map((item) => {
-                      const isItemActive = location.pathname === item.path;
-                      const Icon = item.icon;
-                      return (
-                        <button
-                          key={item.path}
-                          style={styles.dropdownItem(isItemActive)}
-                          onClick={() => {
-                            navigate(item.path);
-                            setActiveMenu(null);
-                          }}
-                          onMouseEnter={(e) => {
-                            if (!isItemActive) e.currentTarget.style.background = 'var(--surface-hover)';
-                          }}
-                          onMouseLeave={(e) => {
-                            if (!isItemActive) e.currentTarget.style.background = 'transparent';
-                          }}
-                        >
-                          <Icon size={16} />
-                          <span style={{ flex: 1 }}>{item.label}</span>
-                          {item.badge && <span style={styles.badge}>{item.badge}</span>}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
+            {activeMenu === 'modules' && (
+              <div style={{ ...styles.navDropdown, width: '240px', maxHeight: '480px', overflowY: 'auto' }}>
+                {filteredMenuItems.map((item) => {
+                  const isItemActive = location.pathname === item.path;
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={item.path}
+                      style={styles.dropdownItem(isItemActive)}
+                      onClick={() => {
+                        navigate(item.path);
+                        setActiveMenu(null);
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isItemActive) e.currentTarget.style.background = 'var(--surface-hover)';
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isItemActive) e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      <Icon size={16} />
+                      <span style={{ flex: 1 }}>{item.label}</span>
+                      {item.badge && <span style={styles.badge}>{item.badge}</span>}
+                    </button>
+                  );
+                })}
               </div>
-            );
-          })}
+            )}
+          </div>
         </nav>
       </div>
 

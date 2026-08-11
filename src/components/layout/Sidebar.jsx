@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import {
@@ -7,43 +7,51 @@ import {
   IndianRupee, UserCircle, Building2, ShieldCheck
 } from 'lucide-react';
 
-const navItems = [
-  { section: 'OVERVIEW' },
-  { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/customer-portal', label: 'Customer Workspace', icon: Building2, badge: 'AI' },
-  { path: '/analytics', label: 'Analytics', icon: BarChart3 },
-  
-  { section: 'OPERATIONS' },
-  { path: '/fleet', label: 'Fleet Management', icon: Truck },
-  { path: '/tracking', label: 'Live Tracking', icon: MapPin },
-  { path: '/knowledge-graph', label: 'Knowledge Graph', icon: Network },
-  { path: '/portals', label: 'Partner Portals', icon: Users, badge: '6' },
-  
-  { section: 'ENTERPRISE' },
-  { path: '/erp', label: 'ERP', icon: IndianRupee },
-  { path: '/crm', label: 'CRM', icon: UserCircle },
-  { path: '/hcm', label: 'HCM', icon: Users },
-  
-  { section: 'INTELLIGENCE' },
-  { path: '/copilot', label: 'AI Copilot', icon: Sparkles, badge: 'AI' },
-  { path: '/agents', label: 'AI Agents', icon: Bot },
+const ROLE_PERMISSIONS = {
+  OPERATIONS: ['/', '/fleet', '/tracking', '/knowledge-graph', '/portals', '/erp', '/copilot', '/profile'],
+  FINANCE: ['/', '/analytics', '/erp', '/copilot', '/profile'],
+  HR: ['/', '/hcm', '/profile', '/copilot'],
+  CEO: ['/', '/customer-portal', '/analytics', '/crm', '/copilot', '/agents', '/knowledge-graph', '/profile'],
+  ADVISOR: ['/', '/analytics', '/crm', '/copilot', '/knowledge-graph', '/profile'],
+  CFO: ['/', '/analytics', '/erp', '/copilot', '/profile'],
+  CTO: ['/', '/knowledge-graph', '/copilot', '/agents', '/security', '/profile'],
+  CRO: ['/', '/analytics', '/crm', '/security', '/copilot', '/profile'],
+  ADMIN: ['/', '/customer-portal', '/analytics', '/fleet', '/tracking', '/knowledge-graph', '/portals', '/erp', '/crm', '/hcm', '/copilot', '/agents', '/security', '/profile']
+};
 
-  { section: 'SECURITY & RISK' },
+const navItems = [
+  { path: '/agents', label: 'AI Agents', icon: Bot },
+  { path: '/copilot', label: 'AI Copilot', icon: Sparkles, badge: 'AI' },
+  { path: '/analytics', label: 'Analytics', icon: BarChart3 },
+  { path: '/crm', label: 'CRM', icon: UserCircle },
+  { path: '/customer-portal', label: 'Customer Workspace', icon: Building2, badge: 'AI' },
+  { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/erp', label: 'ERP', icon: IndianRupee },
+  { path: '/fleet', label: 'Fleet Management', icon: Truck },
+  { path: '/hcm', label: 'HCM', icon: Users },
+  { path: '/knowledge-graph', label: 'Knowledge Graph', icon: Network },
+  { path: '/tracking', label: 'Live Tracking', icon: MapPin },
+  { path: '/portals', label: 'Partner Portals', icon: Users, badge: '6' },
   { path: '/security', label: 'Security Fortress', icon: ShieldCheck, badge: 'SOC' },
 ];
 
 export default function Sidebar() {
-  const { sidebarCollapsed, toggleSidebar } = useTheme();
+  const { sidebarCollapsed, toggleSidebar, userRole } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
 
+  const allowedPaths = ROLE_PERMISSIONS[userRole] || [];
+  const filteredNavItems = navItems.filter(item => allowedPaths.includes(item.path));
+
   const [sidebarWidth, setSidebarWidth] = useState(260);
+  const [isResizing, setIsResizing] = useState(false);
   const isResizingRef = useRef(false);
 
   const startResizing = useCallback((e) => {
     e.preventDefault();
     if (sidebarCollapsed) return;
     isResizingRef.current = true;
+    setIsResizing(true);
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
 
@@ -57,6 +65,7 @@ export default function Sidebar() {
 
     const handleMouseUp = () => {
       isResizingRef.current = false;
+      setIsResizing(false);
       document.body.style.cursor = 'default';
       document.body.style.userSelect = 'auto';
       window.removeEventListener('mousemove', handleMouseMove);
@@ -75,7 +84,7 @@ export default function Sidebar() {
       borderRight: '1px solid var(--border-subtle)',
       display: 'flex',
       flexDirection: 'column',
-      transition: isResizingRef.current ? 'none' : 'width var(--transition-base)',
+      transition: isResizing ? 'none' : 'width var(--transition-base)',
       position: 'fixed',
       left: 0,
       top: 0,
@@ -229,11 +238,7 @@ export default function Sidebar() {
       </div>
 
       <nav style={styles.nav}>
-        {navItems.map((item, idx) => {
-          if (item.section) {
-            return <div key={idx} style={styles.section}>{item.section}</div>;
-          }
-          
+        {filteredNavItems.map((item) => {
           const isActive = location.pathname === item.path;
           const Icon = item.icon;
           
@@ -363,7 +368,7 @@ export default function Sidebar() {
             height: '100%',
             cursor: 'col-resize',
             zIndex: 1000,
-            background: isResizingRef.current ? 'rgba(99, 102, 241, 0.45)' : 'transparent',
+            background: isResizing ? 'rgba(99, 102, 241, 0.45)' : 'transparent',
             transition: 'background 0.2s',
           }}
           onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.2)'; }}

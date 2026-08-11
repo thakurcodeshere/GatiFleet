@@ -1,5 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// GatiFleet Enterprise Relational Database Schema
+// Transportation Operating System & Autonomous Intelligence Core
 
 generator client {
   provider = "prisma-client-js"
@@ -10,12 +10,221 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// --------------------------------------------------------
+// 1. IDENTITY, AUTHENTICATION & ACCESS CONTROL (USER BACKEND)
+// --------------------------------------------------------
+
+model User {
+  id               String         @id @default(uuid())
+  email            String         @unique
+  password         String
+  name             String
+  phone            String?
+  role             String         @default("OPERATOR") // ADMIN, OPERATOR, DRIVER, DISPATCHER, CUSTOMER
+  status           String         @default("ACTIVE")   // ACTIVE, SUSPENDED, PENDING
+  avatar           String?
+  mfaEnabled       Boolean        @default(false)
+  mfaSecret        String?
+  lastLoginAt      DateTime?
+  lastLoginIp      String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  refreshTokens    RefreshToken[]
+  apiKeys          ApiKey[]
+  auditLogs        AuditLog[]     @relation("UserAuditLogs")
+  assignedVehicles FleetVehicle[] @relation("UserAssignedVehicles")
+  driverProfile    Driver?
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id         String   @id @default(uuid())
+  token      String   @unique
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceInfo String?
+  ipAddress  String?
+  isRevoked  Boolean  @default(false)
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@map("refresh_tokens")
+}
+
+model ApiKey {
+  id           String    @id @default(uuid())
+  name         String
+  keyHash      String    @unique
+  prefix       String
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scope        String    @default("read:telemetry") // Comma separated or JSON array string
+  rateLimitMax Int       @default(1000) // Max requests per hour
+  requestCount Int       @default(0)
+  status       String    @default("ACTIVE") // ACTIVE, REVOKED, EXPIRED
+  lastUsedAt   DateTime?
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("api_keys")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation("UserAuditLogs", fields: [userId], references: [id], onDelete: SetNull)
+  action    String   // e.g. USER_LOGIN, VEHICLE_DISPATCH, API_KEY_CREATED
+  entity    String   // Target entity type (User, FleetVehicle, etc.)
+  entityId  String?
+  details   String?  // JSON string containing payload/diff
+  ipAddress String?
+  userAgent String?
+  timestamp DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+// --------------------------------------------------------
+// 2. FLEET, VEHICLES & DRIVER MANAGEMENT
+// --------------------------------------------------------
+
+model FleetVehicle {
+  id                 String           @id @default(uuid())
+  registrationNo     String           @unique // e.g. DL-01-AX-9048
+  model              String           // e.g. Tata Signa 5530.S
+  type               String           // HEAVY_TRUCK, REEFER, CONTAINER, FLATBED
+  capacityTons       Float
+  fuelCapacityLiters Float            @default(300.0)
+  fuelLevelPercent   Float            @default(100.0)
+  status             String           @default("IDLE") // ACTIVE, IDLE, MAINTENANCE, IN_TRANSIT
+  currentSpeed       Float            @default(0.0)
+  latitude           Float?
+  longitude          Float?
+  locationName       String?
+  odometerKm         Float            @default(0.0)
+  healthScore        Float            @default(98.5)
+  assignedUserId     String?
+  assignedUser       User?            @relation("UserAssignedVehicles", fields: [assignedUserId], references: [id], onDelete: SetNull)
+  
+  driverId           String?          @unique
+  driver             Driver?          @relation("DriverAssignedVehicle", fields: [driverId], references: [id], onDelete: SetNull)
+  
+  shipments          ShipmentOrder[]
+  fuelLogs           FuelLog[]
+  maintenanceLogs    MaintenanceLog[]
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@map("fleet_vehicles")
+}
+
+model Driver {
+  id             String        @id @default(uuid())
+  userId         String?       @unique
+  user           User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  fullName       String
+  phone          String        @unique
+  licenseNo      String        @unique
+  licenseExpiry  DateTime
+  dutyStatus     String        @default("OFF_DUTY") // DRIVING, ON_BREAK, OFF_DUTY, STANDBY
+  fatigueScore   Float         @default(15.0)       // 0-100 (higher = more tired)
+  safetyRating   Float         @default(4.8)        // 1.0 - 5.0
+  totalTrips     Int           @default(0)
+  totalDistance  Float         @default(0.0)
+  
+  vehicle        FleetVehicle? @relation("DriverAssignedVehicle")
+  fuelLogs       FuelLog[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@map("drivers")
+}
+
+// --------------------------------------------------------
+// 3. SHIPMENTS, LOGISTICS & FUEL INTELLIGENCE
+// --------------------------------------------------------
+
+model ShipmentOrder {
+  id             String        @id @default(uuid())
+  orderNo        String        @unique // e.g. PO-928410
+  customerName   String
+  cargoType      String
+  cargoWeightKg  Float
+  origin         String
+  destination    String
+  status         String        @default("CREATED") // CREATED, DISPATCHED, IN_TRANSIT, DELIVERED, DELAYED
+  priceINR       Float
+  costMarginINR  Float?
+  riskScore      Float         @default(10.0)
+  vehicleId      String?
+  vehicle        FleetVehicle? @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  slaDeliveryDate DateTime
+  actualDelivery  DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@map("shipment_orders")
+}
+
+model FuelLog {
+  id            String       @id @default(uuid())
+  vehicleId     String
+  vehicle       FleetVehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  driverId      String?
+  driver        Driver?      @relation(fields: [driverId], references: [id], onDelete: SetNull)
+  litersFilled  Float
+  costINR       Float
+  stationName   String
+  odometerKm    Float
+  isAnomaly     Boolean      @default(false)
+  timestamp     DateTime     @default(now())
+
+  @@map("fuel_logs")
+}
+
+model MaintenanceLog {
+  id            String       @id @default(uuid())
+  vehicleId     String
+  vehicle       FleetVehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  issueSummary  String
+  workType      String       // ENGINE, TYRES, BRAKES, OIL_CHANGE, BODY
+  costINR       Float
+  status        String       @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED
+  mechanicNotes String?
+  scheduledDate DateTime
+  completedDate DateTime?
+  createdAt     DateTime     @default(now())
+
+  @@map("maintenance_logs")
+}
+
+model GeofenceZone {
+  id          String   @id @default(uuid())
+  name        String
+  type        String   // DEPOT, PORT, TOLL_PLAZA, WAREHOUSE
+  coordinates String   // GeoJSON or JSON string format
+  radiusMeters Float   @default(500.0)
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+
+  @@map("geofence_zones")
+}
+
+// --------------------------------------------------------
+// 4. TELEMETRY LEDGER & KNOWLEDGE GRAPH (EXISTING & EXPANDED)
+// --------------------------------------------------------
+
 model Event {
   id        String   @id
   timestamp DateTime
   type      String
   desc      String
   source    String
+
+  @@map("events")
 }
 
 model Entity {
@@ -26,11 +235,6 @@ model Entity {
   relations   String   // JSON array string
   riskScore   Float
   performance Float
-}
 
-model User {
-  id       String @id @default(uuid())
-  email    String @unique
-  password String
-  role     String @default("USER")
+  @@map("entities")
 }

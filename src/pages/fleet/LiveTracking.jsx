@@ -1,288 +1,100 @@
 /* eslint-disable */
 // ============================================================
-// GatiFleet — Futuristic Transportation Intelligence Command Center (2035 Digital Twin)
-// India's Logistics Network Operating System (Samsara-Grade Command Tower)
+// GatiFleet — Enterprise Command Center (Unified Control Tower UI)
+// Pixel-Perfect Implementation matching Enterprise Telematics Spec
 // ============================================================
 
-import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ChevronLeft, ChevronRight,
-  Truck, Search, MapPin, Navigation, Phone, ShieldAlert,
-  Compass, Maximize2, Minimize2, ZoomIn, ZoomOut, RotateCcw,
-  Layers, Bell, AlertTriangle, Play, Pause, RefreshCw, X,
-  Activity, PauseCircle, Wrench, WifiOff, Fuel, Clock, Gauge, ArrowRight,
-  Sparkles, Terminal, Shield, Lock, Unlock, Thermometer, Weight, Zap, Volume2,
-  FileText, CheckCircle, BarChart3, Database, Cpu, User, Share2, HelpCircle, Send, Award
+  Play, Pause, AlertTriangle, ShieldAlert, Radio, Clock, CheckCircle2,
+  PhoneCall, Truck, MapPin, X, Search, Share2, Layers, ZoomIn, ZoomOut,
+  Gauge, Thermometer, Disc, FileText, CheckCircle, IndianRupee, Settings, User,
+  ChevronDown, ArrowUpRight, Copy, Check, Sparkles, RefreshCw
 } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { generateTrucks, generateDrivers, generateShipments, CITIES } from '../../data/mockData';
-
-// ---- Module-level static data enrichment ----
-const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-
-const ALL_TRUCKS = generateTrucks(50).map((t, idx) => {
-  const coolantTemp = t.healthScore < 70 ? 118 : Math.floor(Math.random() * (95 - 80 + 1)) + 80;
-  const tirePressure = t.healthScore < 70 ? 82 : Math.floor(Math.random() * (135 - 110 + 1)) + 110;
-  const brakeWear = t.healthScore < 70 ? 84 : Math.floor(Math.random() * (55 - 20 + 1)) + 20;
-  const axleVibration = t.healthScore < 70 ? 'Critical' : 'Normal';
-  const refrigTemp = Math.floor(Math.random() * (8 - (-4) + 1)) - 4; // Cold chain temp
-  const cargoWeight = Math.floor(Math.random() * (24 - 12 + 1)) + 12; // Tonnes
-  const doorLocked = true;
-
-  // Add state coordinate routes
-  const routePoints = [
-    [t.lat, t.lng],
-    [t.lat + (Math.random() - 0.5) * 4, t.lng + (Math.random() - 0.5) * 4]
-  ];
-
-  return {
-    ...t,
-    coolantTemp,
-    tirePressure,
-    brakeWear,
-    axleVibration,
-    refrigTemp,
-    cargoWeight,
-    doorLocked,
-    routePoints,
-    rerouted: false
-  };
-});
-
-const ALL_DRIVERS = generateDrivers(30);
-const ALL_SHIPMENTS = generateShipments(30).map((s, idx) => {
-  const progress = rand(15, 85);
-  const etaConfidence = rand(65, 99);
-  const milestones = [
-    { label: 'Booked', date: 'June 21, 10:14', done: true },
-    { label: 'Loaded', date: 'June 21, 14:32', done: true },
-    { label: 'Dispatched', date: 'June 22, 08:00', done: true },
-    { label: 'Checkpoint (Toll)', date: 'June 23, 11:45', done: progress > 60 },
-    { label: 'Delivered (ETA)', date: 'June 24, 18:30 (Predicted)', done: false }
-  ];
-  return {
-    ...s,
-    progress,
-    etaConfidence,
-    milestones
-  };
-});
-
-// ---- CORRIDOR DATA ----
-const CORRIDORS = [
-  { id: 'c1', name: 'Western Corridor (Delhi → Mumbai)', coords: [[28.6139, 77.2090], [23.5, 73.5], [19.0760, 72.8777]], capacity: '82%', congestion: 'Moderate', profitability: '₹14.2L/day', reliability: '94.2%', speed: '72 km/h' },
-  { id: 'c2', name: 'Southern Corridor (Mumbai → Chennai)', coords: [[19.0760, 72.8777], [15.5, 77.5], [13.0827, 80.2707]], capacity: '64%', congestion: 'Low', profitability: '₹11.8L/day', reliability: '96.8%', speed: '78 km/h' },
-  { id: 'c3', name: 'Eastern Corridor (Kolkata → Guwahati)', coords: [[22.5726, 88.3639], [25.0, 89.0], [26.1445, 91.7362]], capacity: '91%', congestion: 'High (Siliguri Bottleneck)', profitability: '₹9.4L/day', reliability: '82.5%', speed: '48 km/h' }
-];
-
-// ---- REGIONAL SENSORS AND LOGISTICS TARGETS ----
-const REGIONS = [
-  { name: 'Western India', lat: 21.0, lng: 73.5, fleetCount: 148230, utilization: 92.1, riskScore: 12, cashPos: '₹42.2Cr', activeSOS: 1 },
-  { name: 'Northern India', lat: 29.5, lng: 76.0, fleetCount: 136420, utilization: 88.6, riskScore: 18, cashPos: '₹36.8Cr', activeSOS: 0 },
-  { name: 'Southern India', lat: 12.5, lng: 78.5, fleetCount: 124890, utilization: 86.3, riskScore: 9, cashPos: '₹32.4Cr', activeSOS: 0 },
-  { name: 'Eastern India', lat: 23.5, lng: 86.0, fleetCount: 78560, utilization: 81.2, riskScore: 32, cashPos: '₹19.8Cr', activeSOS: 2 },
-  { name: 'Central India', lat: 22.0, lng: 79.0, fleetCount: 62340, utilization: 84.7, riskScore: 15, cashPos: '₹15.6Cr', activeSOS: 0 },
-  { name: 'North-East India', lat: 26.0, lng: 92.5, fleetCount: 18240, utilization: 72.4, riskScore: 45, cashPos: '₹4.2Cr', activeSOS: 1 }
-];
-
-// ---- Status configurations ----
-const STATUS_CONFIG = {
-  active: { label: 'Active', color: '#38CE3C', bg: 'rgba(56, 206, 60, 0.12)', icon: Activity },
-  idle: { label: 'Idle', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.12)', icon: PauseCircle },
-  maintenance: { label: 'Maintenance', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.12)', icon: Wrench },
-  offline: { label: 'Offline', color: '#64748b', bg: 'rgba(100, 116, 139, 0.12)', icon: WifiOff },
-};
-
-// ---- Get curved route coordinate tracer ----
-const getCurvedPath = (fromLatLng, toLatLng) => {
-  const lat1 = fromLatLng[0];
-  const lng1 = fromLatLng[1];
-  const lat2 = toLatLng[0];
-  const lng2 = toLatLng[1];
-  const midLat = (lat1 + lat2) / 2 + (lng2 - lng1) * 0.15;
-  const midLng = (lng1 + lng2) / 2 - (lat2 - lat1) * 0.15;
-  return [fromLatLng, [midLat, midLng], toLatLng];
-};
 
 export default function LiveTracking() {
-  const [activeView, setActiveView] = useState('nation'); // nation | regional | fleet | shipment | driver | decision | executive
+  // Top Clock & Status
+  const [timeString, setTimeString] = useState('14:45:12');
+  const [currentDate] = useState('Nov 12, 2023');
 
-  // Resizable & Collapsible Sidebar State
-  const [sidebarWidth, setSidebarWidth] = useState(380);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const isResizingRef = useRef(false);
+  // Playback Controls State
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [playbackProgress, setPlaybackProgress] = useState(65);
 
-  const startResizing = useCallback((e) => {
-    e.preventDefault();
-    isResizingRef.current = true;
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
+  // Control Tower SOS Alert Overlay State
+  const [sosDismissed, setSosDismissed] = useState(false);
 
-    const handleMouseMove = (moveEvent) => {
-      if (!isResizingRef.current) return;
-      const newWidth = moveEvent.clientX;
-      if (newWidth > 240 && newWidth < 600) {
-        setSidebarWidth(newWidth);
-      }
-    };
+  // Consignee Link Copy State
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [sharedUrl, setSharedUrl] = useState('https://danis.com/sharedftaltA9842');
 
-    const handleMouseUp = () => {
-      isResizingRef.current = false;
-      document.body.style.cursor = 'default';
-      document.body.style.userSelect = 'auto';
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
+  // Map Leaflet Ref
+  const mapRef = useRef(null);
+  const leafletMap = useRef(null);
 
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
+  // Live clock tick
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date();
+      setTimeString(now.toLocaleTimeString('en-US', { hour12: false }));
+    }, 1000);
+    return () => clearInterval(timer);
   }, []);
 
-  const [trucks, setTrucks] = useState(ALL_TRUCKS);
-  const [drivers, setDrivers] = useState(ALL_DRIVERS);
-  const [shipments, setShipments] = useState(ALL_SHIPMENTS);
+  // Initialize Map
+  useEffect(() => {
+    if (!mapRef.current || leafletMap.current) return;
 
-  const [selectedTruck, setSelectedTruck] = useState(ALL_TRUCKS[0]);
-  const [selectedDriver, setSelectedDriver] = useState(ALL_DRIVERS[0]);
-  const [selectedShipment, setSelectedShipment] = useState(ALL_SHIPMENTS[0]);
-  const [selectedSubsystem, setSelectedSubsystem] = useState('engine'); // engine | tyre | cargo | cabin
+    // Dark Satellite / Cyber Map Tiles
+    const map = L.map(mapRef.current, {
+      center: [22.5937, 78.9629], // Center India
+      zoom: 5,
+      zoomControl: false,
+      attributionControl: false
+    });
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [actionAlert, setActionAlert] = useState(null);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19,
+      subdomains: 'abcd'
+    }).addTo(map);
 
-  // Command modes: reduce_cost | maximize_eta | minimize_risk
-  const [commandMode, setCommandMode] = useState('maximize_eta');
+    leafletMap.current = map;
 
-  // Layer switches
-  const [mapLayers, setMapLayers] = useState({
-    demand: false,
-    density: true,
-    risk: false,
-    weather: true,
-    traffic: true,
-    fuel: false
-  });
-
-  // Time Machine States
-  const [timeSliderVal, setTimeSliderVal] = useState(0); // 0 = Live, 1 = +1h, 6 = +6h, 24 = +24h
-  const [isTimeMachineActive, setIsTimeMachineActive] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  // AI Decision States
-  const [autonomySlider, setAutonomySlider] = useState(25); // percentage
-  const [savingsCounter, setSavingsCounter] = useState(4200000); // ₹42 Lakhs initial
-  const [approvedRecommendations, setApprovedRecommendations] = useState([]);
-  const [terminalLogs, setTerminalLogs] = useState([
-    'Initializing edge cognition pipeline...',
-    'Sub-network telemetry synchronized.',
-    'Autonomy status: Sentinel Mode (Active approvals required).'
-  ]);
-
-  // Executive AI Copilot chat state
-  const [copilotOpen, setCopilotOpen] = useState(false);
-  const [copilotInput, setCopilotInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [copilotMsgs, setCopilotMsgs] = useState([
-    { sender: 'copilot', text: "Welcome to GatiFleet Command Tower. I am your Executive Copilot. What logistics decisions should be optimized today?" }
-  ]);
-
-  // SOS States
-  const [activeSosTruckId, setActiveSosTruckId] = useState(null);
-  const [sosInterventions, setSosInterventions] = useState([]);
-
-  // Telemetry simulation rates
-  const [telemetryPingRate, setTelemetryPingRate] = useState('auto');
-  const [lastPingTime, setLastPingTime] = useState('Just now');
-  const [mouseCoords, setMouseCoords] = useState({ lat: 21.7679, lng: 78.8718 });
-
-  // WebGL / Deck.gl High-Density Simulation States
-  const [webglEnabled, setWebglEnabled] = useState(false);
-  const webglCanvasRef = useRef(null);
-  const [fps, setFps] = useState(60);
-  const animationFrameId = useRef(null);
-  const webglParticles = useRef([]);
-
-  const initWebglParticles = () => {
-    if (webglParticles.current.length > 0) return;
-    const list = [];
+    // Defined Highways / Route Polylines (Green, Yellow, Red)
     const routes = [
-      { from: [28.6139, 77.2090], to: [19.0760, 72.8777] }, // Delhi-Mumbai
-      { from: [19.0760, 72.8777], to: [13.0827, 80.2707] }, // Mumbai-Chennai
-      { from: [22.5726, 88.3639], to: [26.1445, 91.7362] }, // Kolkata-Guwahati
-      { from: [28.6139, 77.2090], to: [22.5726, 88.3639] }, // Delhi-Kolkata
-      { from: [13.0827, 80.2707], to: [17.3850, 78.4867] }, // Chennai-Hyderabad
+      { points: [[19.0760, 72.8777], [20.0, 73.5], [22.7196, 75.8577], [26.9124, 75.7873], [28.7041, 77.1025]], color: '#10b981', weight: 4 }, // NH48 Green
+      { points: [[22.5726, 88.3639], [21.1458, 79.0882], [19.0760, 72.8777]], color: '#f59e0b', weight: 4 }, // Central Yellow
+      { points: [[13.0827, 80.2707], [17.3850, 78.4867], [21.1458, 79.0882], [28.7041, 77.1025]], color: '#ef4444', weight: 4 }, // North-South Red
+      { points: [[26.9124, 75.7873], [23.0225, 72.5714], [19.0760, 72.8777]], color: '#10b981', weight: 4 } // Western Green
     ];
 
-    for (let i = 0; i < 10000; i++) {
-      const route = routes[i % routes.length];
-      const progress = Math.random();
-      const speed = 0.0003 + Math.random() * 0.0006;
-      const deviation = (Math.random() - 0.5) * 0.25;
-      list.push({
-        from: route.from,
-        to: route.to,
-        progress,
-        speed,
-        deviation,
-        color: i % 5 === 0 ? 'rgba(56, 206, 60, 0.85)' : i % 5 === 1 ? 'rgba(99, 102, 241, 0.85)' : i % 5 === 2 ? 'rgba(245, 158, 11, 0.85)' : i % 5 === 3 ? 'rgba(59, 130, 246, 0.85)' : 'rgba(236, 72, 153, 0.85)',
-        trail: []
-      });
-    }
-    webglParticles.current = list;
-  };
-
-  // Map refs
-  const mapContainerRef = useRef(null);
-  const leafletMap = useRef(null);
-  const mapMarkers = useRef({});
-  const corridorLines = useRef([]);
-  const trafficFlowDashes = useRef([]);
-  const ghostMarkerRef = useRef(null);
-  const routeLineRef = useRef(null);
-  const alternativeBypassRef = useRef(null);
-  const heatmapLayersRef = useRef([]);
-  const copilotEndRef = useRef(null);
-
-  // Toast helper
-  const showToast = (message, type = 'success') => {
-    setActionAlert({
-      title: type === 'success' ? 'Resolution Dispatched' : type === 'warning' ? 'Telemetry Alert' : 'Emergency Sos Override',
-      message,
-      type
+    routes.forEach(r => {
+      L.polyline(r.points, { color: r.color, weight: r.weight, opacity: 0.8, dashArray: r.color === '#ef4444' ? '6, 6' : undefined }).addTo(map);
     });
-    setTimeout(() => setActionAlert(null), 4000);
-  };
 
-  // Autonomy Log helper
-  const logToTerminal = (msg) => {
-    const time = new Date().toLocaleTimeString('en-US', { hour12: false });
-    setTerminalLogs(prev => [`[${time}] ${msg}`, ...prev.slice(0, 8)]);
-  };
+    // Custom Truck Pulsing Markers
+    const trucksData = [
+      { lat: 26.9124, lng: 75.7873, id: 'DL 1GC 6789 (TRK-314)', status: 'SOS', color: '#ef4444' },
+      { lat: 23.0225, lng: 72.5714, id: 'TRK-315', status: 'Moving', color: '#10b981' },
+      { lat: 19.0760, lng: 72.8777, id: 'TRK-108', status: 'Idle', color: '#f59e0b' },
+      { lat: 28.7041, lng: 77.1025, id: 'TRK-902', status: 'Moving', color: '#10b981' },
+      { lat: 21.1458, lng: 79.0882, id: 'TRK-440', status: 'Moving', color: '#38bdf8' }
+    ];
 
-  // Initialize raw Leaflet map
-  useEffect(() => {
-    if (mapContainerRef.current && !leafletMap.current) {
-      leafletMap.current = L.map(mapContainerRef.current, {
-        center: [21.7679, 78.8718],
-        zoom: 5,
-        zoomControl: false,
-        attributionControl: false
-      });
-
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 18
-      }).addTo(leafletMap.current);
-
-      leafletMap.current.on('mousemove', (e) => {
-        setMouseCoords({
-          lat: e.latlng.lat.toFixed(4),
-          lng: e.latlng.lng.toFixed(4)
-        });
-      });
-    }
+    trucksData.forEach(t => {
+      const customHtml = `
+        <div style="position:relative; display:flex; align-items:center; justify-center; cursor:pointer;">
+          <div style="position:absolute; width:24px; height:24px; border-radius:50%; background:${t.color}; opacity:0.4; animation: pulseRing 1.5s infinite;"></div>
+          <div style="width:14px; height:14px; border-radius:50%; background:${t.color}; border:2px solid #070b14; box-shadow:0 0 10px ${t.color};"></div>
+        </div>
+      `;
+      const icon = L.divIcon({ html: customHtml, className: 'custom-map-pin', iconSize: [24, 24] });
+      L.marker([t.lat, t.lng], { icon }).addTo(map).bindPopup(`<b style="color:#000;">${t.id}</b><br/>Status: ${t.status}`);
+    });
 
     return () => {
       if (leafletMap.current) {
@@ -292,1817 +104,808 @@ export default function LiveTracking() {
     };
   }, []);
 
-  // WebGL / Deck.gl high-performance rendering animation loop
-  useEffect(() => {
-    if (webglEnabled) {
-      initWebglParticles();
-      
-      let lastTime = performance.now();
-      let frameCount = 0;
-      
-      const animate = (time) => {
-        frameCount++;
-        if (time > lastTime + 1000) {
-          setFps(Math.round((frameCount * 1000) / (time - lastTime)));
-          frameCount = 0;
-          lastTime = time;
-        }
-
-        const canvas = webglCanvasRef.current;
-        if (canvas && leafletMap.current) {
-          const ctx = canvas.getContext('2d');
-          
-          // Sync size with parent bounds
-          if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
-            canvas.width = canvas.clientWidth;
-            canvas.height = canvas.clientHeight;
-          }
-          
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          
-          // 1. Calculate dynamic density grid in screen space on the fly
-          const gridRows = 16;
-          const gridCols = 16;
-          const cellWidth = canvas.width / gridCols;
-          const cellHeight = canvas.height / gridRows;
-          const densityGrid = Array.from({ length: gridRows }, () => new Float32Array(gridCols));
-
-          const mappedParticles = [];
-
-          // Draw 10,000 active particles and populate density grid
-          webglParticles.current.forEach(p => {
-            // Move progress along corridor
-            p.progress += p.speed;
-            if (p.progress > 1) {
-              p.progress = 0;
-              p.trail = [];
-            }
-            
-            const lat = p.from[0] + (p.to[0] - p.from[0]) * p.progress + p.deviation * Math.sin(p.progress * Math.PI);
-            const lng = p.from[1] + (p.to[1] - p.from[1]) * p.progress + p.deviation * Math.cos(p.progress * Math.PI);
-            
-            try {
-              const pt = leafletMap.current.latLngToContainerPoint([lat, lng]);
-              mappedParticles.push({ p, pt });
-              
-              if (pt.x >= 0 && pt.x < canvas.width && pt.y >= 0 && pt.y < canvas.height) {
-                const col = Math.floor(pt.x / cellWidth);
-                const row = Math.floor(pt.y / cellHeight);
-                densityGrid[row][col]++;
-              }
-            } catch (err) {
-              // Ignore boundary errors when panning
-            }
-          });
-
-          // 2. Draw dynamic density grids based on particle density
-          for (let r = 0; r < gridRows; r++) {
-            for (let c = 0; c < gridCols; c++) {
-              const count = densityGrid[r][c];
-              if (count > 5) { // Threshold
-                const opacity = Math.min(0.2, count / 150);
-                // Dynamic density color: Cyan/Teal representing high traffic/density
-                ctx.fillStyle = `rgba(6, 182, 212, ${opacity})`; 
-                ctx.fillRect(c * cellWidth + 1, r * cellHeight + 1, cellWidth - 2, cellHeight - 2);
-              }
-            }
-          }
-
-          // 3. Draw dynamic risk heatmaps pulsing on the fly (representing high-risk bottleneck regions)
-          const riskSpots = [
-            { lat: 26.1445, lng: 91.7362, radius: 120, label: 'Siliguri Bottleneck' }, // East
-            { lat: 19.0760, lng: 72.8777, radius: 180, label: 'JNPT Backlog' } // West
-          ];
-
-          riskSpots.forEach(spot => {
-            try {
-              const pt = leafletMap.current.latLngToContainerPoint([spot.lat, spot.lng]);
-              if (pt.x >= -200 && pt.x < canvas.width + 200 && pt.y >= -200 && pt.y < canvas.height + 200) {
-                const grad = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, spot.radius);
-                const alpha = 0.08 + Math.sin(performance.now() * 0.003) * 0.03;
-                grad.addColorStop(0, `rgba(255, 77, 107, ${alpha})`);
-                grad.addColorStop(0.5, `rgba(255, 77, 107, ${alpha * 0.4})`);
-                grad.addColorStop(1, 'rgba(255, 77, 107, 0)');
-                ctx.fillStyle = grad;
-                ctx.beginPath();
-                ctx.arc(pt.x, pt.y, spot.radius, 0, 2 * Math.PI);
-                ctx.fill();
-              }
-            } catch(e) {}
-          });
-
-          // 4. Draw trails and particles
-          mappedParticles.forEach(({ p, pt }) => {
-            // Push to path trail (TripsLayer simulation)
-            p.trail.push({ x: pt.x, y: pt.y });
-            if (p.trail.length > 6) p.trail.shift();
-            
-            if (p.trail.length > 1) {
-              ctx.beginPath();
-              ctx.moveTo(p.trail[0].x, p.trail[0].y);
-              for (let j = 1; j < p.trail.length; j++) {
-                ctx.lineTo(p.trail[j].x, p.trail[j].y);
-              }
-              ctx.strokeStyle = p.color.replace('0.85', '0.12');
-              ctx.lineWidth = 1;
-              ctx.stroke();
-            }
-            
-            // Draw vehicle particle dot
-            ctx.beginPath();
-            ctx.arc(pt.x, pt.y, 1.8, 0, 2 * Math.PI);
-            ctx.fillStyle = p.color;
-            ctx.fill();
-          });
-        }
-        
-        animationFrameId.current = requestAnimationFrame(animate);
-      };
-      
-      animationFrameId.current = requestAnimationFrame(animate);
-    } else {
-      if (animationFrameId.current) {
-        cancelAnimationFrame(animationFrameId.current);
-        animationFrameId.current = null;
-      }
-    }
-    
-    return () => {
-      if (animationFrameId.current) {
-        cancelAnimationFrame(animationFrameId.current);
-      }
-    };
-  }, [webglEnabled]);
-
-  // Time Machine Position Shift interpolator
-  const getPlaybackPosition = (truck, hours) => {
-    const originCity = CITIES.find(c => c.name === truck.origin) || CITIES[0];
-    const destCity = CITIES.find(c => c.name === truck.destination) || CITIES[1];
-    
-    // Shift coordinate towards destination based on hours (e.g. 24h is complete arrival)
-    const ratio = Math.min(1, hours / 24);
-    const lat = originCity.lat + (destCity.lat - originCity.lat) * ratio;
-    const lng = originCity.lng + (destCity.lng - originCity.lng) * ratio;
-
-    return { lat, lng };
-  };
-
-  // Render Map Overlays statefully based on Active View, Map Layers, & Time Machine
-  useEffect(() => {
-    if (!leafletMap.current) return;
-
-    // Clear old layers
-    corridorLines.current.forEach(l => l.remove());
-    trafficFlowDashes.current.forEach(l => l.remove());
-    heatmapLayersRef.current.forEach(l => l.remove());
-    if (routeLineRef.current) routeLineRef.current.remove();
-    if (alternativeBypassRef.current) alternativeBypassRef.current.remove();
-    if (ghostMarkerRef.current) ghostMarkerRef.current.remove();
-
-    corridorLines.current = [];
-    trafficFlowDashes.current = [];
-    heatmapLayersRef.current = [];
-    routeLineRef.current = null;
-    alternativeBypassRef.current = null;
-    ghostMarkerRef.current = null;
-
-    if (webglEnabled) return;
-
-    // 1. Draw Freight Corridors (Nation Control)
-    if (activeView === 'nation') {
-      CORRIDORS.forEach(corridor => {
-        const line = L.polyline(corridor.coords, {
-          color: '#6366f1',
-          weight: 4,
-          opacity: 0.75
-        }).addTo(leafletMap.current);
-        
-        line.bindTooltip(`<b>${corridor.name}</b><br/>Capacity: ${corridor.capacity}<br/>Profitability: ${corridor.profitability}`, { sticky: true });
-        corridorLines.current.push(line);
-
-        // Animated neon flow particles
-        if (mapLayers.traffic) {
-          const flow = L.polyline(corridor.coords, {
-            color: corridor.congestion.includes('High') ? '#FF4D6B' : '#38CE3C',
-            weight: 3.5,
-            opacity: 0.9,
-            dashArray: '8, 25',
-            className: 'leaflet-traffic-flow-dash'
-          }).addTo(leafletMap.current);
-          trafficFlowDashes.current.push(flow);
-        }
-      });
-    }
-
-    // 2. Draw Heatmaps (Demand, Density, Risk)
-    if (mapLayers.demand) {
-      CITIES.forEach(city => {
-        const c = L.circle([city.lat, city.lng], { radius: 100000, color: '#f59e0b', fillColor: '#f59e0b', fillOpacity: 0.08, weight: 1 }).addTo(leafletMap.current);
-        heatmapLayersRef.current.push(c);
-      });
-    }
-    if (mapLayers.density) {
-      CITIES.filter((_, i) => i % 3 === 0).forEach(city => {
-        const c = L.circle([city.lat, city.lng], { radius: 140000, color: '#06b6d4', fillColor: '#06b6d4', fillOpacity: 0.06, weight: 1 }).addTo(leafletMap.current);
-        heatmapLayersRef.current.push(c);
-      });
-    }
-    if (mapLayers.risk) {
-      CITIES.filter((_, i) => i % 4 === 1).forEach(city => {
-        const c = L.circle([city.lat, city.lng], { radius: 80000, color: '#FF4D6B', fillColor: '#FF4D6B', fillOpacity: 0.12, weight: 1, className: 'leaflet-risk-halo' }).addTo(leafletMap.current);
-        heatmapLayersRef.current.push(c);
-      });
-    }
-    if (mapLayers.weather) {
-      const storm1 = L.circle([24.2, 85.1], { radius: 180000, color: '#6366f1', fillOpacity: 0.05, weight: 1 }).addTo(leafletMap.current);
-      const storm2 = L.circle([14.8, 77.2], { radius: 130000, color: '#6366f1', fillOpacity: 0.05, weight: 1 }).addTo(leafletMap.current);
-      heatmapLayersRef.current.push(storm1, storm2);
-    }
-    if (mapLayers.fuel) {
-      CITIES.forEach((city, i) => {
-        const color = i % 2 === 0 ? '#38CE3C' : '#FF4D6B';
-        const c = L.circle([city.lat, city.lng], { radius: 40000, color, fillColor: color, fillOpacity: 0.1, weight: 1 }).addTo(leafletMap.current);
-        heatmapLayersRef.current.push(c);
-      });
-    }
-
-    // 3. Draw Selected Truck Route (Fleet/Shipment View)
-    if ((activeView === 'fleet' || activeView === 'shipment') && selectedTruck) {
-      const originCity = CITIES.find(c => c.name === selectedTruck.origin) || CITIES[0];
-      const destCity = CITIES.find(c => c.name === selectedTruck.destination) || CITIES[1];
-      const start = [originCity.lat, originCity.lng];
-      const end = [destCity.lat, destCity.lng];
-      const routeCoords = getCurvedPath(start, end);
-
-      routeLineRef.current = L.polyline(routeCoords, {
-        color: selectedTruck.healthScore < 70 ? '#FF4D6B' : '#38CE3C',
-        weight: 3.5,
-        opacity: 0.85
-      }).addTo(leafletMap.current);
-
-      // Bypass route overlay
-      if (!selectedTruck.rerouted) {
-        alternativeBypassRef.current = L.polyline([selectedTruck.lat, selectedTruck.lng, destCity.lat + 0.5, destCity.lng - 0.5, destCity.lat], {
-          color: '#f59e0b',
-          weight: 2.5,
-          opacity: 0.6,
-          dashArray: '6, 6'
-        }).addTo(leafletMap.current);
-      }
-
-      // Predictive Ghost Vehicle marker (2 hours ahead)
-      const ghostPos = getPlaybackPosition(selectedTruck, timeSliderVal + 2);
-      const ghostIcon = L.divIcon({
-        html: `
-          <div style="position: relative; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">
-            <div style="position: absolute; width: 18px; height: 18px; border-radius: 50%; background: #3b82f6; opacity: 0.35; animation: mapPulse 2s infinite;"></div>
-            <div style="width: 8px; height: 8px; border-radius: 50%; background: #3b82f6; border: 1.5px solid #fff; box-shadow: 0 0 8px #3b82f6;"></div>
-          </div>
-        `,
-        className: 'ghost-fleet-marker',
-        iconSize: [30, 30],
-        iconAnchor: [15, 15]
-      });
-
-      ghostMarkerRef.current = L.marker([ghostPos.lat, ghostPos.lng], { icon: ghostIcon })
-        .addTo(leafletMap.current)
-        .bindTooltip("Ghost Twin (+2h Prediction)", { permanent: false, direction: 'top' });
-    }
-
-  }, [activeView, mapLayers, selectedTruck, timeSliderVal, webglEnabled]);
-
-  // Update vehicle markers geographically
-  useEffect(() => {
-    if (!leafletMap.current) return;
-
-    if (webglEnabled) {
-      Object.keys(mapMarkers.current).forEach(id => {
-        mapMarkers.current[id].remove();
-      });
-      mapMarkers.current = {};
-      return;
-    }
-
-    trucks.forEach(truck => {
-      let lat = truck.lat;
-      let lng = truck.lng;
-
-      // Adjust coordinate trace line dynamically if time machine slider moves
-      if (isTimeMachineActive) {
-        const pos = getPlaybackPosition(truck, timeSliderVal);
-        lat = pos.lat;
-        lng = pos.lng;
-      }
-
-      const isSelected = selectedTruck?.id === truck.id;
-      const isSos = truck.id === activeSosTruckId;
-      const cfg = STATUS_CONFIG[truck.status] || STATUS_CONFIG.active;
-      const color = isSos ? '#FF4D6B' : cfg.color;
-
-      const markerIcon = L.divIcon({
-        html: `
-          <div style="position: relative; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">
-            ${isSos ? `
-              <div style="position: absolute; width: 44px; height: 44px; border-radius: 50%; background: #FF4D6B; opacity: 0.3; animation: mapSosRadar 1.5s infinite;"></div>
-            ` : isSelected ? `
-              <div style="position: absolute; width: 34px; height: 34px; border-radius: 50%; background: ${color}; opacity: 0.25; animation: mapPulse 2s infinite;"></div>
-            ` : ''}
-            <div style="width: ${isSelected ? '12px' : '9px'}; height: ${isSelected ? '12px' : '9px'}; border-radius: 50%; background: ${color}; border: 1.5px solid #fff; box-shadow: 0 0 10px ${color}; transition: all 0.2s;"></div>
-          </div>
-        `,
-        className: 'custom-fleet-marker',
-        iconSize: [30, 30],
-        iconAnchor: [15, 15]
-      });
-
-      if (mapMarkers.current[truck.id]) {
-        mapMarkers.current[truck.id].setLatLng([lat, lng]);
-        mapMarkers.current[truck.id].setIcon(markerIcon);
-      } else {
-        const m = L.marker([lat, lng], { icon: markerIcon })
-          .addTo(leafletMap.current)
-          .on('click', () => {
-            setSelectedTruck(truck);
-            const matchingDriver = drivers.find(d => d.assignedTruck === truck.id);
-            if (matchingDriver) setSelectedDriver(matchingDriver);
-          });
-        mapMarkers.current[truck.id] = m;
-      }
-    });
-
-  }, [trucks, timeSliderVal, isTimeMachineActive, selectedTruck, activeSosTruckId, drivers, webglEnabled]);
-
-  // Center on selected truck
-  useEffect(() => {
-    if (selectedTruck && leafletMap.current) {
-      let lat = selectedTruck.lat;
-      let lng = selectedTruck.lng;
-      if (isTimeMachineActive) {
-        const pos = getPlaybackPosition(selectedTruck, timeSliderVal);
-        lat = pos.lat;
-        lng = pos.lng;
-      }
-      leafletMap.current.setView([lat, lng], 6, { animate: true });
-    }
-  }, [selectedTruck, isTimeMachineActive, timeSliderVal]);
-
-  // Time Machine Playback deck interval runner
+  // Playback timer interval
   useEffect(() => {
     let interval = null;
-    if (isPlaying && isTimeMachineActive) {
+    if (isPlaying) {
       interval = setInterval(() => {
-        setTimeSliderVal(v => {
-          const next = v + 1;
-          return next > 24 ? 0 : next;
-        });
-      }, 1000);
+        setPlaybackProgress(prev => (prev >= 100 ? 0 : prev + 1 * playbackSpeed));
+      }, 250);
     }
     return () => clearInterval(interval);
-  }, [isPlaying, isTimeMachineActive]);
+  }, [isPlaying, playbackSpeed]);
 
-  // Auto-scroll to bottom of local copilot chat
-  useEffect(() => {
-    if (copilotOpen) {
-      copilotEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [copilotMsgs, isTyping, copilotOpen]);
-
-  // AI Decision approvals triggers
-  const handleApproveRec = (recId, costChange, msg) => {
-    if (approvedRecommendations.includes(recId)) return;
-    setApprovedRecommendations(prev => [...prev, recId]);
-    setSavingsCounter(v => v + costChange);
-    logToTerminal(`Approved recommendation: ${recId}. Dispatching operational scripts...`);
-    showToast(msg, 'success');
-  };
-
-  // Executive AI Copilot handler
-  const handleCopilotPrompt = (query) => {
-    const userMsg = { sender: 'user', text: query };
-    setCopilotMsgs(prev => [...prev, userMsg]);
-    setIsTyping(true);
-
-    setTimeout(() => {
-      let replyText = '';
-      let actionView = null;
-      if (query.toLowerCase().includes('profitability')) {
-        replyText = "Profitability across Western India has dipped 4.2% due to severe port backlog build-ups at JNPT, Mumbai. Current delay is +4.5h per en-route carrier. I suggest shifting 20% cargo loads to container rail routes immediately.";
-        actionView = 'decision';
-      } else if (query.toLowerCase().includes('churn')) {
-        replyText = "Two enterprise shippers (Reliance Supply Chain and Safexpress bids) are identified as high churn risk due to reliability drop metrics on Kolkata-Guwahati line. Active fleet rerouting SH-14 recommended.";
-        actionView = 'decision';
-      } else if (query.toLowerCase().includes('delay')) {
-        replyText = "Yesterday's delay spike was driven by heavy monsoon rainfall contours near Bengal corridors. Dynamic alternate route bypass SH-14 has successfully reduced delay by 2h on 18 en-route vehicles.";
-        actionView = 'fleet';
-      } else {
-        replyText = "Daily executive telemetry is nominal. Current daily revenue stands at ₹4.28Cr (+8.3%), fleet utilization is 87.4%, and average safety twin scores are 94.2%. Click optimize below to maximize fuel margins.";
-        actionView = 'decision';
-      }
-
-      setCopilotMsgs(prev => [...prev, { sender: 'copilot', text: replyText, view: actionView }]);
-      setIsTyping(false);
-    }, 1200);
-  };
-
-  // SVG Radar Coordinates calculator
-  const getRadarPoints = (driver) => {
-    const metrics = [
-      driver.safetyScore,
-      driver.attendance,
-      Math.floor(driver.rating * 20),
-      100 - (driver.violations * 15),
-      Math.min(100, (driver.experience * 4) + 40),
-      92
-    ];
-    const center = 80;
-    const rMax = 55;
-    const points = metrics.map((val, idx) => {
-      const angle = (idx * 60 - 90) * Math.PI / 180;
-      const r = (val / 100) * rMax;
-      const x = center + r * Math.cos(angle);
-      const y = center + r * Math.sin(angle);
-      return `${x},${y}`;
-    });
-    return points.join(' ');
-  };
-
-  const getRadarPointsArray = (driver) => {
-    const metrics = [
-      driver.safetyScore,
-      driver.attendance,
-      Math.floor(driver.rating * 20),
-      100 - (driver.violations * 15),
-      Math.min(100, (driver.experience * 4) + 40),
-      92
-    ];
-    const center = 80;
-    const rMax = 55;
-    return metrics.map((val, idx) => {
-      const angle = (idx * 60 - 90) * Math.PI / 180;
-      const r = (val / 100) * rMax;
-      const x = center + r * Math.cos(angle);
-      const y = center + r * Math.sin(angle);
-      return { x, y };
-    });
-  };
-
-  // Subsystem click sensor handlers
-  const handleSubsystemClick = (system) => {
-    setSelectedSubsystem(system);
-    logToTerminal(`Interrogating Digital Twin subsystem telemetry: [${system.toUpperCase()}]`);
-  };
-
-  // Dispatch Action controllers
-  const toggleDoorLock = (id) => {
-    setTrucks(prev => prev.map(t => t.id === id ? { ...t, doorLocked: !t.doorLocked } : t));
-    setSelectedTruck(prev => prev && prev.id === id ? { ...prev, doorLocked: !prev.doorLocked } : prev);
-    logToTerminal(` cabin lock actuators toggled on vehicle ${id}`);
-    showToast(`Cabin Door Actuator command: ${selectedTruck.doorLocked ? 'UNLOCKED' : 'LOCKED'}`, 'success');
-  };
-
-  const adjustReeferTemp = (id, delta) => {
-    setTrucks(prev => prev.map(t => t.id === id ? { ...t, refrigTemp: Math.min(10, Math.max(-10, t.refrigTemp + delta)) } : t));
-    setSelectedTruck(prev => prev && prev.id === id ? { ...prev, refrigTemp: Math.min(10, Math.max(-10, prev.refrigTemp + delta)) } : prev);
-    showToast(`Refrigerated Cold Chain thermostat setpoint calibrated.`, 'success');
-  };
-
-  const executeReroute = (id) => {
-    setTrucks(prev => prev.map(t => t.id === id ? { ...t, rerouted: true, origin: `${t.origin} (Bypass)`, destination: `${t.destination} via SH-14`, speed: 84 } : t));
-    setSelectedTruck(prev => prev && prev.id === id ? { ...prev, rerouted: true, origin: `${prev.origin} (Bypass)`, destination: `${prev.destination} via SH-14`, speed: 84 } : prev);
-    logToTerminal(`Dynamic alternative SH-14 route bypass authorized for ${id}.`);
-    showToast("Route plan reassigned via green bypass corridor.", "success");
-  };
-
-  const triggerSos = (id) => {
-    setActiveSosTruckId(id);
-    showToast("SOS Alert Triggered. view flashes red border locator.", "warning");
-    logToTerminal(`⚠️ SOS EMERGENCY SIGNAL INTERCEPTED FROM VEHICLE ${id}.`);
-  };
-
-  const clearSos = () => {
-    setActiveSosTruckId(null);
-    logToTerminal(`SOS status cleared. Target twin restored to stable.`);
-    showToast("Emergency anomaly fully resolved.", "success");
+  const copyShareLink = () => {
+    navigator.clipboard?.writeText(sharedUrl);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
   };
 
   return (
-    <div style={{
-      display: 'flex',
-      height: 'calc(100vh - var(--topbar-height))',
-      background: '#070a13',
-      color: '#E0E0E0',
-      fontFamily: "'Inter', sans-serif",
-      position: 'relative',
-      overflow: 'hidden',
-      border: activeSosTruckId ? '2px solid #FF4D6B' : 'none',
-      animation: activeSosTruckId ? 'sosFlashBorder 1.5s infinite' : 'none'
-    }}>
-      {/* Dynamic Action Toast Notifications */}
-      <AnimatePresence>
-        {actionAlert && (
-          <motion.div
-            initial={{ opacity: 0, y: -24, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -12, scale: 0.95 }}
-            style={{
-              position: 'absolute',
-              top: '20px',
-              left: '340px',
-              zIndex: 9999,
-              padding: '12px 18px',
-              borderRadius: '8px',
-              background: 'rgba(10, 15, 30, 0.95)',
-              backdropFilter: 'blur(16px)',
-              border: `1px solid ${actionAlert.type === 'success' ? '#38CE3C' : '#FF4D6B'}`,
-              boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12
-            }}
-          >
-            {actionAlert.type === 'success' ? <CheckCircle size={16} color="#38CE3C" /> : <AlertTriangle size={16} color="#FF4D6B" />}
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 12, color: '#fff' }}>{actionAlert.title}</div>
-              <div style={{ fontSize: 10, color: '#B0B0B0', marginTop: 2 }}>{actionAlert.message}</div>
-            </div>
-            <button onClick={() => setActionAlert(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginLeft: 12 }}>
-              <X size={14} color="#64748b" />
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* LEFT SIDE PANEL (MORPHS PER ACTIVE VIEW) */}
-      <div style={{
-        width: sidebarCollapsed ? '0px' : `${sidebarWidth}px`,
-        background: '#0d1322',
-        borderRight: sidebarCollapsed ? 'none' : '1px solid rgba(255, 255, 255, 0.05)',
-        display: 'flex',
-        flexDirection: 'column',
-        zIndex: 20,
-        flexShrink: 0,
-        position: 'relative',
-        overflow: sidebarCollapsed ? 'hidden' : 'visible',
-        transition: isResizingRef.current ? 'none' : 'width 0.3s ease',
-      }}>
-        {/* Panel Header with Collapse Toggle */}
-        {!sidebarCollapsed && (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '10px 16px',
-            background: '#070a13',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-          }}>
-            <span style={{ fontSize: '11px', fontWeight: 800, color: '#94a3b8', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-              Command Sidebar
-            </span>
-            <button
-              onClick={() => setSidebarCollapsed(true)}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: '#64748b',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                padding: 2,
-              }}
-            >
-              <ChevronLeft size={16} />
-            </button>
+    <div style={styles.container}>
+      {/* Top Navbar Header */}
+      <header style={styles.header}>
+        <div style={styles.headerLeft}>
+          <div style={styles.logoBadge}>
+            <Truck size={18} color="white" />
           </div>
-        )}
-        {/* Navigation Selector Tabs */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: 2,
-          background: '#070a13',
-          padding: 4,
-          borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
-        }}>
-          <button onClick={() => setActiveView('nation')} style={viewTabBtnStyle(activeView === 'nation')}>Global</button>
-          <button onClick={() => setActiveView('regional')} style={viewTabBtnStyle(activeView === 'regional')}>Region</button>
-          <button onClick={() => setActiveView('fleet')} style={viewTabBtnStyle(activeView === 'fleet')}>Fleet</button>
-          <button onClick={() => setActiveView('shipment')} style={viewTabBtnStyle(activeView === 'shipment')}>Cargo</button>
-          <button onClick={() => setActiveView('driver')} style={viewTabBtnStyle(activeView === 'driver')}>Driver</button>
-          <button onClick={() => setActiveView('decision')} style={viewTabBtnStyle(activeView === 'decision')}>AI Ops</button>
-          <button onClick={() => setActiveView('executive')} style={viewTabBtnStyle(activeView === 'executive')}>Exec</button>
-          <button onClick={() => setCopilotOpen(c => !c)} style={{
-            ...viewTabBtnStyle(copilotOpen),
-            background: copilotOpen ? 'rgba(99, 102, 241, 0.15)' : '#0d1322',
-            color: copilotOpen ? '#818cf8' : '#64748b'
-          }}>AI Copilot</button>
+          <span style={styles.logoTitle}>GatiFleet</span>
         </div>
 
-        {/* View Specific Sidebar Panels */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
-          
-          {/* 1. NATION VIEW PANEL */}
-          {activeView === 'nation' && (
-            <>
-              <div style={panelHeaderStyle}>Nation Digital Twin</div>
-              <div style={kpiStripStyle}>
-                <div style={kpiCardStyle}>
-                  <div style={kpiLabelStyle}>Western Corridor Capacity</div>
-                  <div style={kpiValStyle}>82% <span style={{ fontSize: 9, color: '#f59e0b' }}>Stable</span></div>
-                </div>
-                <div style={kpiCardStyle}>
-                  <div style={kpiLabelStyle}>ETA Confidence Index</div>
-                  <div style={kpiValStyle}>94.2% <span style={{ fontSize: 9, color: '#38CE3C' }}>High</span></div>
-                </div>
+        <div style={styles.headerCenterPill}>
+          <span style={styles.liveDot} />
+          LIVE FLEET OVERVIEW: <strong style={{ color: '#34d399', marginLeft: 4 }}>114 VEHICLES ACTIVE</strong>
+        </div>
+
+        <div style={styles.headerRight}>
+          <div style={styles.statusPill}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px #10b981' }} />
+            Connected
+          </div>
+          <div style={styles.timeBadge}>{timeString}</div>
+          <div style={styles.userBadge}>
+            <User size={14} color="#818cf8" />
+            <span>User: <strong>Admin</strong></span>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Command Center Body Viewport */}
+      <div style={styles.viewport}>
+        {/* Center GIS Map Background */}
+        <div ref={mapRef} style={styles.mapCanvas} />
+
+        {/* Floating Map Legend (Bottom Right of Map) */}
+        <div style={styles.mapLegend}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'white', marginBottom: 6 }}>Routes</div>
+          <div style={styles.legendRow}><span style={{ ...styles.legendDot, background: '#10b981' }} /> Green</div>
+          <div style={styles.legendRow}><span style={{ ...styles.legendDot, background: '#f59e0b' }} /> Yellow</div>
+          <div style={styles.legendRow}><span style={{ ...styles.legendDot, background: '#ef4444' }} /> Red</div>
+        </div>
+
+        {/* Floating Map Zoom & Layer Tools (Top Right of Map) */}
+        <div style={styles.mapToolsGroup}>
+          <button style={styles.mapToolBtn} onClick={() => leafletMap.current?.zoomIn()} title="Zoom In"><ZoomIn size={16} /></button>
+          <button style={styles.mapToolBtn} onClick={() => leafletMap.current?.zoomOut()} title="Zoom Out"><ZoomOut size={16} /></button>
+          <button style={styles.mapToolBtn} title="Layer Toggle"><Layers size={16} /></button>
+          <button style={styles.mapToolBtn} title="Share Map View"><Share2 size={16} /></button>
+        </div>
+
+        {/* Top Left Overlay Card — CONTROL TOWER PANIC SOS */}
+        <AnimatePresence>
+          {!sosDismissed && (
+            <motion.div
+              style={styles.sosCard}
+              initial={{ opacity: 0, x: -30, scale: 0.95 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: -30, scale: 0.95 }}
+            >
+              <div style={styles.cardHeader}>
+                <span style={{ fontSize: 12, fontWeight: 800, color: '#f3f4f6', letterSpacing: '0.05em' }}>CONTROL TOWER</span>
+                <button onClick={() => setSosDismissed(true)} style={styles.closeBtn}><X size={14} /></button>
               </div>
 
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#818cf8', letterSpacing: '0.04em' }}>ACTIVE FREIGHT ROUTE CORRIDORS</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {CORRIDORS.map(c => (
-                  <div key={c.id} style={listItemStyle}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                      <span style={{ fontWeight: 700, color: '#fff', fontSize: 12 }}>{c.name}</span>
-                      <span style={{ fontSize: 10, color: '#38CE3C', fontWeight: 600 }}>{c.profitability}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#B0B0B0' }}>
-                      <span>Congestion: {c.congestion}</span>
-                      <span>Avg Speed: {c.speed}</span>
-                    </div>
-                  </div>
-                ))}
+              <div style={styles.sosAlertBox}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                  <AlertTriangle size={24} color="#ef4444" style={{ animation: 'bounce 1s infinite' }} />
+                  <span style={{ fontSize: 18, fontWeight: 900, color: '#ef4444', letterSpacing: '0.04em' }}>PANIC SOS ALERT!</span>
+                </div>
+                <div style={{ fontSize: 12, color: 'white', fontWeight: 700, marginBottom: 4 }}>
+                  URGENT: PANIC EVENT - DL 1GC 6789 - TRUCK 314
+                </div>
+                <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 2 }}>
+                  Location: NH 48 near Jaipur (26.91N, 75.78E)
+                </div>
+                <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 14 }}>
+                  Timestamp: 14:42:01
+                </div>
+
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button onClick={() => alert('Dispatching nearest GatiFleet patrol team to TRUCK 314 (Jaipur NH48)...')} style={styles.btnAcknowledge}>
+                    ACKNOWLEDGE & DISPATCH
+                  </button>
+                  <button onClick={() => alert('Connecting live vehicle dashcam video feed...')} style={styles.btnLiveFeed}>
+                    LIVE FEED
+                  </button>
+                </div>
               </div>
-            </>
+            </motion.div>
           )}
+        </AnimatePresence>
 
-          {/* 2. REGIONAL VIEW PANEL */}
-          {activeView === 'regional' && (
-            <>
-              <div style={panelHeaderStyle}>Regional Control Centers</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {REGIONS.map(r => (
-                  <div key={r.name} onClick={() => leafletMap.current?.setView([r.lat, r.lng], 6)} style={{ ...listItemStyle, cursor: 'pointer' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                      <span style={{ fontWeight: 700, color: '#fff', fontSize: 12 }}>{r.name}</span>
-                      <span style={{ fontSize: 10, color: '#FF4D6B', fontWeight: 600 }}>{r.activeSOS > 0 ? `🚨 ${r.activeSOS} Active SOS` : ''}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#B0B0B0' }}>
-                      <span>Fleet count: {r.fleetCount.toLocaleString()}</span>
-                      <span>Utilization: {r.utilization}%</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#B0B0B0', marginTop: 2 }}>
-                      <span>Asset Value: {r.cashPos}</span>
-                      <span style={{ color: r.riskScore > 30 ? '#FF4D6B' : '#38CE3C' }}>Risk score: {r.riskScore}</span>
-                    </div>
-                  </div>
-                ))}
+        {/* Right Dock Panel Stack (4 Widgets) */}
+        <aside style={styles.rightDock}>
+          {/* Widget 1: FASTag TOLL & e-WAY BILL */}
+          <div style={styles.widgetCard}>
+            <div style={styles.widgetHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <IndianRupee size={15} color="#34d399" />
+                <span style={styles.widgetTitle}>FASTag TOLL & e-WAY BILL</span>
               </div>
-            </>
-          )}
+              <span style={{ fontSize: 10, color: '#9ca3af' }}>•••</span>
+            </div>
+            <div style={{ fontSize: 10, color: '#6b7280', marginBottom: 8 }}>List of recent automated transactions</div>
 
-          {/* 3. FLEET VIEW PANEL */}
-          {activeView === 'fleet' && selectedTruck && (
-            <>
-              <div style={panelHeaderStyle}>Truck Telemetry Twin</div>
-              
-              {/* Selected Truck Selector */}
-              <div style={{ display: 'flex', gap: 6 }}>
-                <select
-                  value={selectedTruck.id}
-                  onChange={(e) => {
-                    const t = trucks.find(tr => tr.id === e.target.value);
-                    if (t) setSelectedTruck(t);
-                  }}
-                  style={{
-                    background: '#1a2332', border: '1px solid rgba(255,255,255,0.1)', color: '#fff',
-                    padding: '6px 12px', borderRadius: 4, width: '100%', fontSize: 12, outline: 'none'
-                  }}
-                >
-                  {trucks.slice(0, 15).map(t => (
-                    <option key={t.id} value={t.id}>{t.id} ({t.type})</option>
-                  ))}
-                </select>
+            <div style={styles.tableHeader}>
+              <span>ID</span>
+              <span>Amount</span>
+              <span>Status</span>
+              <span style={{ textAlign: 'right' }}>Timestamp</span>
+            </div>
+            <div style={styles.tableRow}>
+              <span style={{ color: '#818cf8', fontWeight: 700 }}>TRK-314</span>
+              <span>₹20.00</span>
+              <span style={styles.pillActive}>● Active</span>
+              <span style={styles.timeText}>14:42:27 AM</span>
+            </div>
+            <div style={styles.tableRow}>
+              <span style={{ color: '#818cf8', fontWeight: 700 }}>TRK-314</span>
+              <span>₹30.00</span>
+              <span style={styles.pillActive}>● Active</span>
+              <span style={styles.timeText}>14:42:27 AM</span>
+            </div>
+            <div style={styles.tableRow}>
+              <span style={{ color: '#818cf8', fontWeight: 700 }}>TRK-315</span>
+              <span>₹25.00</span>
+              <span style={styles.pillRone}>● Rone</span>
+              <span style={styles.timeText}>14:50:59 AM</span>
+            </div>
+          </div>
+
+          {/* Widget 2: REEFER TELEMETRY */}
+          <div style={styles.widgetCard}>
+            <div style={styles.widgetHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Thermometer size={15} color="#38bdf8" />
+                <span style={styles.widgetTitle}>REEFER TELEMETRY</span>
               </div>
-
-              {/* Truck twin stats card */}
-              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: 8, padding: 12 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <span style={{ fontWeight: 700, fontSize: 13, color: '#fff' }}>{selectedTruck.id}</span>
-                  <span style={{ fontSize: 11, color: '#38CE3C', fontWeight: 600 }}>Active en-route</span>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, fontSize: 11, color: '#B0B0B0' }}>
-                  <div>Speed: <span style={{ color: '#fff', fontWeight: 600 }}>{selectedTruck.speed} km/h</span></div>
-                  <div>Fuel Level: <span style={{ color: '#fff', fontWeight: 600 }}>{selectedTruck.fuelLevel}%</span></div>
-                  <div>Driver: <span style={{ color: '#fff', fontWeight: 600 }}>{selectedTruck.driver}</span></div>
-                  <div>Weight Load: <span style={{ color: '#fff', fontWeight: 600 }}>{selectedTruck.cargoWeight}t</span></div>
-                  <div>ETA: <span style={{ color: '#f59e0b', fontWeight: 600 }}>{selectedTruck.eta}</span></div>
-                  <div>Health: <span style={{ color: selectedTruck.healthScore > 75 ? '#38CE3C' : '#FF4D6B', fontWeight: 600 }}>{selectedTruck.healthScore}%</span></div>
-                </div>
-                
-                {/* Dispatch Controls */}
-                <div style={{ display: 'flex', gap: 6, marginTop: 12 }}>
-                  <button onClick={() => executeReroute(selectedTruck.id)} style={miniBtnStyle(false)}>Reroute Bypass</button>
-                  {activeSosTruckId === selectedTruck.id ? (
-                    <button onClick={clearSos} style={{ ...miniBtnStyle(true), background: '#38CE3C' }}>Clear SOS</button>
-                  ) : (
-                    <button onClick={() => triggerSos(selectedTruck.id)} style={miniBtnStyle(true)}>Trigger SOS</button>
-                  )}
-                </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#9ca3af', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: 6 }}>
+                <span>TRK-314</span>
+                <ChevronDown size={12} />
               </div>
+            </div>
 
-              {/* INTERACTIVE SVG TRUCK MODEL */}
-              <div style={{ marginTop: 10 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#818cf8', letterSpacing: '0.04em', marginBottom: 8 }}>DIGITAL TWIN HARDWARE DIAGNOSTICS</div>
-                
-                <div style={{ background: '#070a13', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 8, padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <svg width="300" height="90" viewBox="0 0 300 90" style={{ overflow: 'visible' }}>
-                    {/* Trailer Body */}
-                    <rect x="10" y="10" width="180" height="50" rx="3" fill="none" stroke={selectedSubsystem === 'cargo' ? '#818cf8' : '#334155'} strokeWidth="2.5" style={{ cursor: 'pointer' }} onClick={() => handleSubsystemClick('cargo')} />
-                    {/* Cabin Front */}
-                    <path d="M 200,60 L 200,20 L 240,20 L 260,40 L 260,60 Z" fill="none" stroke={selectedSubsystem === 'engine' ? '#38CE3C' : '#334155'} strokeWidth="2.5" style={{ cursor: 'pointer' }} onClick={() => handleSubsystemClick('engine')} />
-                    {/* Connector Hook */}
-                    <line x1="190" y1="52" x2="200" y2="52" stroke="#334155" strokeWidth="3" />
-                    
-                    {/* Wheels / Tyres */}
-                    <circle cx="45" cy="70" r="10" fill="none" stroke={selectedSubsystem === 'tyre' ? '#818cf8' : '#334155'} strokeWidth="3.5" style={{ cursor: 'pointer' }} onClick={() => handleSubsystemClick('tyre')} />
-                    <circle cx="85" cy="70" r="10" fill="none" stroke={selectedSubsystem === 'tyre' ? '#818cf8' : '#334155'} strokeWidth="3.5" style={{ cursor: 'pointer' }} onClick={() => handleSubsystemClick('tyre')} />
-                    <circle cx="150" cy="70" r="10" fill="none" stroke={selectedSubsystem === 'tyre' ? '#818cf8' : '#334155'} strokeWidth="3.5" style={{ cursor: 'pointer' }} onClick={() => handleSubsystemClick('tyre')} />
-                    <circle cx="230" cy="70" r="10" fill="none" stroke={selectedSubsystem === 'tyre' ? '#818cf8' : '#334155'} strokeWidth="3.5" style={{ cursor: 'pointer' }} onClick={() => handleSubsystemClick('tyre')} />
-
-                    {/* Sensor Dots */}
-                    <circle cx="30" cy="20" r="3" fill="#818cf8" className="animate-ping" style={{ transformOrigin: '30px 20px' }} />
-                    <circle cx="30" cy="20" r="3" fill="#818cf8" />
-                    <circle cx="215" cy="30" r="3" fill="#38CE3C" className="animate-ping" style={{ transformOrigin: '215px 30px' }} />
-                    <circle cx="215" cy="30" r="3" fill="#38CE3C" />
-
-                    {/* Cabin Door Handle clickable Area */}
-                    <rect x="205" y="35" width="20" height="20" rx="2" fill="rgba(255,255,255,0.02)" stroke={selectedSubsystem === 'cabin' ? '#f59e0b' : 'transparent'} strokeWidth="1.5" style={{ cursor: 'pointer' }} onClick={() => handleSubsystemClick('cabin')} />
-                    <line x1="210" y1="45" x2="218" y2="45" stroke="#334155" strokeWidth="2.5" />
-                  </svg>
-
-                  {/* Subsystem Details Display */}
-                  <div style={{ width: '100%', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 12, paddingTop: 10, fontSize: 11 }}>
-                    {selectedSubsystem === 'engine' && (
-                      <div>
-                        <div style={{ fontWeight: 700, color: '#38CE3C', display: 'flex', justify: 'space-between' }}>
-                          <span>ENGINE CONTROL UNIT</span>
-                          <span>NOMINAL</span>
-                        </div>
-                        <div style={{ marginTop: 4, color: '#B0B0B0' }}>Coolant Temperature: {selectedTruck.coolantTemp}°C</div>
-                        <div style={{ color: '#B0B0B0' }}>Fault Logs: No active OBD DTC engine trouble codes.</div>
-                      </div>
-                    )}
-                    {selectedSubsystem === 'tyre' && (
-                      <div>
-                        <div style={{ fontWeight: 700, color: '#818cf8' }}>TYRE PRESSURE MONITORING SYSTEM</div>
-                        <div style={{ marginTop: 4, display: 'grid', gridTemplateColumns: '1fr 1fr', color: '#B0B0B0' }}>
-                          <span>Front Wheel: 118 PSI</span>
-                          <span>Drive Wheel: 122 PSI</span>
-                          <span>Axle Weight: 8.4t</span>
-                          <span>Tyre Wear: 18%</span>
-                        </div>
-                      </div>
-                    )}
-                    {selectedSubsystem === 'cargo' && (
-                      <div>
-                        <div style={{ fontWeight: 700, color: '#818cf8' }}>REEFER COLD CHAIN CONTROL</div>
-                        <div style={{ marginTop: 4, display: 'flex', justify: 'space-between', alignItems: 'center' }}>
-                          <span style={{ color: '#B0B0B0' }}>Thermostat Setting: {selectedTruck.refrigTemp}°C</span>
-                          <div style={{ display: 'flex', gap: 4 }}>
-                            <button onClick={() => adjustReeferTemp(selectedTruck.id, 1)} style={{ padding: '2px 8px', background: '#1a2332', border: 'none', color: '#fff', cursor: 'pointer' }}>+</button>
-                            <button onClick={() => adjustReeferTemp(selectedTruck.id, -1)} style={{ padding: '2px 8px', background: '#1a2332', border: 'none', color: '#fff', cursor: 'pointer' }}>-</button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    {selectedSubsystem === 'cabin' && (
-                      <div>
-                        <div style={{ fontWeight: 700, color: '#f59e0b' }}>CABIN SECURITY CONTROL</div>
-                        <div style={{ marginTop: 4, display: 'flex', justify: 'space-between', alignItems: 'center' }}>
-                          <span style={{ color: '#B0B0B0' }}>Status: {selectedTruck.doorLocked ? 'LOCKED' : 'UNLOCKED'}</span>
-                          <button onClick={() => toggleDoorLock(selectedTruck.id)} style={{ padding: '3px 10px', background: '#1a2332', border: 'none', color: '#fff', cursor: 'pointer', borderRadius: 2 }}>
-                            {selectedTruck.doorLocked ? 'Unlock Door' : 'Lock Door'}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* 4. SHIPMENT VIEW PANEL */}
-          {activeView === 'shipment' && selectedShipment && (
-            <>
-              <div style={panelHeaderStyle}>Shipment Intelligence</div>
-              
-              <div style={{ display: 'flex', gap: 6 }}>
-                <select
-                  value={selectedShipment.id}
-                  onChange={(e) => {
-                    const sh = shipments.find(s => s.id === e.target.value);
-                    if (sh) {
-                      setSelectedShipment(sh);
-                      const matchingTruck = trucks.find(t => t.id === sh.truck);
-                      if (matchingTruck) setSelectedTruck(matchingTruck);
-                    }
-                  }}
-                  style={{
-                    background: '#1a2332', border: '1px solid rgba(255,255,255,0.1)', color: '#fff',
-                    padding: '6px 12px', borderRadius: 4, width: '100%', fontSize: 12, outline: 'none'
-                  }}
-                >
-                  {shipments.map(s => (
-                    <option key={s.id} value={s.id}>{s.id} ({s.origin} ➔ {s.destination})</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* shipment details */}
-              <div style={listItemStyle}>
-                <div style={{ display: 'flex', justify: 'space-between', marginBottom: 4 }}>
-                  <span style={{ fontWeight: 700, color: '#fff' }}>Bill: {selectedShipment.ewayBill}</span>
-                  <span style={{ color: '#818cf8', fontWeight: 600 }}>{selectedShipment.status}</span>
-                </div>
-                <div style={{ fontSize: 11, color: '#B0B0B0' }}>
-                  Route: {selectedShipment.origin} ➔ {selectedShipment.destination}
-                </div>
-                <div style={{ fontSize: 11, color: '#B0B0B0', marginTop: 4 }}>
-                  Assigned Truck: {selectedShipment.truck}
-                </div>
-                <div style={{ fontSize: 11, color: '#B0B0B0' }}>
-                  ETA Confidence: <span style={{ color: '#38CE3C', fontWeight: 600 }}>{selectedShipment.etaConfidence}%</span>
-                </div>
-              </div>
-
-              {/* PREDICTIVE MILESTONES TIMELINE */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '6px 0 8px' }}>
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#818cf8', letterSpacing: '0.04em', marginBottom: 8 }}>PREDICTIVE TRANSIT MILESTONES</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingLeft: 12, borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
-                  {selectedShipment.milestones.map((m, idx) => (
-                    <div key={idx} style={{ position: 'relative' }}>
-                      <div style={{
-                        position: 'absolute', left: '-17px', top: '2px', width: '9px', height: '9px', borderRadius: '50%',
-                        background: m.done ? '#38CE3C' : '#334155', border: '1.5px solid #0d1322'
-                      }} />
-                      <div style={{ fontSize: 11, fontWeight: m.done ? 600 : 400, color: m.done ? '#fff' : '#64748b' }}>{m.label}</div>
-                      <div style={{ fontSize: 9, color: '#B0B0B0' }}>{m.date}</div>
-                    </div>
-                  ))}
-                </div>
+                <span style={{ fontSize: 11, color: '#9ca3af' }}>Temperature °C &nbsp;</span>
+                <span style={{ fontSize: 13, fontWeight: 800, color: '#38bdf8' }}>-22.1°C</span>
+                <span style={{ fontSize: 11, color: '#6b7280' }}> / -22.0°C</span>
               </div>
+              <span style={{ fontSize: 10, fontWeight: 700, color: '#f59e0b', background: 'rgba(245, 158, 11, 0.15)', padding: '2px 6px', borderRadius: 4 }}>
+                ⚠ Alerts
+              </span>
+            </div>
 
-              {/* ANTIMATED RELATIONSHIP GRAPH */}
-              <div style={{ marginTop: 6 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#818cf8', letterSpacing: '0.04em', marginBottom: 6 }}>NETWORK RELATIONSHIP GRAPH</div>
-                <div style={{ background: '#070a13', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 8, padding: 12, display: 'flex', justify: 'center' }}>
-                  <svg width="280" height="70" viewBox="0 0 280 70">
-                    {/* Connections */}
-                    <line x1="30" y1="35" x2="90" y2="35" stroke="#818cf8" strokeWidth="1.5" strokeDasharray="3,3" />
-                    <line x1="90" y1="35" x2="150" y2="35" stroke="#38CE3C" strokeWidth="1.5" strokeDasharray="3,3" />
-                    <line x1="150" y1="35" x2="210" y2="35" stroke="#3b82f6" strokeWidth="1.5" strokeDasharray="3,3" />
-                    <line x1="210" y1="35" x2="250" y2="35" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="3,3" />
-
-                    {/* Nodes */}
-                    <circle cx="30" cy="35" r="14" fill="#0d1322" stroke="#818cf8" strokeWidth="2" />
-                    <text x="30" y="39" fill="#818cf8" fontSize="8" textAnchor="middle" fontWeight="bold">CLI</text>
-                    
-                    <circle cx="90" cy="35" r="14" fill="#0d1322" stroke="#38CE3C" strokeWidth="2" />
-                    <text x="90" y="39" fill="#38CE3C" fontSize="8" textAnchor="middle" fontWeight="bold">SHP</text>
-
-                    <circle cx="150" cy="35" r="14" fill="#0d1322" stroke="#3b82f6" strokeWidth="2" />
-                    <text x="150" y="39" fill="#3b82f6" fontSize="8" textAnchor="middle" fontWeight="bold">TRK</text>
-
-                    <circle cx="210" cy="35" r="14" fill="#0d1322" stroke="#f59e0b" strokeWidth="2" />
-                    <text x="210" y="39" fill="#f59e0b" fontSize="8" textAnchor="middle" fontWeight="bold">DRV</text>
-                  </svg>
-                </div>
+            {/* Reefer Waveform SVG Chart */}
+            <div style={styles.chartContainer}>
+              <svg width="100%" height="54" viewBox="0 0 300 54" preserveAspectRatio="none">
+                <path
+                  d="M 0,30 Q 30,10 60,35 T 120,20 T 180,40 T 240,15 T 300,32"
+                  fill="none"
+                  stroke="#38bdf8"
+                  strokeWidth="2"
+                />
+                <path
+                  d="M 0,30 Q 30,10 60,35 T 120,20 T 180,40 T 240,15 T 300,32 L 300,54 L 0,54 Z"
+                  fill="rgba(56, 189, 248, 0.12)"
+                />
+              </svg>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: '#6b7280', marginTop: 2 }}>
+                <span>0h</span>
+                <span>8h</span>
+                <span>14h</span>
+                <span>20h</span>
+                <span>24h</span>
               </div>
-            </>
-          )}
+            </div>
+          </div>
 
-          {/* 5. DRIVER VIEW PANEL */}
-          {activeView === 'driver' && selectedDriver && (() => {
-            const isRisk = selectedDriver.violations > 2;
-            const pulseColor = isRisk ? '#FF4D6B' : '#06b6d4';
-            const animationDuration = isRisk ? '1.2s' : '2.5s';
-            
-            return (
-              <>
-                <div style={panelHeaderStyle}>Driver Digital Twin</div>
-                
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <select
-                    value={selectedDriver.id}
-                    onChange={(e) => {
-                      const dr = drivers.find(d => d.id === e.target.value);
-                      if (dr) {
-                        setSelectedDriver(dr);
-                        const matchingTruck = trucks.find(t => t.id === dr.assignedTruck);
-                        if (matchingTruck) setSelectedTruck(matchingTruck);
-                      }
-                    }}
-                    style={{
-                      background: '#1a2332', border: '1px solid rgba(255,255,255,0.1)', color: '#fff',
-                      padding: '6px 12px', borderRadius: 4, width: '100%', fontSize: 12, outline: 'none'
-                    }}
-                  >
-                    {drivers.map(d => (
-                      <option key={d.id} value={d.id}>{d.name} ({d.id})</option>
-                    ))}
-                  </select>
-                </div>
+          {/* Widget 3: TPMS 18-WHEELER HEATMAP */}
+          <div style={styles.widgetCard}>
+            <div style={styles.widgetHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Disc size={15} color="#c084fc" />
+                <span style={styles.widgetTitle}>TPMS 18-WHEELER HEATMAP</span>
+              </div>
+              <span style={{ fontSize: 10, color: '#9ca3af' }}>•••</span>
+            </div>
+            <div style={{ fontSize: 10, color: '#6b7280', marginBottom: 8 }}>Tyre pressure (PSI) and temp (°C)</div>
 
-                {/* Driver twin stats (refined technically) */}
-                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: 8, padding: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <span style={{ fontWeight: 700, fontSize: 13, color: '#fff' }}>{selectedDriver.name}</span>
-                      <div style={{ fontSize: 9, color: '#64748b', fontFamily: 'var(--font-mono)' }}>ID: {selectedDriver.id}</div>
-                    </div>
-                    <span style={{ 
-                      padding: '2px 8px', borderRadius: 4, fontSize: 9, fontWeight: 700,
-                      background: isRisk ? 'rgba(255, 77, 107, 0.15)' : 'rgba(56, 206, 60, 0.15)',
-                      color: isRisk ? '#FF4D6B' : '#38CE3C',
-                      border: `1px solid ${isRisk ? 'rgba(255, 77, 107, 0.3)' : 'rgba(56, 206, 60, 0.3)'}`
-                    }}>
-                      {isRisk ? '⚠️ ATTENTION RISK' : '🟢 DUTY NOMINAL'}
-                    </span>
-                  </div>
-
-                  <div style={{ height: 1, background: 'rgba(255,255,255,0.05)' }} />
-
-                  {/* Progress bars for key parameters */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#B0B0B0', marginBottom: 2 }}>
-                        <span>SAFETY PERFORMANCE INDEX</span>
-                        <span style={{ fontWeight: 600, color: '#38CE3C' }}>{selectedDriver.safetyScore}%</span>
-                      </div>
-                      <div style={{ height: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
-                        <div style={{ width: `${selectedDriver.safetyScore}%`, height: '100%', borderRadius: 2, background: 'linear-gradient(to right, #FF4D6B, #38CE3C)' }} />
-                      </div>
-                    </div>
-
-                    <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#B0B0B0', marginBottom: 2 }}>
-                        <span>FATIGUE EXPOSURE RISK</span>
-                        <span style={{ fontWeight: 600, color: selectedDriver.violations * 15 > 40 ? '#FF4D6B' : '#f59e0b' }}>
-                          {selectedDriver.violations * 15}%
-                        </span>
-                      </div>
-                      <div style={{ height: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
-                        <div style={{ width: `${selectedDriver.violations * 15}%`, height: '100%', borderRadius: 2, background: 'linear-gradient(to right, #38CE3C, #FF4D6B)' }} />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={{ height: 1, background: 'rgba(255,255,255,0.05)' }} />
-
-                  {/* Telemetry Biometric Oscilloscope Grid */}
-                  <div style={{
-                    position: 'relative',
-                    height: '42px',
-                    background: 'rgba(5, 8, 16, 0.6)',
-                    border: `1px solid ${isRisk ? 'rgba(255, 77, 107, 0.15)' : 'rgba(6, 182, 212, 0.15)'}`,
-                    borderRadius: 6,
-                    padding: '4px 8px',
-                    overflow: 'hidden',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    boxShadow: 'inset 0 0 12px rgba(0,0,0,0.5)'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 8, fontFamily: 'var(--font-mono)', color: pulseColor, letterSpacing: '0.05em' }}>
-                      <span>TELEMETRY BIOMETRIC STREAM</span>
-                      <span className="animate-pulse">{isRisk ? '⚠️ ELEVATED STRESS' : '🟢 COHERENT BIOMETRICS'}</span>
-                    </div>
-                    
-                    <svg width="100%" height="22" viewBox="0 0 100 22" preserveAspectRatio="none" style={{ display: 'block' }}>
-                      {/* Grid lines */}
-                      <line x1="0" y1="5.5" x2="100" y2="5.5" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" strokeDasharray="1,1" />
-                      <line x1="0" y1="11" x2="100" y2="11" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
-                      <line x1="0" y1="16.5" x2="100" y2="16.5" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" strokeDasharray="1,1" />
-                      
-                      <path
-                        d="M 0 11 L 15 11 L 20 2 L 25 20 L 30 11 L 45 11 L 50 2 L 55 20 L 60 11 L 80 11 L 85 0 L 90 22 L 95 11 L 100 11"
-                        fill="none"
-                        stroke={pulseColor}
-                        strokeWidth="1.2"
-                        strokeDasharray="200"
-                        strokeDashoffset="200"
+            {/* Tyre Axle Grid */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {[
+                { label: 'Tyres', vals: [105, 105, 118, 105, 105, 118] },
+                { label: 'Tyres', vals: [105, 118, 118, 118, 118, 118] },
+                { label: 'Tyre 18', vals: [105, 118, 118, 118, 118, 118] },
+                { label: 'Tyres', vals: [105, 118, 118, 118, 118, 118] }
+              ].map((row, rIdx) => (
+                <div key={rIdx} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 9, color: '#9ca3af', width: 42 }}>{row.label}</span>
+                  <div style={{ display: 'flex', gap: 4, flex: 1 }}>
+                    {row.vals.map((v, cIdx) => (
+                      <span
+                        key={cIdx}
                         style={{
-                          animation: `ecgDraw ${animationDuration} linear infinite`
+                          flex: 1,
+                          textAlign: 'center',
+                          padding: '3px 0',
+                          fontSize: 10,
+                          fontWeight: 700,
+                          borderRadius: 3,
+                          background: v === 105 ? '#ef4444' : '#10b981',
+                          color: 'white'
                         }}
-                      />
-                    </svg>
-                  </div>
-
-                  <div style={{ height: 1, background: 'rgba(255,255,255,0.05)' }} />
-
-                  {/* Technical stats grid */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 12px', fontSize: 10, color: '#B0B0B0', fontFamily: 'var(--font-mono)' }}>
-                    <div>EXP: <span style={{ color: '#fff', fontWeight: 600 }}>{selectedDriver.experience} Yrs</span></div>
-                    <div>ASSIGNED: <span style={{ color: '#fff', fontWeight: 600 }}>{selectedDriver.assignedTruck}</span></div>
-                    <div>TRIPS: <span style={{ color: '#fff', fontWeight: 600 }}>{selectedDriver.tripsCompleted}</span></div>
-                    <div>ATTENDANCE: <span style={{ color: '#fff', fontWeight: 600 }}>{selectedDriver.attendance}%</span></div>
-                    <div>VIGILANCE INDEX: <span style={{ color: isRisk ? '#FF4D6B' : '#38CE3C', fontWeight: 600 }}>{isRisk ? '78.5%' : '94.2%'}</span></div>
-                    <div>COGNITIVE LOAD: <span style={{ color: isRisk ? '#FF4D6B' : '#38CE3C', fontWeight: 600 }}>{isRisk ? '74%' : '34%'}</span></div>
-                    <div>HEART RATE: <span style={{ color: isRisk ? '#FF4D6B' : '#38CE3C', fontWeight: 600 }}>{isRisk ? '89 BPM' : '72 BPM'}</span></div>
-                    <div>REACTION TIME: <span style={{ color: isRisk ? '#FF4D6B' : '#38CE3C', fontWeight: 600 }}>{isRisk ? '380ms' : '270ms'}</span></div>
-                    <div>SPO2 LEVEL: <span style={{ color: '#38CE3C', fontWeight: 600 }}>98%</span></div>
-                    <div>SKIN TEMP: <span style={{ color: '#38CE3C', fontWeight: 600 }}>36.6 °C</span></div>
-                    <div>GPS UPLINK: <span style={{ color: '#38CE3C', fontWeight: 600 }}>3D FIX (12 SAT)</span></div>
-                    <div>HARSH EVENTS: <span style={{ color: isRisk ? '#FF4D6B' : '#64748b', fontWeight: 600 }}>{selectedDriver.violations} EVENT{selectedDriver.violations !== 1 ? 'S' : ''}</span></div>
+                      >
+                        {v}
+                      </span>
+                    ))}
                   </div>
                 </div>
+              ))}
+            </div>
 
-                {/* DRIVER BEHAVIOR RADAR CHART */}
-                <div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#818cf8', letterSpacing: '0.04em', marginBottom: 8 }}>DRIVER SKILLS RADAR CHART</div>
-                  <div style={{ background: '#070a13', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 8, padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <svg width="160" height="160" viewBox="0 0 160 160">
-                      {/* Background concentric hex circles */}
-                      <circle cx="80" cy="80" r="55" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
-                      <circle cx="80" cy="80" r="40" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
-                      <circle cx="80" cy="80" r="25" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
-                      
-                      {/* Axis lines */}
-                      {[0, 60, 120, 180, 240, 300].map(deg => {
-                        const rad = deg * Math.PI / 180;
-                        return <line key={deg} x1="80" y1="80" x2={80 + 55 * Math.cos(rad)} y2={80 + 55 * Math.sin(rad)} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />;
-                      })}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 9, color: '#9ca3af', marginTop: 8 }}>
+              <span>Alert</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><span style={{ width: 8, height: 8, background: '#ef4444', borderRadius: 2 }} /> Red 105 PSI</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><span style={{ width: 8, height: 8, background: '#10b981', borderRadius: 2 }} /> Green 118 PSI</span>
+            </div>
+          </div>
 
-                      {/* Radar polygon coordinates */}
-                      <polygon points={getRadarPoints(selectedDriver)} fill="rgba(99, 102, 241, 0.25)" stroke="#818cf8" strokeWidth="1.5" />
-                      
-                      {/* Glowing vertices dots */}
-                      {getRadarPointsArray(selectedDriver).map((pt, idx) => (
-                        <circle key={idx} cx={pt.x} cy={pt.y} r="2.5" fill="#818cf8" stroke="#fff" strokeWidth="0.75" />
-                      ))}
+          {/* Widget 4: CONSIGNEE TRACKING LINK */}
+          <div style={styles.widgetCard}>
+            <div style={styles.widgetHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Share2 size={15} color="#818cf8" />
+                <span style={styles.widgetTitle}>CONSIGNEE TRACKING LINK</span>
+              </div>
+            </div>
 
-                      {/* Labels */}
-                      <text x="80" y="16" fill="#B0B0B0" fontSize="7" textAnchor="middle">Safety</text>
-                      <text x="140" y="52" fill="#B0B0B0" fontSize="7" textAnchor="middle">Compliance</text>
-                      <text x="140" y="112" fill="#B0B0B0" fontSize="7" textAnchor="middle">Skill</text>
-                      <text x="80" y="148" fill="#B0B0B0" fontSize="7" textAnchor="middle">Fatigue</text>
-                      <text x="20" y="112" fill="#B0B0B0" fontSize="7" textAnchor="middle">Experience</text>
-                      <text x="20" y="52" fill="#B0B0B0" fontSize="7" textAnchor="middle">Reliability</text>
-                    </svg>
-                  </div>
-                </div>
-              </>
-            );
-          })()}
+            <div style={{ display: 'flex', gap: 6, margin: '8px 0' }}>
+              <div style={{ flex: 1, position: 'relative' }}>
+                <Search size={12} color="#6b7280" style={{ position: 'absolute', left: 8, top: 8 }} />
+                <input
+                  type="text"
+                  placeholder="Search vehicle"
+                  style={styles.searchInput}
+                />
+              </div>
+              <button style={styles.btnIconShare}><Share2 size={12} /></button>
+            </div>
 
-          {/* 6. AI DECISION CENTER */}
-          {activeView === 'decision' && (
-            <>
-              <div style={panelHeaderStyle}>AI Strategic Cockpit</div>
-              
-              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: 8, padding: 12 }}>
-                <div style={{ display: 'flex', justify: 'space-between', fontSize: 11, color: '#B0B0B0', marginBottom: 4 }}>
-                  <span>Dynamic Savings Realized:</span>
-                  <span style={{ color: '#38CE3C', fontWeight: 700 }}>₹{(savingsCounter / 100000).toFixed(1)} Lakhs</span>
-                </div>
-                <div style={{ display: 'flex', justify: 'space-between', fontSize: 11, color: '#B0B0B0' }}>
-                  <span>Autonomy Policy:</span>
-                  <span style={{ color: '#818cf8', fontWeight: 700 }}>{autonomySlider}% Autonomous</span>
-                </div>
+            <div style={{ fontSize: 10, color: '#6b7280', marginBottom: 4 }}>Shared links</div>
+            <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+              <input
+                readOnly
+                value={sharedUrl}
+                style={styles.linkInput}
+              />
+              <button onClick={copyShareLink} style={styles.btnCopy}>
+                {copiedLink ? <Check size={12} /> : <Copy size={12} />}
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 10 }}>
+              <div>
+                <span style={{ color: '#6b7280' }}>Recipient: </span>
+                <span style={{ color: 'white', fontWeight: 600 }}>Tata Motors</span>
+                <span style={{ color: '#34d399', marginLeft: 8, fontWeight: 700 }}>Active</span>
+              </div>
+              <button onClick={() => alert('Tracking link dispatched to Tata Motors Logistics Portal!')} style={styles.btnSharePrimary}>
+                Share
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        {/* Bottom Full-Width Dock — TRIP PLAYBACK */}
+        <footer style={styles.bottomDock}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Play size={10} color="white" />
+            </div>
+            <span style={{ fontSize: 12, fontWeight: 800, color: 'white', letterSpacing: '0.04em' }}>TRIP PLAYBACK</span>
+            <button style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer' }}>
+              <X size={14} />
+            </button>
+          </div>
+
+          {/* Scrubber Track Bar with Waypoint Pin Nodes */}
+          <div style={styles.timelineScrubber}>
+            <div style={styles.timelineLineBg} />
+            <div style={{ ...styles.timelineLineProgress, width: `${playbackProgress}%` }} />
+
+            {/* Waypoints */}
+            <span style={{ ...styles.timelineNode, left: '20%', background: '#10b981' }}>210</span>
+            <span style={{ ...styles.timelineNode, left: '40%', background: '#10b981' }}>555</span>
+            <span style={{ ...styles.timelineNode, left: '60%', background: '#f59e0b' }}>510</span>
+            <span style={{ ...styles.timelineNode, left: '90%', background: '#ef4444' }}>ROD</span>
+
+            {/* Moving Playhead Marker */}
+            <div style={{ ...styles.playheadMarker, left: `${playbackProgress}%` }} />
+          </div>
+
+          {/* Controls Bar */}
+          <div style={styles.controlsBar}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <button onClick={() => setIsPlaying(!isPlaying)} style={styles.btnPlayToggle}>
+                {isPlaying ? <Pause size={14} /> : <Play size={14} />}
+              </button>
+              <button onClick={() => setPlaybackProgress(0)} style={styles.btnMiniControl}>
+                ⏮
+              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#9ca3af' }}>
+                <span>Speed</span>
                 <input
                   type="range"
                   min="0"
                   max="100"
-                  value={autonomySlider}
-                  onChange={e => setAutonomySlider(parseInt(e.target.value))}
-                  style={{ accentColor: '#818cf8', width: '100%', marginTop: 8 }}
+                  value={playbackProgress}
+                  onChange={(e) => setPlaybackProgress(Number(e.target.value))}
+                  style={{ width: 100, accentColor: '#6366f1' }}
                 />
               </div>
+            </div>
 
-              {/* AI Recommendations ledger list */}
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#818cf8', letterSpacing: '0.04em' }}>ACTIVE DECISION FEED RECOMMENDATIONS</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {/* Rec card 1 */}
-                <div style={{ ...listItemStyle, borderLeft: '3px solid #f59e0b' }}>
-                  <div style={{ display: 'flex', justify: 'space-between', marginBottom: 4 }}>
-                    <span style={{ fontWeight: 700, color: '#fff', fontSize: 11 }}>JNPT Port backlog build-up</span>
-                    <span style={{ fontSize: 10, color: '#38CE3C', fontWeight: 600 }}>₹34 Lakhs savings</span>
-                  </div>
-                  <div style={{ fontSize: 10, color: '#B0B0B0', marginBottom: 8 }}>
-                    Shift 20% freight capacity of active Delhi-Mumbai corridor cargo to container rail.
-                  </div>
-                  <button
-                    disabled={approvedRecommendations.includes('rec1')}
-                    onClick={() => handleApproveRec('rec1', 3400000, "Shifted 20% en-route containers to Western Rail freight line.")}
-                    style={miniBtnStyle(false)}
-                  >
-                    {approvedRecommendations.includes('rec1') ? '✓ Authorized Execution' : 'Authorize Action'}
-                  </button>
-                </div>
-
-                {/* Rec card 2 */}
-                <div style={{ ...listItemStyle, borderLeft: '3px solid #FF4D6B' }}>
-                  <div style={{ display: 'flex', justify: 'space-between', marginBottom: 4 }}>
-                    <span style={{ fontWeight: 700, color: '#fff', fontSize: 11 }}>Siliguri Monsoon Landslide</span>
-                    <span style={{ fontSize: 10, color: '#38CE3C', fontWeight: 600 }}>₹18 Lakhs savings</span>
-                  </div>
-                  <div style={{ fontSize: 10, color: '#B0B0B0', marginBottom: 8 }}>
-                    Reroute 8 en-route vehicles via alternative state highway bypass SH-14.
-                  </div>
-                  <button
-                    disabled={approvedRecommendations.includes('rec2')}
-                    onClick={() => handleApproveRec('rec2', 1800000, "Authorized alternative SH-14 bypass route.")}
-                    style={miniBtnStyle(false)}
-                  >
-                    {approvedRecommendations.includes('rec2') ? '✓ Authorized Execution' : 'Authorize Action'}
-                  </button>
-                </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div style={{ fontSize: 11, color: '#9ca3af' }}>
+                Timestamp <strong style={styles.timeBadgeDigit}>14:45:12</strong>
               </div>
+              <div style={{ fontSize: 11, color: '#9ca3af' }}>{currentDate}</div>
+            </div>
 
-              {/* COGNITIVE GREEN SCREEN TERMINAL */}
-              <div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: '#64748b', letterSpacing: '0.04em', marginBottom: 6 }}>EDGE COGNITION LOG CONSOLE</div>
-                <div style={{
-                  background: '#040711', border: '1px solid rgba(255,255,255,0.04)', borderRadius: 6,
-                  padding: '8px 12px', fontFamily: 'monospace', fontSize: 10, color: '#38CE3C', display: 'flex',
-                  flexDirection: 'column', gap: 4, height: '90px', overflowY: 'auto'
-                }}>
-                  {terminalLogs.map((log, i) => (
-                    <div key={i}>{log}</div>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* 7. EXECUTIVE VIEW PANEL */}
-          {activeView === 'executive' && (
-            <>
-              <div style={panelHeaderStyle}>CEO Executive Dashboard</div>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <div style={kpiCardStyle}>
-                  <div style={kpiLabelStyle}>Revenue Today</div>
-                  <div style={kpiValStyle}>₹4.28Cr</div>
-                </div>
-                <div style={kpiCardStyle}>
-                  <div style={kpiLabelStyle}>Fleet Utilization</div>
-                  <div style={kpiValStyle}>87.4%</div>
-                </div>
-                <div style={kpiCardStyle}>
-                  <div style={kpiLabelStyle}>Customer Health Index</div>
-                  <div style={kpiValStyle}>96.8%</div>
-                </div>
-                <div style={kpiCardStyle}>
-                  <div style={kpiLabelStyle}>Driver Safety Twin</div>
-                  <div style={kpiValStyle}>94.2%</div>
-                </div>
-                <div style={kpiCardStyle}>
-                  <div style={kpiLabelStyle}>Operational Cash</div>
-                  <div style={kpiValStyle}>₹14.2Cr</div>
-                </div>
-                <div style={kpiCardStyle}>
-                  <div style={kpiLabelStyle}>Network Risk Level</div>
-                  <div style={{ ...kpiValStyle, color: '#FF4D6B' }}>Low</div>
-                </div>
-              </div>
-
-              {/* Predicted Revenue sparks */}
-              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: 8, padding: 12, marginTop: 4 }}>
-                <div style={{ display: 'flex', justify: 'space-between', fontSize: 11, color: '#B0B0B0', marginBottom: 4 }}>
-                  <span>Predicted Month Revenue:</span>
-                  <span style={{ color: '#38CE3C', fontWeight: 700 }}>₹1.32 Cr</span>
-                </div>
-                <div style={{ fontSize: 9, color: '#64748b' }}>
-                  Calculated based on en-route logistics contracts ETA completion.
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Dynamic Telemetry rate footer */}
-        <div style={{
-          padding: '12px 16px',
-          borderTop: '1px solid rgba(255,255,255,0.05)',
-          background: '#070a13',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          fontSize: 10,
-          color: '#64748b'
-        }}>
-          <span>Telemping: {lastPingTime}</span>
-          <span style={{ color: '#38CE3C' }}>System Nominal</span>
-        </div>
-
-        {/* Drag-to-Resize Handle */}
-        {!sidebarCollapsed && (
-          <div
-            onMouseDown={startResizing}
-            style={{
-              position: 'absolute',
-              top: 0,
-              right: 0,
-              width: '6px',
-              height: '100%',
-              cursor: 'col-resize',
-              zIndex: 1000,
-              background: isResizingRef.current ? 'rgba(99, 102, 241, 0.45)' : 'transparent',
-              transition: 'background 0.2s',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.2)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-          />
-        )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button style={styles.btnBottomIcon} title="Global Grid"><GlobeIcon size={14} /></button>
+              <button style={styles.btnBottomIcon} title="Table View"><FileText size={14} /></button>
+              <button style={styles.btnBottomIcon} title="Filter"><Search size={14} /></button>
+              <button style={styles.btnBottomIcon} title="Settings"><Settings size={14} /></button>
+            </div>
+          </div>
+        </footer>
       </div>
-
-      {/* Floating Expand Button when collapsed */}
-      {sidebarCollapsed && (
-        <button
-          onClick={() => setSidebarCollapsed(false)}
-          style={{
-            position: 'absolute',
-            left: 12,
-            top: 76,
-            zIndex: 99,
-            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '50%',
-            width: 36,
-            height: 36,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            boxShadow: '0 4px 15px rgba(99, 102, 241, 0.4)',
-          }}
-        >
-          <ChevronRight size={18} />
-        </button>
-      )}
-
-
-
-      {/* MAP CANVAS VIEWPORT */}
-      <div style={{ flex: 1, position: 'relative', overflow: 'hidden', display: 'flex' }}>
-        
-        {/* Tactical HUD grid coordinate overlay */}
-        <div style={hudGridStyle}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#fff', fontSize: 10, marginBottom: 4 }}>
-            <Compass size={11} color="#818cf8" />
-            <span>NOC TACTICAL Digital Twin</span>
-          </div>
-          <div>CURSOR: {mouseCoords.lat}°N, {mouseCoords.lng}°E</div>
-          <div>ACTIVE FLIGHTS: {trucks.filter(t => t.status === 'active').length} units</div>
-          <div>ESTIMATED REVENUE: ₹4.28Cr</div>
-        </div>
-
-        {/* WebGL Performance Diagnostics HUD */}
-        {webglEnabled && (
-          <div style={{
-            ...hudGridStyle,
-            top: '130px',
-            color: '#38CE3C',
-            border: '1px solid rgba(56, 206, 60, 0.25)',
-            background: 'rgba(5, 16, 8, 0.85)',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#fff', fontSize: 10, marginBottom: 4 }}>
-              <Cpu size={11} color="#38CE3C" />
-              <span style={{ fontWeight: 'bold' }}>GPU TELEMETRY HUD</span>
-            </div>
-            <div>ENGINE: WebGL2 / 2D Canvas</div>
-            <div>RENDER RATE: <span style={{ color: fps >= 55 ? '#38CE3C' : '#f59e0b', fontWeight: 'bold' }}>{fps} FPS</span></div>
-            <div>PARTICLES: 10,000 units</div>
-            <div>VERTEX COUNT: ~80,000 dynamic</div>
-            <div>EST. VRAM SIZE: 41.8 MB</div>
-            <div style={{ borderTop: '1px solid rgba(56, 206, 60, 0.15)', marginTop: 4, paddingTop: 4 }}>
-              <div style={{ color: '#aaa' }}>DOM Node count:</div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <span style={{ color: '#FF4D6B' }}>DOM (Standard): 10,000</span>
-                <span style={{ color: '#38CE3C' }}>WebGL (Canvas): 1</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* COMMAND MODE DECKS (REDUCE COST / MAX ETA / MIN RISK) */}
-        <div style={{
-          position: 'absolute', top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 999,
-          display: 'flex', gap: 6, background: 'rgba(10, 15, 30, 0.85)', backdropFilter: 'blur(12px)',
-          border: '1px solid rgba(255,255,255,0.05)', padding: '4px 8px', borderRadius: 6, boxShadow: '0 4px 20px rgba(0,0,0,0.4)'
-        }}>
-          <button onClick={() => { setCommandMode('reduce_cost'); logToTerminal('Command Mode: Minimize operational expenses.'); }} style={commandModeBtnStyle(commandMode === 'reduce_cost')}>Reduce Cost</button>
-          <button onClick={() => { setCommandMode('maximize_eta'); logToTerminal('Command Mode: Prioritize maximum SLA on-time speeds.'); }} style={commandModeBtnStyle(commandMode === 'maximize_eta')}>Maximize ETA</button>
-          <button onClick={() => { setCommandMode('minimize_risk'); logToTerminal('Command Mode: Reroute and bypass high-risk zones.'); }} style={commandModeBtnStyle(commandMode === 'minimize_risk')}>Minimize Risk</button>
-        </div>
-
-        {/* TIME MACHINE SLIDER CONTROLLER */}
-        <div style={{
-          position: 'absolute', bottom: '72px', left: '50%', transform: 'translateX(-50%)', zIndex: 999,
-          background: 'rgba(10, 15, 30, 0.85)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.05)',
-          padding: '10px 16px', borderRadius: 8, width: '400px', display: 'flex', alignItems: 'center', gap: 12,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.5)'
-        }}>
-          <button
-            onClick={() => {
-              setIsTimeMachineActive(!isTimeMachineActive);
-              setIsPlaying(false);
-              logToTerminal(isTimeMachineActive ? "Telemetry restoration." : "Entering future network projections.");
-            }}
-            style={{
-              padding: '6px 12px', borderRadius: 4, border: 'none', cursor: 'pointer', fontSize: 10, fontWeight: 700,
-              background: isTimeMachineActive ? 'linear-gradient(135deg, #6366f1, #818cf8)' : 'rgba(255,255,255,0.05)',
-              color: '#fff', display: 'flex', alignItems: 'center', gap: 4
-            }}
-          >
-            <Clock size={11} /> {isTimeMachineActive ? 'Predictive state' : 'Time Machine'}
-          </button>
-
-          {isTimeMachineActive && (
-            <>
-              <button
-                onClick={() => setIsPlaying(!isPlaying)}
-                style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: 0 }}
-              >
-                {isPlaying ? <Pause size={14} /> : <Play size={14} />}
-              </button>
-              
-              <input
-                type="range"
-                min="0"
-                max="24"
-                value={timeSliderVal}
-                onChange={(e) => { setTimeSliderVal(parseInt(e.target.value)); setIsPlaying(false); }}
-                style={{ flex: 1, accentColor: '#818cf8', cursor: 'pointer' }}
-              />
-              <span style={{ fontSize: 10, fontFamily: 'monospace', color: '#818cf8', fontWeight: 600 }}>
-                {timeSliderVal === 0 ? 'Live' : `+${timeSliderVal}h`}
-              </span>
-            </>
-          )}
-        </div>
-
-        {/* Floating map controls */}
-        <div style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 999, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <button onClick={() => leafletMap.current?.zoomIn()} style={mapControlBtnStyle}><ZoomIn size={14} /></button>
-          <button onClick={() => leafletMap.current?.zoomOut()} style={mapControlBtnStyle}><ZoomOut size={14} /></button>
-          <button onClick={() => leafletMap.current?.setView([21.7679, 78.8718], 5)} style={mapControlBtnStyle}><RotateCcw size={14} /></button>
-          
-          <button
-            onClick={() => {
-              setWebglEnabled(!webglEnabled);
-              logToTerminal(webglEnabled ? "Deactivating WebGL High-Density Engine." : "Activating WebGL High-Density Engine (10k particles).");
-              showToast(webglEnabled ? "Deactivated WebGL simulation" : "Activated WebGL high-density particle engine", "success");
-            }}
-            style={{
-              ...mapControlBtnStyle,
-              background: webglEnabled ? 'linear-gradient(135deg, #38CE3C, #059669)' : 'rgba(10,15,30,0.85)',
-              boxShadow: webglEnabled ? '0 0 10px rgba(56, 206, 60, 0.5)' : 'none',
-              border: webglEnabled ? '1px solid #38CE3C' : '1px solid rgba(255,255,255,0.05)',
-            }}
-            title="Toggle WebGL Engine"
-          >
-            <Cpu size={14} color={webglEnabled ? '#fff' : '#64748b'} />
-          </button>
-          
-          {/* Map Layer Switch Dropdown */}
-          <div style={{ position: 'relative' }}>
-            <button style={mapControlBtnStyle} onClick={() => setMapLayers(l => ({ ...l, dropdown: !l.dropdown }))}>
-              <Layers size={14} />
-            </button>
-            {mapLayers.dropdown && (
-              <div style={{
-                position: 'absolute', right: '40px', top: 0, background: 'rgba(10,15,30,0.9)', border: '1px solid rgba(255,255,255,0.05)',
-                borderRadius: 6, padding: 8, display: 'flex', flexDirection: 'column', gap: 6, width: '130px', boxShadow: '0 4px 16px rgba(0,0,0,0.4)'
-              }}>
-                <label style={layerOptionStyle}>
-                  <input type="checkbox" checked={mapLayers.demand} onChange={e => setMapLayers(l => ({ ...l, demand: e.target.checked }))} />
-                  <span>Demand Grid</span>
-                </label>
-                <label style={layerOptionStyle}>
-                  <input type="checkbox" checked={mapLayers.density} onChange={e => setMapLayers(l => ({ ...l, density: e.target.checked }))} />
-                  <span>Fleet density</span>
-                </label>
-                <label style={layerOptionStyle}>
-                  <input type="checkbox" checked={mapLayers.risk} onChange={e => setMapLayers(l => ({ ...l, risk: e.target.checked }))} />
-                  <span>Risk factors</span>
-                </label>
-                <label style={layerOptionStyle}>
-                  <input type="checkbox" checked={mapLayers.weather} onChange={e => setMapLayers(l => ({ ...l, weather: e.target.checked }))} />
-                  <span>Weather Storm</span>
-                </label>
-                <label style={layerOptionStyle}>
-                  <input type="checkbox" checked={mapLayers.traffic} onChange={e => setMapLayers(l => ({ ...l, traffic: e.target.checked }))} />
-                  <span>Traffic speed</span>
-                </label>
-                <label style={layerOptionStyle}>
-                  <input type="checkbox" checked={mapLayers.fuel} onChange={e => setMapLayers(l => ({ ...l, fuel: e.target.checked }))} />
-                  <span>Fuel corridors</span>
-                </label>
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: 4, paddingTop: 4 }}>
-                  <label style={{ ...layerOptionStyle, color: '#38CE3C' }}>
-                    <input type="checkbox" checked={webglEnabled} onChange={e => {
-                      setWebglEnabled(e.target.checked);
-                      logToTerminal(e.target.checked ? "Activating WebGL High-Density Engine." : "Deactivating WebGL High-Density Engine.");
-                      showToast(e.target.checked ? "Activated WebGL simulation" : "Deactivated WebGL simulation", "success");
-                    }} />
-                    <span>WebGL Engine</span>
-                  </label>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Real Leaflet canvas target */}
-        <div ref={mapContainerRef} style={{ width: '100%', height: '100%', zIndex: 1 }} />
-        {webglEnabled && (
-          <canvas
-            ref={webglCanvasRef}
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              zIndex: 2,
-              pointerEvents: 'none'
-            }}
-          />
-        )}
-
-        {/* Dynamic route planner recommendation floating banner */}
-        {selectedTruck && !selectedTruck.rerouted && activeView === 'fleet' && (
-          <div style={{
-            position: 'absolute', top: '80px', left: '50%', transform: 'translateX(-50%)', zIndex: 999,
-            background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.4)', borderRadius: 6,
-            padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 12, backdropFilter: 'blur(8px)'
-          }}>
-            <span style={{ fontSize: 10, fontWeight: 700, color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 4 }}>
-              <Sparkles size={11} /> AI Re-route Recommendation: SH-14 corridor bypass saves 2.2 hrs
-            </span>
-            <button onClick={() => executeReroute(selectedTruck.id)} style={{
-              background: '#f59e0b', border: 'none', color: '#000', fontSize: 9, fontWeight: 800,
-              padding: '3px 8px', borderRadius: 4, cursor: 'pointer'
-            }}>Authorize Bypass</button>
-          </div>
-        )}
-
-        {/* BOTTOM GLOBAL STATUS BAR */}
-        <div style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0, height: '52px', background: '#0d1322',
-          borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center',
-          justifyContent: 'space-between', padding: '0 20px', zIndex: 999
-        }}>
-          <div style={bottomStatBlockStyle}>
-            <span style={bottomStatLabelStyle}>Network Freight:</span>
-            <span style={bottomStatValStyle}>{trucks.length} Active twins</span>
-          </div>
-          <div style={bottomStatBlockStyle}>
-            <span style={bottomStatLabelStyle}>Corridor Reliability:</span>
-            <span style={bottomStatValStyle} style={{ color: '#38CE3C' }}>94.2% (Nominal)</span>
-          </div>
-          <div style={bottomStatBlockStyle}>
-            <span style={bottomStatLabelStyle}>Edge Telemetry polling:</span>
-            <span style={bottomStatValStyle}>{lastPingTime}</span>
-          </div>
-          <div style={bottomStatBlockStyle}>
-            <span style={bottomStatLabelStyle}>Decision savings pool:</span>
-            <span style={bottomStatValStyle} style={{ color: '#38CE3C' }}>₹{(savingsCounter / 100000).toFixed(1)} Lakhs</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Embedded CSS Animations */}
-      {/* Floating Chat Us Copilot Icon */}
-      {!copilotOpen && (
-        <motion.div
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          whileHover={{ scale: 1.1 }}
-          onClick={() => setCopilotOpen(true)}
-          style={{
-            position: 'absolute',
-            bottom: '76px',
-            right: '24px',
-            width: '56px',
-            height: '56px',
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, #6366f1, #a855f7)',
-            boxShadow: '0 4px 20px rgba(99, 102, 241, 0.4)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            zIndex: 1000,
-          }}
-          title="Ask Executive AI Copilot"
-        >
-          <Sparkles size={24} color="#fff" />
-          <span style={{
-            position: 'absolute',
-            top: 2,
-            right: 2,
-            width: 10,
-            height: 10,
-            borderRadius: '50%',
-            background: '#FF4D6B',
-            border: '2px solid #070a13',
-            boxShadow: '0 0 8px #FF4D6B'
-          }} />
-        </motion.div>
-      )}
-
-      {/* Floating Executive Copilot Window */}
-      <AnimatePresence>
-        {copilotOpen && (
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0, y: 50 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.8, opacity: 0, y: 50 }}
-            style={{
-              position: 'absolute',
-              bottom: '76px',
-              right: '24px',
-              width: '360px',
-              height: '500px',
-              background: 'rgba(13, 19, 34, 0.85)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(99, 102, 241, 0.15)',
-              borderRadius: '16px',
-              boxShadow: '0 12px 40px rgba(0, 0, 0, 0.6)',
-              display: 'flex',
-              flexDirection: 'column',
-              zIndex: 1000,
-              overflow: 'hidden'
-            }}
-          >
-            <div style={{
-              padding: '16px',
-              borderBottom: '1px solid rgba(255,255,255,0.06)',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              background: 'rgba(10, 14, 24, 0.4)'
-            }}>
-              <span style={{ fontWeight: 700, color: '#fff', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Sparkles size={14} color="#818cf8" /> EXECUTIVE AI COPILOT
-              </span>
-              <button onClick={() => setCopilotOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex', alignItems: 'center' }}>
-                <X size={16} color="#64748b" />
-              </button>
-            </div>
-
-            {/* Chat message list area */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {copilotMsgs.map((m, idx) => (
-                <div key={idx} style={{
-                  background: m.sender === 'user' ? 'rgba(99,102,241,0.1)' : 'rgba(255,255,255,0.03)',
-                  border: `1px solid ${m.sender === 'user' ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.05)'}`,
-                  borderRadius: 8, padding: '10px 12px', alignSelf: m.sender === 'user' ? 'flex-end' : 'flex-start',
-                  maxWidth: '85%', fontSize: 11, color: m.sender === 'user' ? '#fff' : '#B0B0B0', lineHeight: 1.4,
-                  boxShadow: m.sender === 'user' ? '0 2px 8px rgba(99, 102, 241, 0.15)' : 'none'
-                }}>
-                  {m.text}
-                  {m.action && (
-                    <button
-                      onClick={() => {
-                        setActiveView(m.action.view);
-                        setCopilotOpen(false);
-                      }}
-                      style={{
-                        display: 'block', width: '100%', marginTop: 8, padding: '6px 8px', fontSize: 10,
-                        background: '#818cf8', border: 'none', color: '#fff', borderRadius: 4, cursor: 'pointer', fontWeight: 600,
-                        boxShadow: '0 2px 4px rgba(99, 102, 241, 0.3)'
-                      }}
-                    >
-                      {m.action.text}
-                    </button>
-                  )}
-                </div>
-              ))}
-              {isTyping && (
-                <div style={{ color: '#64748b', fontSize: 10, alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <span style={{ display: 'inline-block', width: 4, height: 4, borderRadius: '50%', background: '#64748b', animation: 'gridPulse 1s infinite' }} />
-                  <span>Copilot is typing...</span>
-                </div>
-              )}
-              <div ref={copilotEndRef} />
-            </div>
-
-            {/* Suggestions Chips list */}
-            <div style={{ padding: '8px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <button onClick={() => handleCopilotPrompt("Why is Western India profitability down?")} style={suggestionChipStyle}>Why is Western India profitability down?</button>
-              <button onClick={() => handleCopilotPrompt("Which customers may churn?")} style={suggestionChipStyle}>Which customers may churn?</button>
-              <button onClick={() => handleCopilotPrompt("What caused yesterday's delay spike?")} style={suggestionChipStyle}>What caused yesterday's delay spike?</button>
-            </div>
-
-            {/* Chat Input form */}
-            <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 6, background: 'rgba(10, 14, 24, 0.2)' }}>
-              <input
-                type="text"
-                placeholder="Ask Executive Copilot..."
-                value={copilotInput}
-                onChange={e => setCopilotInput(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && copilotInput.trim()) { handleCopilotPrompt(copilotInput); setCopilotInput(''); } }}
-                style={{
-                  flex: 1, background: '#131929', border: '1px solid rgba(255,255,255,0.08)', color: '#fff',
-                  borderRadius: 6, padding: '8px 12px', fontSize: 11, outline: 'none', fontFamily: "'Inter', sans-serif"
-                }}
-              />
-              <button onClick={() => { if (copilotInput.trim()) { handleCopilotPrompt(copilotInput); setCopilotInput(''); } }} style={{ background: '#818cf8', border: 'none', padding: '8px 12px', color: '#fff', borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Send size={12} /></button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <style>{`
-        @keyframes sosFlashBorder {
-          0% { border-color: #FF4D6B; box-shadow: inset 0 0 16px rgba(255, 77, 107, 0.4); }
-          50% { border-color: transparent; box-shadow: inset 0 0 0px transparent; }
-          100% { border-color: #FF4D6B; box-shadow: inset 0 0 16px rgba(255, 77, 107, 0.4); }
+        @keyframes pulseRing {
+          0% { transform: scale(0.8); opacity: 0.8; }
+          100% { transform: scale(2.2); opacity: 0; }
         }
-        @keyframes flow {
-          to { stroke-dashoffset: -120px; }
-        }
-        .leaflet-traffic-flow-dash {
-          animation: flow 4s linear infinite !important;
-        }
-        @keyframes mapPulse {
-          0% { transform: scale(0.6); opacity: 0.6; }
-          100% { transform: scale(1.6); opacity: 0; }
-        }
-        @keyframes mapSosRadar {
-          0% { transform: scale(0.5); opacity: 0.7; }
-          100% { transform: scale(1.8); opacity: 0; }
-        }
-        .animate-ping {
-          animation: mapPulse 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
-        }
-        @keyframes ecgDraw {
-          0% { stroke-dashoffset: 200; }
-          100% { stroke-dashoffset: 0; }
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-3px); }
         }
       `}</style>
     </div>
   );
 }
 
-// ---- INLINE CYBER-GRID STYLES ----
-const viewTabBtnStyle = (active) => ({
-  padding: '6px 0',
-  fontSize: '9px',
-  fontWeight: 700,
-  textTransform: 'uppercase',
-  cursor: 'pointer',
-  background: active ? '#1a2332' : 'transparent',
-  color: active ? '#818cf8' : '#64748b',
-  border: 'none',
-  borderRadius: 4,
-  transition: 'all 0.15s ease',
-  outline: 'none'
-});
+function GlobeIcon({ size }) {
+  return <span style={{ fontSize: size }}>🌐</span>;
+}
 
-const panelHeaderStyle = {
-  fontSize: '15px',
-  fontWeight: 800,
-  color: '#fff',
-  borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-  paddingBottom: '8px',
-  letterSpacing: '0.02em'
-};
-
-const kpiStripStyle = {
-  display: 'grid',
-  gridTemplateColumns: '1fr 1fr',
-  gap: 10
-};
-
-const kpiCardStyle = {
-  background: 'rgba(255,255,255,0.02)',
-  border: '1px solid rgba(255,255,255,0.04)',
-  padding: '10px 12px',
-  borderRadius: 6
-};
-
-const kpiLabelStyle = {
-  fontSize: '9px',
-  color: '#64748b',
-  textTransform: 'uppercase',
-  marginBottom: 2
-};
-
-const kpiValStyle = {
-  fontSize: '14px',
-  fontWeight: 700,
-  color: '#fff'
-};
-
-const listItemStyle = {
-  background: 'rgba(255,255,255,0.02)',
-  border: '1px solid rgba(255,255,255,0.04)',
-  padding: '10px 12px',
-  borderRadius: 6,
-  transition: 'all 0.2s ease'
-};
-
-const miniBtnStyle = (danger) => ({
-  flex: 1,
-  padding: '6px 0',
-  fontSize: '9px',
-  fontWeight: 700,
-  borderRadius: 4,
-  cursor: 'pointer',
-  border: 'none',
-  background: danger ? '#FF4D6B' : '#1a2332',
-  color: '#fff',
-  textAlign: 'center'
-});
-
-const suggestionChipStyle = {
-  background: 'rgba(255,255,255,0.02)',
-  border: '1px solid rgba(255,255,255,0.04)',
-  borderRadius: 4,
-  padding: '6px 12px',
-  color: '#818cf8',
-  fontSize: '10px',
-  textAlign: 'left',
-  cursor: 'pointer',
-  outline: 'none',
-  width: '100%',
-  transition: 'all 0.15s'
-};
-
-const hudGridStyle = {
-  position: 'absolute',
-  top: '20px',
-  left: '20px',
-  background: 'rgba(5, 8, 16, 0.75)',
-  backdropFilter: 'blur(8px)',
-  border: '1px solid rgba(255,255,255,0.05)',
-  borderRadius: 4,
-  padding: '8px 12px',
-  zIndex: 999,
-  fontFamily: 'monospace',
-  fontSize: 10,
-  color: '#818cf8',
-  boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 4
-};
-
-const commandModeBtnStyle = (active) => ({
-  padding: '5px 12px',
-  fontSize: '9px',
-  fontWeight: 700,
-  borderRadius: 4,
-  cursor: 'pointer',
-  border: 'none',
-  background: active ? 'linear-gradient(135deg, #6366f1, #818cf8)' : 'transparent',
-  color: active ? '#fff' : '#64748b',
-  transition: 'all 0.15s ease'
-});
-
-const mapControlBtnStyle = {
-  width: '32px',
-  height: '32px',
-  background: 'rgba(10,15,30,0.85)',
-  border: '1px solid rgba(255,255,255,0.05)',
-  color: '#fff',
-  borderRadius: 4,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  cursor: 'pointer',
-  backdropFilter: 'blur(10px)',
-  outline: 'none'
-};
-
-const layerOptionStyle = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 6,
-  fontSize: '9px',
-  color: '#B0B0B0',
-  cursor: 'pointer'
-};
-
-const bottomStatBlockStyle = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 6
-};
-
-const bottomStatLabelStyle = {
-  fontSize: '9px',
-  color: '#64748b',
-  textTransform: 'uppercase'
-};
-
-const bottomStatValStyle = {
-  fontSize: '11px',
-  fontWeight: 700,
-  color: '#fff'
+// Inline Styles matching exact color theme & design system from screenshot
+const styles = {
+  container: {
+    width: '100vw',
+    height: '100vh',
+    background: '#070b14',
+    color: '#f3f4f6',
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
+    fontFamily: "'Inter', system-ui, sans-serif",
+    position: 'fixed',
+    inset: 0,
+    zIndex: 99999
+  },
+  header: {
+    height: '48px',
+    background: 'rgba(11, 15, 25, 0.95)',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '0 16px',
+    zIndex: 100
+  },
+  headerLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px'
+  },
+  logoBadge: {
+    width: '28px',
+    height: '28px',
+    borderRadius: '8px',
+    background: 'linear-gradient(135deg, #6366f1, #3b82f6)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 0 10px rgba(99, 102, 241, 0.4)'
+  },
+  logoTitle: {
+    fontSize: '16px',
+    fontWeight: 900,
+    background: 'linear-gradient(90deg, #ffffff, #818cf8)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    letterSpacing: '-0.02em'
+  },
+  headerCenterPill: {
+    background: 'rgba(6, 78, 59, 0.6)',
+    border: '1px solid #10b981',
+    borderRadius: '20px',
+    padding: '4px 14px',
+    fontSize: '11px',
+    color: '#a7f3d0',
+    fontWeight: 700,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px'
+  },
+  liveDot: {
+    width: '8px',
+    height: '8px',
+    borderRadius: '50%',
+    background: '#10b981',
+    boxShadow: '0 0 8px #10b981'
+  },
+  headerRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '14px'
+  },
+  statusPill: {
+    fontSize: '11px',
+    color: '#10b981',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontWeight: 600
+  },
+  timeBadge: {
+    fontSize: '12px',
+    fontFamily: 'monospace',
+    fontWeight: 700,
+    color: '#818cf8',
+    background: 'rgba(99, 102, 241, 0.1)',
+    padding: '3px 8px',
+    borderRadius: '6px',
+    border: '1px solid rgba(99, 102, 241, 0.2)'
+  },
+  userBadge: {
+    fontSize: '11px',
+    color: '#9ca3af',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    background: 'rgba(255, 255, 255, 0.04)',
+    padding: '4px 10px',
+    borderRadius: '8px',
+    border: '1px solid rgba(255, 255, 255, 0.08)'
+  },
+  viewport: {
+    flex: 1,
+    position: 'relative',
+    overflow: 'hidden'
+  },
+  mapCanvas: {
+    position: 'absolute',
+    inset: 0,
+    zIndex: 1
+  },
+  mapLegend: {
+    position: 'absolute',
+    bottom: '90px',
+    right: '340px',
+    background: 'rgba(11, 15, 25, 0.85)',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    borderRadius: '10px',
+    padding: '10px 14px',
+    backdropFilter: 'blur(10px)',
+    zIndex: 20
+  },
+  legendRow: {
+    fontSize: '10px',
+    color: '#9ca3af',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    marginTop: '3px'
+  },
+  legendDot: {
+    width: '8px',
+    height: '8px',
+    borderRadius: '50%'
+  },
+  mapToolsGroup: {
+    position: 'absolute',
+    top: '16px',
+    right: '340px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+    zIndex: 20
+  },
+  mapToolBtn: {
+    width: '32px',
+    height: '32px',
+    borderRadius: '8px',
+    background: 'rgba(11, 15, 25, 0.85)',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    color: 'white',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    backdropFilter: 'blur(10px)'
+  },
+  sosCard: {
+    position: 'absolute',
+    top: '16px',
+    left: '16px',
+    width: '380px',
+    background: 'rgba(11, 15, 25, 0.92)',
+    border: '1px solid rgba(239, 68, 68, 0.4)',
+    borderRadius: '14px',
+    padding: '14px',
+    backdropFilter: 'blur(16px)',
+    boxShadow: '0 10px 40px rgba(239, 68, 68, 0.25)',
+    zIndex: 30
+  },
+  cardHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '10px'
+  },
+  closeBtn: {
+    background: 'none',
+    border: 'none',
+    color: '#6b7280',
+    cursor: 'pointer'
+  },
+  sosAlertBox: {
+    background: 'rgba(239, 68, 68, 0.08)',
+    border: '1px solid rgba(239, 68, 68, 0.2)',
+    borderRadius: '10px',
+    padding: '12px'
+  },
+  btnAcknowledge: {
+    flex: 1,
+    padding: '8px',
+    background: '#ef4444',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '10px',
+    fontWeight: 900,
+    cursor: 'pointer',
+    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.4)'
+  },
+  btnLiveFeed: {
+    padding: '8px 14px',
+    background: '#f59e0b',
+    color: '#070b14',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '10px',
+    fontWeight: 900,
+    cursor: 'pointer'
+  },
+  rightDock: {
+    position: 'absolute',
+    top: '16px',
+    right: '16px',
+    bottom: '90px',
+    width: '310px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+    overflowY: 'auto',
+    zIndex: 20
+  },
+  widgetCard: {
+    background: 'rgba(11, 15, 25, 0.92)',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    borderRadius: '12px',
+    padding: '12px',
+    backdropFilter: 'blur(16px)'
+  },
+  widgetHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  widgetTitle: {
+    fontSize: '11px',
+    fontWeight: 800,
+    color: '#f3f4f6',
+    letterSpacing: '0.04em'
+  },
+  tableHeader: {
+    display: 'grid',
+    gridTemplateColumns: '1.2fr 1fr 1fr 1.2fr',
+    fontSize: '9px',
+    color: '#6b7280',
+    paddingBottom: '4px',
+    borderBottom: '1px solid rgba(255,255,255,0.06)'
+  },
+  tableRow: {
+    display: 'grid',
+    gridTemplateColumns: '1.2fr 1fr 1fr 1.2fr',
+    fontSize: '10px',
+    alignItems: 'center',
+    padding: '4px 0',
+    borderBottom: '1px solid rgba(255,255,255,0.03)'
+  },
+  pillActive: {
+    fontSize: '9px',
+    fontWeight: 700,
+    color: '#34d399',
+    background: 'rgba(52, 211, 153, 0.15)',
+    padding: '1px 5px',
+    borderRadius: '4px',
+    display: 'inline-block'
+  },
+  pillRone: {
+    fontSize: '9px',
+    fontWeight: 700,
+    color: '#f87171',
+    background: 'rgba(248, 113, 113, 0.15)',
+    padding: '1px 5px',
+    borderRadius: '4px',
+    display: 'inline-block'
+  },
+  timeText: {
+    fontSize: '9px',
+    color: '#6b7280'
+  },
+  chartContainer: {
+    background: 'rgba(0,0,0,0.3)',
+    borderRadius: '8px',
+    padding: '6px',
+    border: '1px solid rgba(255,255,255,0.04)'
+  },
+  searchInput: {
+    width: '100%',
+    padding: '6px 8px 6px 24px',
+    background: 'rgba(0,0,0,0.3)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: '6px',
+    color: 'white',
+    fontSize: '10px',
+    outline: 'none',
+    boxSizing: 'border-box'
+  },
+  btnIconShare: {
+    padding: '6px 8px',
+    background: '#6366f1',
+    border: 'none',
+    color: 'white',
+    borderRadius: '6px',
+    cursor: 'pointer'
+  },
+  linkInput: {
+    flex: 1,
+    padding: '4px 8px',
+    background: 'rgba(0,0,0,0.3)',
+    border: '1px solid rgba(255,255,255,0.06)',
+    borderRadius: '6px',
+    color: '#818cf8',
+    fontSize: '9px',
+    fontFamily: 'monospace'
+  },
+  btnCopy: {
+    padding: '4px 8px',
+    background: 'rgba(255,255,255,0.06)',
+    border: 'none',
+    color: 'white',
+    borderRadius: '6px',
+    cursor: 'pointer'
+  },
+  btnSharePrimary: {
+    padding: '4px 12px',
+    background: '#6366f1',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '10px',
+    fontWeight: 700,
+    cursor: 'pointer'
+  },
+  bottomDock: {
+    position: 'absolute',
+    bottom: '12px',
+    left: '16px',
+    right: '340px',
+    background: 'rgba(11, 15, 25, 0.94)',
+    border: '1px solid rgba(99, 102, 241, 0.25)',
+    borderRadius: '12px',
+    padding: '10px 14px',
+    backdropFilter: 'blur(16px)',
+    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.6)',
+    zIndex: 20
+  },
+  timelineScrubber: {
+    position: 'relative',
+    height: '24px',
+    display: 'flex',
+    alignItems: 'center',
+    margin: '4px 0 8px'
+  },
+  timelineLineBg: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    height: '4px',
+    background: 'rgba(255,255,255,0.1)',
+    borderRadius: '2px'
+  },
+  timelineLineProgress: {
+    position: 'absolute',
+    left: 0,
+    height: '4px',
+    background: 'linear-gradient(90deg, #6366f1, #38bdf8)',
+    borderRadius: '2px',
+    boxShadow: '0 0 8px #38bdf8'
+  },
+  timelineNode: {
+    position: 'absolute',
+    transform: 'translate(-50%, -14px)',
+    padding: '1px 6px',
+    borderRadius: '4px',
+    color: 'white',
+    fontSize: '9px',
+    fontWeight: 800,
+    boxShadow: '0 2px 6px rgba(0,0,0,0.5)'
+  },
+  playheadMarker: {
+    position: 'absolute',
+    width: '12px',
+    height: '12px',
+    borderRadius: '50%',
+    background: 'white',
+    border: '2px solid #6366f1',
+    boxShadow: '0 0 10px white',
+    transform: 'translateX(-50%)'
+  },
+  controlsBar: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between'
+  },
+  btnPlayToggle: {
+    width: '28px',
+    height: '28px',
+    borderRadius: '50%',
+    background: '#6366f1',
+    border: 'none',
+    color: 'white',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer'
+  },
+  btnMiniControl: {
+    background: 'none',
+    border: 'none',
+    color: '#9ca3af',
+    cursor: 'pointer',
+    fontSize: '12px'
+  },
+  timeBadgeDigit: {
+    color: 'white',
+    fontFamily: 'monospace',
+    background: 'rgba(255,255,255,0.06)',
+    padding: '2px 6px',
+    borderRadius: '4px',
+    marginLeft: '4px'
+  },
+  btnBottomIcon: {
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    color: '#9ca3af',
+    borderRadius: '6px',
+    padding: '4px 8px',
+    cursor: 'pointer'
+  }
 };

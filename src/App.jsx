@@ -1,24 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/layout/Layout';
+import PageSkeletonLoader from './components/shared/PageSkeletonLoader';
 
 // Lazy imports for code splitting
-import Dashboard from './pages/Dashboard';
-import FleetOverview from './pages/fleet/FleetOverview';
-import LiveTracking from './pages/fleet/LiveTracking';
-import KnowledgeGraph from './pages/knowledge/KnowledgeGraph';
-import ERPDashboard from './pages/erp/ERPDashboard';
-import CRMDashboard from './pages/crm/CRMDashboard';
-import HCMDashboard from './pages/hcm/HCMDashboard';
-import AICopilot from './pages/copilot/AICopilot';
-import AgentsDashboard from './pages/agents/AgentsDashboard';
-import Analytics from './pages/analytics/Analytics';
-import PortalsWorkspace from './pages/portals/PortalsWorkspace';
-import CustomerPortal from './pages/portals/CustomerPortal';
-import ProfileSettings from './pages/profile/ProfileSettings';
-import SecurityFortress from './pages/security/SecurityFortress';
-import LandingPage from './pages/LandingPage';
-import Unauthorized from './pages/security/Unauthorized';
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const FleetOverview = lazy(() => import('./pages/fleet/FleetOverview'));
+const LiveTracking = lazy(() => import('./pages/fleet/LiveTracking'));
+const KnowledgeGraph = lazy(() => import('./pages/knowledge/KnowledgeGraph'));
+const ERPDashboard = lazy(() => import('./pages/erp/ERPDashboard'));
+const CRMDashboard = lazy(() => import('./pages/crm/CRMDashboard'));
+const HCMDashboard = lazy(() => import('./pages/hcm/HCMDashboard'));
+const AICopilot = lazy(() => import('./pages/copilot/AICopilot'));
+const AgentsDashboard = lazy(() => import('./pages/agents/AgentsDashboard'));
+const Analytics = lazy(() => import('./pages/analytics/Analytics'));
+const PortalsWorkspace = lazy(() => import('./pages/portals/PortalsWorkspace'));
+const CustomerPortal = lazy(() => import('./pages/portals/CustomerPortal'));
+const ProfileSettings = lazy(() => import('./pages/profile/ProfileSettings'));
+const SecurityFortress = lazy(() => import('./pages/security/SecurityFortress'));
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const Unauthorized = lazy(() => import('./pages/security/Unauthorized'));
 
 import { ThemeContext } from './context/ThemeContext';
 import { Lock, Shield, Fingerprint, AlertCircle, CheckCircle } from 'lucide-react';
@@ -83,7 +84,9 @@ function App() {
   if (!userRole) {
     return (
       <ThemeContext.Provider value={contextValue}>
-        <LandingPage />
+        <Suspense fallback={<PageSkeletonLoader />}>
+          <LandingPage />
+        </Suspense>
       </ThemeContext.Provider>
     );
   }
@@ -91,23 +94,25 @@ function App() {
   return (
     <ThemeContext.Provider value={contextValue}>
       <Layout>
-        <Routes>
-          <Route path="/" element={<ProtectedRoute element={<Dashboard />} path="/" userRole={userRole} />} />
-          <Route path="/fleet" element={<ProtectedRoute element={<FleetOverview />} path="/fleet" userRole={userRole} />} />
-          <Route path="/tracking" element={<ProtectedRoute element={<LiveTracking />} path="/tracking" userRole={userRole} />} />
-          <Route path="/knowledge-graph" element={<ProtectedRoute element={<KnowledgeGraph />} path="/knowledge-graph" userRole={userRole} />} />
-          <Route path="/erp" element={<ProtectedRoute element={<ERPDashboard />} path="/erp" userRole={userRole} />} />
-          <Route path="/crm" element={<ProtectedRoute element={<CRMDashboard />} path="/crm" userRole={userRole} />} />
-          <Route path="/hcm" element={<ProtectedRoute element={<HCMDashboard />} path="/hcm" userRole={userRole} />} />
-          <Route path="/copilot" element={<ProtectedRoute element={<AICopilot />} path="/copilot" userRole={userRole} />} />
-          <Route path="/agents" element={<ProtectedRoute element={<AgentsDashboard />} path="/agents" userRole={userRole} />} />
-          <Route path="/analytics" element={<ProtectedRoute element={<Analytics />} path="/analytics" userRole={userRole} />} />
-          <Route path="/portals" element={<ProtectedRoute element={<PortalsWorkspace />} path="/portals" userRole={userRole} />} />
-          <Route path="/customer-portal" element={<ProtectedRoute element={<CustomerPortal />} path="/customer-portal" userRole={userRole} />} />
-          <Route path="/profile" element={<ProtectedRoute element={<ProfileSettings />} path="/profile" userRole={userRole} />} />
-          <Route path="/security" element={<ProtectedRoute element={<SecurityFortress />} path="/security" userRole={userRole} />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <Suspense fallback={<PageSkeletonLoader />}>
+          <Routes>
+            <Route path="/" element={<ProtectedRoute element={<Dashboard />} path="/" userRole={userRole} />} />
+            <Route path="/fleet" element={<ProtectedRoute element={<FleetOverview />} path="/fleet" userRole={userRole} />} />
+            <Route path="/tracking" element={<ProtectedRoute element={<LiveTracking />} path="/tracking" userRole={userRole} />} />
+            <Route path="/knowledge-graph" element={<ProtectedRoute element={<KnowledgeGraph />} path="/knowledge-graph" userRole={userRole} />} />
+            <Route path="/erp" element={<ProtectedRoute element={<ERPDashboard />} path="/erp" userRole={userRole} />} />
+            <Route path="/crm" element={<ProtectedRoute element={<CRMDashboard />} path="/crm" userRole={userRole} />} />
+            <Route path="/hcm" element={<ProtectedRoute element={<HCMDashboard />} path="/hcm" userRole={userRole} />} />
+            <Route path="/copilot" element={<ProtectedRoute element={<AICopilot />} path="/copilot" userRole={userRole} />} />
+            <Route path="/agents" element={<ProtectedRoute element={<AgentsDashboard />} path="/agents" userRole={userRole} />} />
+            <Route path="/analytics" element={<ProtectedRoute element={<Analytics />} path="/analytics" userRole={userRole} />} />
+            <Route path="/portals" element={<ProtectedRoute element={<PortalsWorkspace />} path="/portals" userRole={userRole} />} />
+            <Route path="/customer-portal" element={<ProtectedRoute element={<CustomerPortal />} path="/customer-portal" userRole={userRole} />} />
+            <Route path="/profile" element={<ProtectedRoute element={<ProfileSettings />} path="/profile" userRole={userRole} />} />
+            <Route path="/security" element={<ProtectedRoute element={<SecurityFortress />} path="/security" userRole={userRole} />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </Layout>
     </ThemeContext.Provider>
   );

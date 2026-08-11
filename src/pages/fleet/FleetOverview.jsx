@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { generateTrucks, formatCurrency } from '../../data/mockData';
 import { RealityEngine } from '../../data/RealityEngine';
+import FastagEwayHub from '../../components/fleet/FastagEwayHub';
 
 // ---- Generate stable data at module level ----
 const ALL_TRUCKS = generateTrucks(50);
@@ -444,6 +445,7 @@ const styles = {
 export default function FleetOverview() {
   const [trucks, setTrucks] = useState(() => ALL_TRUCKS);
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [showFastagEway, setShowFastagEway] = useState(false);
   const [selectedTruckForDocs, setSelectedTruckForDocs] = useState(null);
   const [selectedTruckForRouteMap, setSelectedTruckForRouteMap] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -690,6 +692,14 @@ export default function FleetOverview() {
           </p>
         </div>
         <div style={styles.headerActions}>
+          <motion.button
+            style={{ ...styles.btnSecondary, borderColor: '#10b981', color: '#6ee7b7', background: 'rgba(16, 185, 129, 0.1)' }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => setShowFastagEway(true)}
+          >
+            💳 FASTag & e-Way Hub
+          </motion.button>
           <motion.button
             style={styles.btnPrimary}
             whileHover={{ scale: 1.03, boxShadow: '0 4px 16px rgba(99, 102, 241, 0.4)' }}
@@ -1591,6 +1601,9 @@ export default function FleetOverview() {
             filteredTrucks={filteredTrucks}
             onClose={() => setExportModalOpen(false)}
           />
+        )}
+        {showFastagEway && (
+          <FastagEwayHub onClose={() => setShowFastagEway(false)} />
         )}
       </AnimatePresence>
     </div>
