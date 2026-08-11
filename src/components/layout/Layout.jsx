@@ -49,11 +49,12 @@ export default function Layout({ children }) {
     },
     main: {
       flex: 1,
+      marginTop: '68px',
       marginLeft: `${sidebarWidth}px`,
       width: `calc(100% - ${sidebarWidth}px)`,
       display: 'flex',
       flexDirection: 'column',
-      minHeight: '100vh',
+      minHeight: 'calc(100vh - 68px)',
       position: 'relative',
       overflow: 'hidden',
       transition: 'margin-left var(--transition-base), width var(--transition-base)',
@@ -86,9 +87,9 @@ export default function Layout({ children }) {
 
   return (
     <div style={styles.container}>
+      <Topbar />
       <Sidebar />
       <div style={styles.main}>
-        <Topbar />
         <main style={styles.content}>
           {children}
         </main>

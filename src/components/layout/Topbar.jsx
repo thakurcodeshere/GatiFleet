@@ -5,7 +5,7 @@ import {
   Search, Bell, Sun, Moon, Sparkles, User,
   Settings, LogOut, X, Truck, LayoutDashboard,
   Building2, BarChart3, MapPin, Network, Users,
-  IndianRupee, UserCircle, Bot, ShieldCheck, ChevronRight
+  IndianRupee, UserCircle, Bot, ShieldCheck, ChevronRight, PanelLeft
 } from 'lucide-react';
 import { generateAlerts } from '../../data/mockData';
 
@@ -72,7 +72,7 @@ const GLOBAL_SEARCH_INDEX = [
 
 export default function Topbar() {
   const navigate = useNavigate();
-  const { theme, toggleTheme, copilotOpen, userRole, logoutUser } = useTheme();
+  const { theme, toggleTheme, toggleSidebar, sidebarCollapsed, copilotOpen, userRole, logoutUser } = useTheme();
   
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchValue, setSearchValue] = useState('');
@@ -116,9 +116,11 @@ export default function Topbar() {
       alignItems: 'center',
       justifyContent: 'space-between',
       padding: '0 24px',
-      position: 'sticky',
+      position: 'fixed',
       top: 0,
-      zIndex: 'var(--z-sticky)',
+      left: 0,
+      right: 0,
+      zIndex: 1000,
       backdropFilter: 'blur(20px)',
     },
     left: {
@@ -414,7 +416,18 @@ export default function Topbar() {
   return (
     <header style={styles.topbar}>
       <div style={styles.left}>
-        {/* Logo */}
+        {/* Navigation Sidebar Toggle Button */}
+        <button
+          style={{ ...styles.iconBtn(), width: 34, height: 34, marginRight: '4px' }}
+          onClick={toggleSidebar}
+          title={sidebarCollapsed ? "Expand Navigation Sidebar" : "Collapse Navigation Sidebar"}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-hover)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+        >
+          <PanelLeft size={18} color="var(--primary-400)" />
+        </button>
+
+        {/* The Single Unified Brand Logo */}
         <div style={styles.logo} onClick={() => navigate('/')}>
           <div style={styles.logoIcon}>
             <Truck size={18} color="white" />

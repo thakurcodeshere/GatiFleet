@@ -79,7 +79,7 @@ export default function Sidebar() {
   const styles = {
     sidebar: {
       width: sidebarCollapsed ? 'var(--sidebar-collapsed-width)' : `${sidebarWidth}px`,
-      height: '100vh',
+      height: 'calc(100vh - 68px)',
       background: 'var(--bg-800)',
       borderRight: '1px solid var(--border-subtle)',
       display: 'flex',
@@ -87,7 +87,7 @@ export default function Sidebar() {
       transition: isResizing ? 'none' : 'width var(--transition-base)',
       position: 'fixed',
       left: 0,
-      top: 0,
+      top: '68px',
       zIndex: 'var(--z-sticky)',
       overflow: 'hidden',
     },
@@ -227,15 +227,6 @@ export default function Sidebar() {
 
   return (
     <aside style={styles.sidebar}>
-      <div style={styles.logo} onClick={() => navigate('/')}>
-        <div style={styles.logoIcon}>
-          <Truck size={20} color="white" />
-        </div>
-        <div style={styles.logoText}>
-          <div style={styles.logoTitle}>GatiFleet</div>
-          <div style={styles.logoSub}>Transport AI OS</div>
-        </div>
-      </div>
 
       <nav style={styles.nav}>
         {filteredNavItems.map((item) => {
