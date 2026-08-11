@@ -107,6 +107,13 @@ export default function LiveTracking() {
   const [copiedLink, setCopiedLink] = useState(false);
   const [sharedUrl, setSharedUrl] = useState('https://danis.com/sharedftaltA9842');
 
+  // Reefer Telemetry Selected Vehicle State
+  const [reeferTruckId, setReeferTruckId] = useState('TRK-314');
+
+  const currentReeferTruck = useMemo(() => {
+    return ALL_TRUCKS.find(t => t.id === reeferTruckId) || ALL_TRUCKS[0];
+  }, [reeferTruckId]);
+
   // Map Ref
   const mapRef = useRef(null);
   const leafletMap = useRef(null);
@@ -653,16 +660,35 @@ export default function LiveTracking() {
                     <Thermometer size={15} color="#38bdf8" />
                     <span style={styles.widgetTitle}>REEFER TELEMETRY</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#9ca3af', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: 6 }}>
-                    <span>TRK-314</span>
-                    <ChevronDown size={12} />
-                  </div>
+                  <select
+                    value={reeferTruckId}
+                    onChange={(e) => setReeferTruckId(e.target.value)}
+                    style={{
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      color: '#818cf8',
+                      background: '#090d16',
+                      border: '1px solid rgba(99, 102, 241, 0.4)',
+                      borderRadius: '6px',
+                      padding: '3px 8px',
+                      outline: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {ALL_TRUCKS.map(t => (
+                      <option key={t.id} value={t.id} style={{ background: '#090d16', color: '#f3f4f6' }}>
+                        {t.id} ({t.refrigTemp}°C)
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '6px 0 8px' }}>
                   <div>
                     <span style={{ fontSize: 11, color: '#9ca3af' }}>Temperature °C &nbsp;</span>
-                    <span style={{ fontSize: 13, fontWeight: 800, color: '#38bdf8' }}>-22.1°C</span>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: '#38bdf8' }}>
+                      {currentReeferTruck ? `${currentReeferTruck.refrigTemp}°C` : '-22.1°C'}
+                    </span>
                     <span style={{ fontSize: 11, color: '#6b7280' }}> / -22.0°C</span>
                   </div>
                   <span style={{ fontSize: 10, fontWeight: 700, color: '#f59e0b', background: 'rgba(245, 158, 11, 0.15)', padding: '2px 6px', borderRadius: 4 }}>
