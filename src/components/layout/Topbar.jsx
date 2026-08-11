@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import {
   Search, Bell, Sun, Moon, Sparkles, User,
@@ -72,8 +72,7 @@ const GLOBAL_SEARCH_INDEX = [
 
 export default function Topbar() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { theme, toggleTheme, toggleCopilot, copilotOpen, userRole, logoutUser } = useTheme();
+  const { theme, toggleTheme, copilotOpen, userRole, logoutUser } = useTheme();
   
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchValue, setSearchValue] = useState('');
