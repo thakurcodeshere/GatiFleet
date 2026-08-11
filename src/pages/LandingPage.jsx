@@ -67,48 +67,42 @@ const ROLE_TEMPLATES = [
 
 export default function LandingPage() {
   const { setUserRole } = useTheme();
-  const [googleView, setGoogleView] = useState(true); // Start with Google search simulation
+  const [googleView, setGoogleView] = useState(false); // Direct access to GatiFleet
   const [selectedRole, setSelectedRole] = useState(null);
   const [passcode, setPasscode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [authSuccess, setAuthSuccess] = useState(false);
 
+  const quickLaunchRole = (roleId, targetPath = '/customer-portal') => {
+    setAuthSuccess(true);
+    setUserRole(roleId);
+    localStorage.setItem('gatifleet-user-role', roleId);
+    window.location.hash = `#${targetPath}`;
+  };
+
   const handleRoleAuth = (e) => {
     e.preventDefault();
     if (!selectedRole) return;
 
-    if (passcode === selectedRole.passcode) {
-      setAuthSuccess(true);
-      setError('');
-      
-      // Dispatch authorization event to RealityEngine
-      RealityEngine.events = [{
-        id: `ev-${Date.now()}`,
-        timestamp: new Date().toISOString(),
-        type: 'ROLE_AUTHORIZED',
-        desc: `Employee console unlocked successfully. Active session role: ${selectedRole.id}.`,
-        source: 'SYS/GUARD'
-      }, ...RealityEngine.events];
-      RealityEngine.notify();
+    setAuthSuccess(true);
+    setError('');
+    
+    // Dispatch authorization event to RealityEngine
+    RealityEngine.events = [{
+      id: `ev-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      type: 'ROLE_AUTHORIZED',
+      desc: `Employee console unlocked successfully. Active session role: ${selectedRole.id}.`,
+      source: 'SYS/GUARD'
+    }, ...RealityEngine.events];
+    RealityEngine.notify();
 
-      setTimeout(() => {
-        setUserRole(selectedRole.id);
-        localStorage.setItem('gatifleet-user-role', selectedRole.id);
-        window.location.hash = `#${selectedRole.defaultPath}`;
-      }, 1000);
-    } else {
-      setError('Invalid passcode token. Check role hint below.');
-      
-      RealityEngine.events = [{
-        id: `ev-${Date.now()}`,
-        timestamp: new Date().toISOString(),
-        type: 'ROLE_AUTH_FAILED',
-        desc: `Failed auth attempt for role: ${selectedRole.id}. Invalid passcode signature.`,
-        source: 'SYS/GUARD'
-      }, ...RealityEngine.events];
-      RealityEngine.notify();
-    }
+    setTimeout(() => {
+      setUserRole(selectedRole.id);
+      localStorage.setItem('gatifleet-user-role', selectedRole.id);
+      window.location.hash = `#${selectedRole.defaultPath || '/customer-portal'}`;
+    }, 500);
   };
 
   const handleGoogleClick = () => {

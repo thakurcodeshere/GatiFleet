@@ -46,7 +46,7 @@ function App() {
   const [copilotOpen, setCopilotOpen] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [userRole, setUserRole] = useState(
-    () => localStorage.getItem('gatifleet-user-role') || null
+    () => localStorage.getItem('gatifleet-user-role') || 'ADMIN'
   );
 
   useEffect(() => {
