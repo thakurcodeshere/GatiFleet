@@ -23,6 +23,7 @@ import GisWeatherDrawer from '../../components/fleet/GisWeatherDrawer';
 import ConsignmentVaultModal from '../../components/fleet/ConsignmentVaultModal';
 import WaypointFilterModal from '../../components/fleet/WaypointFilterModal';
 import PlaybackSettingsModal from '../../components/fleet/PlaybackSettingsModal';
+import TpmsSettingsModal from '../../components/fleet/TpmsSettingsModal';
 
 // ---- Static Data Generation ----
 const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -102,6 +103,7 @@ export default function LiveTracking() {
   const [showConsignmentVault, setShowConsignmentVault] = useState(false);
   const [showWaypointFilter, setShowWaypointFilter] = useState(false);
   const [showPlaybackSettings, setShowPlaybackSettings] = useState(false);
+  const [showTpmsSettings, setShowTpmsSettings] = useState(false);
 
   // Consignee Link Copy State
   const [copiedLink, setCopiedLink] = useState(false);
@@ -726,7 +728,23 @@ export default function LiveTracking() {
                     <Disc size={15} color="#c084fc" />
                     <span style={styles.widgetTitle}>TPMS 18-WHEELER HEATMAP</span>
                   </div>
-                  <span style={{ fontSize: 10, color: '#9ca3af' }}>•••</span>
+                  <button
+                    onClick={() => setShowTpmsSettings(true)}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      color: '#c084fc',
+                      borderRadius: '6px',
+                      padding: '2px 8px',
+                      fontSize: '11px',
+                      fontWeight: 900,
+                      letterSpacing: '0.1em',
+                      cursor: 'pointer'
+                    }}
+                    title="TPMS Telemetry Options & Diagnostics"
+                  >
+                    •••
+                  </button>
                 </div>
                 <div style={{ fontSize: 10, color: '#6b7280', marginBottom: 8 }}>Tyre pressure (PSI) and temp (°C)</div>
 
@@ -907,11 +925,12 @@ export default function LiveTracking() {
         </footer>
       </div>
 
-      {/* Render 4 Interactive Playback Icon Feature Drawers */}
+      {/* Render Interactive Playback & Telematics Feature Drawers */}
       {showGisDrawer && <GisWeatherDrawer onClose={() => setShowGisDrawer(false)} />}
       {showConsignmentVault && <ConsignmentVaultModal vehicle={selectedTruck} onClose={() => setShowConsignmentVault(false)} />}
       {showWaypointFilter && <WaypointFilterModal onClose={() => setShowWaypointFilter(false)} onSelectWaypoint={(wp) => alert(`Jumping map timeline to Waypoint ${wp.id}: ${wp.location}`)} />}
       {showPlaybackSettings && <PlaybackSettingsModal onClose={() => setShowPlaybackSettings(false)} />}
+      {showTpmsSettings && <TpmsSettingsModal onClose={() => setShowTpmsSettings(false)} />}
 
       <style>{`
         @keyframes pulseRing {
