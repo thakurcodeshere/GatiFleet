@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { Settings, Volume2, Eye, Compass, Sliders, X } from 'lucide-react';
+import { X } from 'lucide-react';
 
 export default function PlaybackSettingsModal({ onClose }) {
   const [autoFollow, setAutoFollow] = useState(true);
   const [scrubberPrecision, setScrubberPrecision] = useState('30s'); // 5s, 30s, 60s
   const [audioChimes, setAudioChimes] = useState(true);
-  const [showTelemetryBadges, setShowTelemetryBadges] = useState(true);
 
   return (
     <div style={{

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, AlertTriangle, Gauge, Clock, Fuel, MapPin, X } from 'lucide-react';
+import { MapPin, X } from 'lucide-react';
 
 export default function WaypointFilterModal({ onClose, onSelectWaypoint }) {
   const [filterCategory, setFilterCategory] = useState('ALL');

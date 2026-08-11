@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, Download, CheckCircle, ShieldCheck, Truck, User, IndianRupee, X } from 'lucide-react';
+import { Download, ShieldCheck, X } from 'lucide-react';
 
 export default function ConsignmentVaultModal({ vehicle, onClose }) {
   const [downloaded, setDownloaded] = useState(false);

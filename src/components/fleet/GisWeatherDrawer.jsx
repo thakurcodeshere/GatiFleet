@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CloudRain, Sun, Wind, AlertTriangle, Layers, Map, Eye, X } from 'lucide-react';
+import { AlertTriangle, X } from 'lucide-react';
 
 export default function GisWeatherDrawer({ onClose }) {
   const [activeLayer, setActiveLayer] = useState('CYBER_DARK');
