@@ -1,1565 +1,1042 @@
 /* eslint-disable */
 // ============================================================
-// GatiFleet — Unified Transportation Reality Engine (TRE) Cockpit
-// Combining both: 5-Tab Business Workspace & 10-Layer Core Engine Cockpit
+// GatiFleet — Customer Workspace
+// Full 9-Tab Enterprise Customer Intelligence Operating System
+// Modules: CIC, Digital Twin, ARIE, ACAIS, RABIP, ACOIP, Support, AI, Audit
 // ============================================================
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Users, Truck, MapPin, Bot, Sparkles, Clock, Activity, CheckCircle,
-  AlertTriangle, Send, ChevronRight, Coins, Zap, Award, Building2,
-  Landmark, ShieldCheck, UserPlus, X, ShieldAlert, Sliders, Globe, Compass,
-  DollarSign, AlertCircle, TrendingUp, BarChart3, Database, Layers, Settings, Share2,
-  FileText, Brain, RefreshCw, Cpu
+  Users, Building2, Brain, Zap, TrendingUp, DollarSign, FileText, MessageSquare,
+  Activity, Clock, AlertTriangle, CheckCircle, ChevronRight, Search,
+  Star, Award, Target, Shield, Globe, Cpu, RefreshCw, Send, X, Plus,
+  BarChart3, Layers, Eye, ArrowRight, Sparkles, Bot, Heart, Package, Truck,
+  MapPin, Phone, Mail, ExternalLink, Edit3, Download, Bell, Settings, Info,
+  AlertCircle, ChevronDown, ChevronUp, Calendar, Flag, Briefcase, PieChart,
+  TrendingDown, Bookmark, Share2, UserCheck, UserX, Building, IndianRupee,
+  CreditCard, Receipt, ShieldCheck, ShieldAlert, GitBranch, Network, Database,
+  Lock, Unlock, Play, Pause, RotateCcw, Maximize2, Copy, Check, Hash, Percent
 } from 'lucide-react';
 import { RealityEngine } from '../../data/RealityEngine';
-import { CITIES, formatCurrency } from '../../data/mockData';
+import { ALL_CUSTOMERS, LIFECYCLE_STATES, getHealthColor, getLifecycleColor, getChurnColor, getDealHealthColor } from '../../data/customerData';
 import { useTheme } from '../../context/ThemeContext';
 
-// Role-based adaptations
-const ROLE_DETAILS = {
-  CEO: {
-    title: "Chief Executive Command Console",
-    description: "Enterprise strategic margins, long-term capital exposure, growth hedges, and corporate carbon liability.",
-    kpis: {
-      revProtected: "₹42.9 Cr",
-      revProtectedTrend: "+8.3%",
-      revAtRisk: "₹1.8 Cr",
-      revAtRiskTrend: "-12.5%",
-      inventoryValue: "₹184.2 Cr",
-      workingCapital: "₹34.6 Cr",
-      costVariance: "+1.2%",
-      slaPredict: "98.4%",
-      netHealth: "Nominal (99.8%)",
-      cashImpact: "₹14.2 Cr"
-    },
-    alerts: [
-      { id: 'ceo-1', title: 'Customer Churn Risk', desc: 'Tata Motors contract flags 12% churn risk due to recent Siliguri delays.', type: 'danger' },
-      { id: 'ceo-2', title: 'Strategic Carbon Penalty', desc: 'Emissions offset requirements projected to rise 8% in Q4 if road share exceeds 65%.', type: 'warning' }
-    ],
-    actions: [
-      { label: "Reserve Diwali capacity", detail: "Authorize spot contracts with BlueDart at 6% rebate.", event: "CAPACITY_RESERVED", desc: "Reserved 120 trailer contracts" },
-      { label: "Contact Arjun Kapoor (Tata)", detail: "Initiate VIP CRM alignment call to waive demurrage fees.", event: "VIP_CRM_ALIGN", desc: "Demurrage waiver proposal sent" }
-    ],
-    presets: [
-      "Can we support 30% growth next quarter?",
-      "Review Q3 strategic profit margins",
-      "What is our corporate carbon risk?"
-    ]
-  },
-  ADMIN: {
-    title: "Super Admin System Command",
-    description: "Complete platform orchestration, multi-agent consensus control, permission bounds, and infrastructure health.",
-    kpis: {
-      revProtected: "₹58.4 Cr",
-      revProtectedTrend: "+11.2%",
-      revAtRisk: "₹0.4 Cr",
-      revAtRiskTrend: "-22.1%",
-      inventoryValue: "₹210.0 Cr",
-      workingCapital: "₹45.0 Cr",
-      costVariance: "0.0%",
-      slaPredict: "99.2%",
-      netHealth: "Optimal (100%)",
-      cashImpact: "₹18.5 Cr"
-    },
-    alerts: [
-      { id: 'admin-1', title: 'PM2 Cluster Load', desc: 'Node-2 worker CPU utilization hit 88% during peak telemetry ingestion.', type: 'warning' },
-      { id: 'admin-2', title: 'API Gateway Rate Guard', desc: 'Restricted 14 unauthorized webhook attempts from external carrier domain.', type: 'danger' }
-    ],
-    actions: [
-      { label: "Rebalance PM2 Clusters", detail: "Trigger automatic load balancing across 4 node worker processes.", event: "CLUSTER_REBALANCE", desc: "Rebalanced 4 PM2 worker instances" },
-      { label: "Audit Global Security Logs", detail: "Generate SOC2 audit trail for active session tokens.", event: "SOC2_AUDIT", desc: "SOC2 compliance audit log generated" }
-    ],
-    presets: [
-      "Show live API gateway throughput",
-      "Verify system SOC2 security state",
-      "Check PM2 worker memory health"
-    ]
-  },
-  OPERATIONS: {
-    title: "Operations & Dispatch Command",
-    description: "Live trailer positioning, driver hours-of-service compliance, depot gate queues, and OTD SLA protection.",
-    kpis: {
-      revProtected: "₹36.8 Cr",
-      revProtectedTrend: "+6.2%",
-      revAtRisk: "₹2.9 Cr",
-      revAtRiskTrend: "-4.2%",
-      inventoryValue: "₹152.0 Cr",
-      workingCapital: "₹24.0 Cr",
-      costVariance: "+0.8%",
-      slaPredict: "97.8%",
-      netHealth: "Nominal (99.2%)",
-      cashImpact: "₹11.5 Cr"
-    },
-    alerts: [
-      { id: 'ops-1', title: 'JNPT Port congestion delay', desc: 'Container dwell average spikes to 14.2 hours. 8 inbound trailers affected.', type: 'danger' },
-      { id: 'ops-2', title: 'Driver Shift allocation shortage', desc: 'NCR hub registry flags 14 driver roster vacancies for night shifts.', type: 'warning' }
-    ],
-    actions: [
-      { label: "Auto-reallocate shift roster", detail: "Trigger standby driver roster pool via HR HCM integrations.", event: "ROSTER_FILL", desc: "Dispatched 14 standby drivers" },
-      { label: "Reroute JNPT inbound trailers", detail: "Divert container queue to secondary customs warehouse depot.", event: "PORT_DIVERT", desc: "Diverted 8 trucks to Panvel hub" }
-    ],
-    presets: [
-      "Show active warehouse dock congestion",
-      "Optimize driver fatigue roster schedules",
-      "Which regional hubs are operating at capacity?"
-    ]
-  },
-  CFO: {
-    title: "Logistics CFO Office",
-    description: "Freight spend analytics, GST reconciliation buffers, fuel card inflation hedges, and working capital cycles.",
-    kpis: {
-      revProtected: "₹28.4 Cr",
-      revProtectedTrend: "+4.1%",
-      revAtRisk: "₹3.2 Cr",
-      revAtRiskTrend: "+15.0%",
-      inventoryValue: "₹120.4 Cr",
-      workingCapital: "₹18.4 Cr",
-      costVariance: "+3.8% (Diesel)",
-      slaPredict: "96.5%",
-      netHealth: "Audit Required",
-      cashImpact: "₹9.8 Cr"
-    },
-    alerts: [
-      { id: 'cfo-1', title: 'Fuel Rate Inflation Surcharge', desc: 'NH48 transporter billing claims average +2.4% fuel surcharge over standard rates.', type: 'warning' },
-      { id: 'cfo-2', title: 'GST Reconciliation Discrepancy', desc: '₹14.8 Lakhs ITC mismatch detected between GSTR-2B and cargo e-way bills.', type: 'danger' }
-    ],
-    actions: [
-      { label: "Apply diesel surcharge hedge", detail: "Execute 10-day volume fuel card pre-buy contract.", event: "FUEL_CARD_BUY", desc: "Hedging 50k Litres at ₹94.2/L" },
-      { label: "Audit GST ledger mismatches", detail: "Trigger automatic supplier reconcile message to Carrier.", event: "GST_RECON_SENT", desc: "Sent ITC reconciliations to Safexpress" }
-    ],
-    presets: [
-      "Why did freight costs increase 6.2% this week?",
-      "Reconcile outstanding transport invoices",
-      "Analyze NH48 toll surcharge inflation"
-    ]
-  },
-  COO: {
-    title: "Operations & Network command",
-    description: "Live warehouse dwell bottlenecks, regional fleet distributions, port congestions, and operational SLAs.",
-    kpis: {
-      revProtected: "₹36.8 Cr",
-      revProtectedTrend: "+6.2%",
-      revAtRisk: "₹2.9 Cr",
-      revAtRiskTrend: "-4.2%",
-      inventoryValue: "₹152.0 Cr",
-      workingCapital: "₹24.0 Cr",
-      costVariance: "+0.8%",
-      slaPredict: "97.8%",
-      netHealth: "Nominal (99.2%)",
-      cashImpact: "₹11.5 Cr"
-    },
-    alerts: [
-      { id: 'coo-1', title: 'JNPT Port congestion delay', desc: 'Container dwell average spikes to 14.2 hours. 8 inbound trailers affected.', type: 'danger' },
-      { id: 'coo-2', title: 'Driver Shift allocation shortage', desc: 'NCR hub registry flags 14 driver roster vacancies for night shifts.', type: 'warning' }
-    ],
-    actions: [
-      { label: "Auto-reallocate shift roster", detail: "Trigger standby driver roster pool via HR HCM integrations.", event: "ROSTER_FILL", desc: "Dispatched 14 standby drivers" },
-      { label: "Reroute JNPT inbound trailers", detail: "Divert container queue to secondary customs warehouse depot.", event: "PORT_DIVERT", desc: "Diverted 8 trucks to Panvel hub" }
-    ],
-    presets: [
-      "Show active warehouse dock congestion",
-      "Optimize driver fatigue roster schedules",
-      "Which regional hubs are operating at capacity?"
-    ]
-  },
-  FINANCE: {
-    title: "Financial Controller & Billing",
-    description: "Rating engines, accessorial billing, credit line approvals, and cashflow velocity forecasting.",
-    kpis: {
-      revProtected: "₹31.2 Cr",
-      revProtectedTrend: "+5.1%",
-      revAtRisk: "₹2.1 Cr",
-      revAtRiskTrend: "-2.4%",
-      inventoryValue: "₹110.0 Cr",
-      workingCapital: "₹19.5 Cr",
-      costVariance: "+1.1%",
-      slaPredict: "97.2%",
-      netHealth: "Balanced",
-      cashImpact: "₹8.9 Cr"
-    },
-    alerts: [
-      { id: 'fin-1', title: 'Credit Limit Exposure', desc: 'Reliance Retail account approaches 88% of approved ₹2.5 Cr credit limit.', type: 'warning' }
-    ],
-    actions: [
-      { label: "Approve temporary credit extension", detail: "Extend credit ceiling by ₹50L for active Q3 shipments.", event: "CREDIT_EXTENDED", desc: "Extended Reliance credit limit" }
-    ],
-    presets: [
-      "What is our DSO average this month?",
-      "Review disputed carrier accessorial claims"
-    ]
-  },
-  CONSIGNER: {
-    title: "Consigner Booking & visibility Panel",
-    description: "Direct spot booking engines, e-way bills generation, live location pins, and POD document control.",
-    kpis: {
-      revProtected: "₹18.2 Cr",
-      revProtectedTrend: "+12.1%",
-      revAtRisk: "₹0.9 Cr",
-      revAtRiskTrend: "-18.5%",
-      inventoryValue: "₹62.0 Cr",
-      workingCapital: "₹6.4 Cr",
-      costVariance: "-0.5% (Contracted)",
-      slaPredict: "99.1%",
-      netHealth: "Optimal",
-      cashImpact: "₹3.8 Cr"
-    },
-    alerts: [
-      { id: 'con-1', title: 'E-way Bill expiring in 4h', desc: 'EWB92841029 (Delhi-Mumbai) will expire. Cargo is 82km away from destination.', type: 'warning' },
-      { id: 'con-2', title: 'Pending POD confirmation', desc: 'Shipment SHP-CT-90483 delivered but consignee signature hash pending.', type: 'warning' }
-    ],
-    actions: [
-      { label: "Extend E-way Bill validity", detail: "Submit GPS telemetry coordinates verification to GST portal.", event: "EWB_EXTENDED", desc: "Extended EWB92841029 by 24 hours" },
-      { label: "Trigger digital POD request", detail: "Ping receiver operator mobile to verify OTP lock status.", event: "POD_PINGED", desc: "Sent OTP ping to consignee" }
-    ],
-    presets: [
-      "Where is my active shipment SHP-CT-90481?",
-      "Book 500 tons Delhi to Chennai route",
-      "Download invoice for last week shipments"
-    ]
-  },
-  SUPPLY_CHAIN_MGR: {
-    title: "Supply Chain Manager cockpit",
-    description: "Production supply alignment, factory stockout margins, temperature-controlled cargo, and lane transit risk indices.",
-    kpis: {
-      revProtected: "₹31.4 Cr",
-      revProtectedTrend: "+5.3%",
-      revAtRisk: "₹4.5 Cr",
-      revAtRiskTrend: "+28.2%",
-      inventoryValue: "₹118.6 Cr",
-      workingCapital: "₹16.2 Cr",
-      costVariance: "+1.9%",
-      slaPredict: "95.2%",
-      netHealth: "High Risk Corridor",
-      cashImpact: "₹8.4 Cr"
-    },
-    alerts: [
-      { id: 'scm-1', title: 'Nagpur Bypass Corridor Blockage', desc: 'Monsoon flash flood surge reports. ETA penalty margin degraded by 4.5h.', type: 'danger' },
-      { id: 'scm-2', title: 'Cold Chain Temp Breach Alert', desc: 'Reefer truck TRK-00052 reports cabinet temperature rise to 5.8°C.', type: 'danger' }
-    ],
-    actions: [
-      { label: "Reroute Nagpur en-route trucks", detail: "Authorize bypass SH-14 corridor reroute instructions.", event: "NAGPUR_REROUTE", desc: "Bypassed Nagpur via SH-14 detour" },
-      { label: "Trigger remote reefer cooling", detail: "Send telemetry override to restore reefer compressor to 2.0°C.", event: "REEFER_COOL", desc: "Compressor override set to 2°C" }
-    ],
-    presets: [
-      "Predict factory assembly downtime risk",
-      "Show risk indices for NH48 Western corridor",
-      "Which refrigerated shipments are near boundaries?"
-    ]
-  },
-  LOGISTICS_HEAD: {
-    title: "Logistics Head command dashboard",
-    description: "Transporter trust indices, driver behavior logs, tire/coolant OBD diagnostics, and fuel consumption optimization.",
-    kpis: {
-      revProtected: "₹24.9 Cr",
-      revProtectedTrend: "+2.6%",
-      revAtRisk: "₹1.4 Cr",
-      revAtRiskTrend: "-8.4%",
-      inventoryValue: "₹92.0 Cr",
-      workingCapital: "₹10.5 Cr",
-      costVariance: "+2.1%",
-      slaPredict: "98.1%",
-      netHealth: "Nominal",
-      cashImpact: "₹6.8 Cr"
-    },
-    alerts: [
-      { id: 'lh-1', title: 'Transporter compliance review', desc: 'BlackBuck compliance score drops to 91.8% after 3 driver fatigue events.', type: 'warning' },
-      { id: 'lh-2', title: 'Toll Card low balance alert', desc: 'FASTag account ID FT82481029 has less than ₹5,000 balance remaining.', type: 'warning' }
-    ],
-    actions: [
-      { label: "Auto-recharge FASTag balance", detail: "Top up ₹50,000 using strategic bank accounts credit lines.", event: "TOLL_TOPUP", desc: "Deposited ₹50,000 into FASTag balance" },
-      { label: "Enforce driver safety coaching", detail: "Enroll high-fatigue carrier logs into mandatory safety modules.", event: "SAFETY_COACH", desc: "Assigned safety course to BlackBuck driver" }
-    ],
-    presets: [
-      "Compare road vs rail costs Delhi-Chennai",
-      "Show driver safety radar compliance charts",
-      "Audit active trucks diagnostic trouble codes"
-    ]
-  },
-  ADVISOR: {
-    title: "Strategic Intelligence Advisor",
-    description: "Multi-agent consensus metrics, predictive churn models, digital twin scenario simulations, and policy evolution audits.",
-    kpis: {
-      revProtected: "₹45.0 Cr",
-      revProtectedTrend: "+9.0%",
-      revAtRisk: "₹1.2 Cr",
-      revAtRiskTrend: "-10.0%",
-      inventoryValue: "₹160.0 Cr",
-      workingCapital: "₹30.0 Cr",
-      costVariance: "-0.4%",
-      slaPredict: "99.0%",
-      netHealth: "Optimal",
-      cashImpact: "₹12.8 Cr"
-    },
-    alerts: [
-      { id: 'adv-1', title: 'Consensus Divergence Detected', desc: 'Logistics Brain vs Financial Brain disagree on spot market premium by 4.2%.', type: 'warning' }
-    ],
-    actions: [
-      { label: "Trigger Agent Consensus Voting", detail: "Re-run multi-agent policy consensus evaluation loop.", event: "CONSENSUS_RUN", desc: "Evaluated 6 neural agent policies" }
-    ],
-    presets: [
-      "Simulate Q4 network disruption scenarios",
-      "What is our multi-agent prediction accuracy rate?"
-    ]
-  }
-};
-
-// Safe helper to get role details without throwing
-const getRoleDetails = (role) => {
-  return ROLE_DETAILS[role] || ROLE_DETAILS.CEO;
-};
-
-const TRACE_STEPS = [
-  { step: 1, name: "L1 Event Capture", desc: "SHIPMENT_CREATED emitted to Event Bus. Copies dispatched to driver/truck/route twins.", event: "SHIPMENT_CREATED" },
-  { step: 2, name: "L2 Entity Generation", desc: "Instantiated active Shipment Entity in dynamic Neo4j topological memory.", event: "ENTITY_INIT" },
-  { step: 3, name: "L3 Digital Twin Hydration", desc: "Hydrated Physical, Operational, Financial, Behavioral, and Risk twins.", event: "TWIN_HYDRATE" },
-  { step: 4, name: "L4 Memory Scan", desc: "Scanned Neo4j database to retrieve similar historic shipment outcomes and lessons.", event: "MEMORY_SCAN" },
-  { step: 5, name: "L5 Learning Retrieval", desc: "Pulled learned Monday Congestion Factors and toll gate transit delays.", event: "LEARN_PULL" },
-  { step: 6, name: "L6 Prediction Analysis", desc: "Evaluated driver resignation threats (82%) and breakdown risks (4.2%).", event: "PREDICT_RUN" },
-  { step: 7, name: "L7 Simulation Search", desc: "Simulated 500 route variations. Evaluated cost spikes and toll queue delays.", event: "SIM_ITERATE" },
-  { step: 8, name: "L8 Decision Package", desc: "Goal policy evaluated. Selected Dedicated DFC Rail corridor as cost/reliability match.", event: "DECISION_SELECT" },
-  { step: 9, name: "L9 Execution Agent", desc: "Assigned TRK-90482, updated ETA, notified customer, generated e-invoice.", event: "EXEC_AUTONOMOUS" },
-  { step: 10, name: "L10 Evolution Audit", desc: "Logged metrics to compare prediction vs actual. Model auto-upgrade check complete.", event: "EVO_AUDIT" }
+// ---- CONSTANTS ----
+const TABS = [
+  { id: 'profile', label: '360° Profile', icon: Building2 },
+  { id: 'twins', label: 'Digital Twins', icon: Brain },
+  { id: 'pipeline', label: 'Sales Pipeline', icon: Target },
+  { id: 'contracts', label: 'Contracts', icon: FileText },
+  { id: 'billing', label: 'Billing & Revenue', icon: IndianRupee },
+  { id: 'operations', label: 'Operations', icon: Truck },
+  { id: 'support', label: 'Support & SLA', icon: MessageSquare },
+  { id: 'ai', label: 'AI Intelligence', icon: Sparkles },
+  { id: 'journal', label: 'Decision Journal', icon: Clock },
 ];
 
-export default function CustomerPortal() {
-  const { userRole } = useTheme();
-  const [viewMode, setViewMode] = useState('workspace'); // workspace | engine
-  const [currentRole, setCurrentRole] = useState(() => userRole || 'CEO');
-  const [activeTab, setActiveTab] = useState('command'); // command | planning | twins | market | cfo
-  const [activeLayer, setActiveLayer] = useState(1); // 1 to 10
-  const [engineState, setEngineState] = useState(RealityEngine.getState());
-  const [selectedGraphNode, setSelectedGraphNode] = useState(null);
-  
-  // AI Copilot variables
-  const [copilotInput, setCopilotInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [copilotMsgs, setCopilotMsgs] = useState([
-    { sender: 'copilot', text: "Welcome back. I am GatiFleet's Transportation Reality Engine Advisor. Select a preset query or ask me about active lanes, costs, or delays." }
-  ]);
+const SHIPPER_TABS = [
+  { id: 'my_shipments', label: 'My Shipments', icon: Truck },
+  { id: 'my_invoices', label: 'My Invoices', icon: Receipt },
+  { id: 'book', label: 'Book Shipment', icon: Plus },
+  { id: 'my_support', label: 'Support', icon: MessageSquare },
+];
 
-  // Tab 2: Planning & Simulator variables
-  const [tonsInput, setTonsInput] = useState(500);
-  const [bookingOrigin, setBookingOrigin] = useState('Delhi');
-  const [bookingDest, setBookingDest] = useState('Chennai');
-  const [selectedObjective, setSelectedObjective] = useState('minimize_cost'); // minimize_cost | maximize_speed | zero_carbon | high_reliability
+const STAGE_COLORS = {
+  'Prospect': '#6b7280', 'Qualified': '#3b82f6', 'Opportunity': '#8b5cf6',
+  'Proposal': '#a855f7', 'Negotiation': '#f59e0b', 'Won': '#10b981', 'Lost': '#ef4444',
+};
+const SENTIMENT_COLORS = { Positive: '#10b981', Neutral: '#f59e0b', Negative: '#ef4444', 'Very Positive': '#22c55e', 'Very Negative': '#dc2626' };
+const PRIORITY_COLORS = { Urgent: '#ef4444', High: '#f97316', Medium: '#f59e0b', Low: '#6b7280' };
+const STATUS_COLORS = { in_transit: '#06b6d4', delivered: '#10b981', delayed: '#ef4444', loading: '#f59e0b', unloading: '#a855f7', scheduled: '#6b7280' };
+const SLA_RISK_COLORS = { None: '#10b981', Low: '#06b6d4', Medium: '#f59e0b', High: '#f97316', Critical: '#ef4444' };
 
-  // Booking loop traceback state
-  const [activeTraceStep, setActiveTraceStep] = useState(null); // null or 1 to 10
-  const [traceLogs, setTraceLogs] = useState([]);
+// ---- STYLE HELPERS ----
+const card = (extra = {}) => ({
+  background: 'rgba(17,24,39,0.7)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '14px 16px', ...extra,
+});
+const lbl = (color = '#6b7280') => ({ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color });
+const pill = (color = '#6366f1', bg = 'rgba(99,102,241,0.1)') => ({
+  display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 99, fontSize: 9, fontWeight: 700,
+  textTransform: 'uppercase', letterSpacing: '0.06em', color, background: bg, border: `1px solid ${color}30`,
+});
 
-  // Tab 3: Digital Twin time machine
-  const [futureSlider, setFutureSlider] = useState(0); // +0h to +24h
-  const [selectedTwin, setSelectedTwin] = useState('shipment'); // shipment | driver | route | customer
-  const [customEventText, setCustomEventText] = useState('');
+const emitEvent = (type, desc, source = 'CRM/OPERATOR') => {
+  RealityEngine.events = [{ id: `ev-${Date.now()}`, timestamp: new Date().toISOString(), type, desc, source }, ...RealityEngine.events];
+  RealityEngine.notify();
+};
 
-  // Stateful Alerts list
-  const [roleAlerts, setRoleAlerts] = useState({});
-
-  // Sync with global userRole when context updates
-  useEffect(() => {
-    if (userRole && ROLE_DETAILS[userRole]) {
-      setCurrentRole(userRole);
-    }
-  }, [userRole]);
-
-  // Sync state with RealityEngine singleton
-  useEffect(() => {
-    const unsubscribe = RealityEngine.subscribe((state) => {
-      setEngineState(state);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  // Update alerts on role switch
-  useEffect(() => {
-    const roleConfig = getRoleDetails(currentRole);
-    setRoleAlerts(prev => ({
-      ...prev,
-      [currentRole]: roleConfig.alerts || []
-    }));
-    RealityEngine.events = [{
-      id: `ev-${Date.now()}`,
-      timestamp: new Date().toISOString(),
-      type: 'RoleSwitched',
-      desc: `Console context modified to ${currentRole} workspace.`,
-      source: 'USER/INTERFACE'
-    }, ...RealityEngine.events];
-    RealityEngine.notify();
-  }, [currentRole]);
-
-  const handleResolveAlert = (alertId, alertTitle) => {
-    setRoleAlerts(prev => ({
-      ...prev,
-      [currentRole]: (prev[currentRole] || []).filter(a => a.id !== alertId)
-    }));
-    RealityEngine.events = [{
-      id: `ev-${Date.now()}`,
-      timestamp: new Date().toISOString(),
-      type: 'AlertResolved',
-      desc: `Strategic Alert Resolved: "${alertTitle}"`,
-      source: 'NOC/AGENT'
-    }, ...RealityEngine.events];
-    RealityEngine.notify();
-  };
-
-  const handleActionClick = (action) => {
-    RealityEngine.events = [{
-      id: `ev-${Date.now()}`,
-      timestamp: new Date().toISOString(),
-      type: action.event,
-      desc: action.desc,
-      source: 'AUTONOMY/BROKER'
-    }, ...RealityEngine.events];
-    RealityEngine.notify();
-    alert(`Autonomous Execution Complete!\n\nAction: ${action.label}\nDetail: ${action.detail}`);
-  };
-
-  // AI Copilot Handler
-  const handleCopilotSubmit = (query) => {
-    if (!query.trim()) return;
-    setCopilotMsgs(prev => [...prev, { sender: 'user', text: query }]);
-    setIsTyping(true);
-    setCopilotInput('');
-
-    setTimeout(() => {
-      let reply = '';
-      const q = query.toLowerCase();
-      if (q.includes('2,000 tons') || q.includes('2000 tons')) {
-        reply = `**Capacity Analysis for Moving 2,000 Tons next week:**\n\n` +
-                `* **Capacity Availability:** **92% Confidence** (Rail DFC surplus capacity available: 42%).\n` +
-                `* **Route Path:** Dedicated Delhi ➔ Chennai container rail line bypasses NH44 road bottlenecks.\n` +
-                `* **Estimated Cost:** ₹28.6 Lakhs (Rail pricing is 24% cheaper than road transport for this bulk).\n` +
-                `* **Transit Time:** 42.5 Hours (Road average is 58 hours due to monsoon lane limits).\n` +
-                `* **Active Risks:** Minor monsoon alerts at Jhansi rail interchange (Low risk, delay probability <5%).\n` +
-                `* **Recommended Action:** Execute **DFC Rail Route Reservation** now to secure contract rates.`;
-      } else if (q.includes('risk') || q.includes('revenue')) {
-        reply = "Strategic Threat Detected:\n\nSHP-CT-90482 (carrying ₹36.0L components) is en-route to Bangalore but flagged with 'Critical Delay Risk' due to Nagpur bypass blockages.\n\nRevenue impact: Stockout threat at Bangalore factory in 6.2h. Autonomy recommend: Reroute via DFC Rail.";
-      } else if (q.includes('costs') || q.includes('increase')) {
-        reply = "CFO Ledger cost audit:\n\nTransportation expenses rose 3.8% this week. Primary factors: toll changes on NH48 (+1.2%) and fuel card diesel rate inflation (+2%). DFC rail routes are priced 24% cheaper.";
-      } else {
-        reply = `GatiFleet intelligence twin reports nominal status. Predictive Certainty index stands at ${engineState.oci.globalCertainty}%. Ask me about delays, inventory exposure, or green route planners.`;
-      }
-      setCopilotMsgs(prev => [...prev, { sender: 'copilot', text: reply }]);
-      setIsTyping(false);
-    }, 1000);
-  };
-
-  // Cost speed plan calculations
-  const planningPlans = useMemo(() => {
-    const baseCost = tonsInput * 1600;
-    const baseHours = 48;
-
-    let roadCost = baseCost;
-    let railCost = baseCost * 0.72;
-    let multiCost = baseCost * 0.84;
-    let dedCost = baseCost * 1.15;
-    let sharedCost = baseCost * 0.65;
-
-    let roadHours = baseHours;
-    let railHours = baseHours * 1.25;
-    let multiHours = baseHours * 1.05;
-    let dedHours = baseHours * 0.90;
-    let sharedHours = baseHours * 1.50;
-
-    let roadReliability = 94.2;
-    let railReliability = 98.5;
-    let multiReliability = 96.0;
-    let dedReliability = 99.4;
-    let sharedReliability = 89.8;
-
-    let roadCarbon = tonsInput * 0.08;
-    let railCarbon = tonsInput * 0.02;
-    let multiCarbon = tonsInput * 0.04;
-    let dedCarbon = tonsInput * 0.07;
-    let sharedCarbon = tonsInput * 0.09;
-
-    // Apply objectives multiplier
-    if (selectedObjective === 'minimize_cost') {
-      roadCost *= 0.95; railCost *= 0.90; sharedCost *= 0.85;
-      roadReliability -= 1.5;
-    } else if (selectedObjective === 'maximize_speed') {
-      roadHours *= 0.88; dedHours *= 0.82;
-      roadCost *= 1.10; dedCost *= 1.15;
-    } else if (selectedObjective === 'zero_carbon') {
-      railCarbon *= 0.80; multiCarbon *= 0.85;
-      railCost *= 1.05;
-    } else if (selectedObjective === 'high_reliability') {
-      dedReliability = 99.8; railReliability = 99.1;
-      dedCost *= 1.12;
-    }
-
-    return [
-      { id: 'road', name: `Road Corridor (${bookingOrigin} ➔ ${bookingDest})`, cost: Math.floor(roadCost), hours: roadHours.toFixed(1), carbon: roadCarbon.toFixed(1), reliability: roadReliability.toFixed(1), risk: 'Medium', confidence: '94%' },
-      { id: 'rail', name: `Dedicated Rail DFC Line`, cost: Math.floor(railCost), hours: railHours.toFixed(1), carbon: railCarbon.toFixed(1), reliability: railReliability.toFixed(1), risk: 'Low', confidence: '98%' },
-      { id: 'multi', name: `Multimodal (Road + Rail Hub)`, cost: Math.floor(multiCost), hours: multiHours.toFixed(1), carbon: multiCarbon.toFixed(1), reliability: multiReliability.toFixed(1), risk: 'Low', confidence: '96%' },
-      { id: 'ded', name: `Dedicated Fleet (Gati Motors Express)`, cost: Math.floor(dedCost), hours: dedHours.toFixed(1), carbon: dedCarbon.toFixed(1), reliability: dedReliability.toFixed(1), risk: 'Low', confidence: '99%' },
-      { id: 'shared', name: `Shared LTL Consolidated Express`, cost: Math.floor(sharedCost), hours: sharedHours.toFixed(1), carbon: sharedCarbon.toFixed(1), reliability: sharedReliability.toFixed(1), risk: 'High', confidence: '88%' }
-    ];
-  }, [tonsInput, selectedObjective, bookingOrigin, bookingDest]);
-
-  // Run book shipment loop simulation
-  const handleBookOption = (optionName, optionCost) => {
-    if (tonsInput <= 0 || tonsInput > 5000) {
-      alert("Validation Error: Please select a valid cargo tonnage between 1 and 5,000 tons.");
-      return;
-    }
-    setActiveTraceStep(1);
-    setTraceLogs([`[Step 1] Emitted Event SHIPMENT_CREATED to Event Bus.`]);
-    RealityEngine.events = [{
-      id: `ev-${Date.now()}`,
-      timestamp: new Date().toISOString(),
-      type: 'SHIPMENT_CREATED',
-      desc: `Booked ${tonsInput} Tons (${bookingOrigin} ➔ ${bookingDest}) via ${optionName}. Loop initialized.`,
-      source: 'ORDER/CLIENT'
-    }, ...RealityEngine.events];
-    RealityEngine.notify();
-
-    // Trigger step sequence
-    let currentStep = 1;
-    const interval = setInterval(() => {
-      currentStep += 1;
-      if (currentStep <= 10) {
-        const stepDef = TRACE_STEPS.find(s => s.step === currentStep);
-        setActiveTraceStep(currentStep);
-        setTraceLogs(prev => [...prev, `[Step ${currentStep}] ${stepDef.name}: ${stepDef.desc}`]);
-        RealityEngine.events = [{
-          id: `ev-${Date.now()}-${currentStep}`,
-          timestamp: new Date().toISOString(),
-          type: stepDef.event,
-          desc: stepDef.desc,
-          source: 'REALITY_ENGINE'
-        }, ...RealityEngine.events];
-        RealityEngine.notify();
-      } else {
-        clearInterval(interval);
-        setTimeout(() => {
-          setActiveTraceStep(null);
-          setTraceLogs([]);
-          alert(`Ecosystem Loop Complete!\n\nPlan Booked: ${optionName}\nRoute: ${bookingOrigin} ➔ ${bookingDest}\nCost: ₹${optionCost.toLocaleString()}\nOutcome logged in Evolution Matrix.`);
-        }, 800);
-      }
-    }, 1200);
-  };
-
-  const handleManualEventInject = () => {
-    if (!customEventText.trim()) return;
-    RealityEngine.events = [{
-      id: `ev-${Date.now()}`,
-      timestamp: new Date().toISOString(),
-      type: 'ManualEventInjected',
-      desc: customEventText,
-      source: 'USER/COCKPIT'
-    }, ...RealityEngine.events];
-    RealityEngine.notify();
-    setCustomEventText('');
-  };
-
-  const getCertaintyColor = (val) => {
-    if (val > 95) return '#10b981';
-    if (val > 88) return '#06b6d4';
-    if (val > 80) return '#f59e0b';
-    return '#ef4444';
-  };
-
-  const getAlertsForCurrentRole = () => {
-    const roleConfig = getRoleDetails(currentRole);
-    return roleAlerts[currentRole] || roleConfig.alerts || [];
-  };
-
-  // Node Positions for Connected SVG Graph
-  const graphNodes = [
-    { id: 'customer', label: 'Customer', cx: 60, cy: 50, color: '#10b981', desc: 'Arjun Kapoor (CEO)' },
-    { id: 'order', label: 'Order', cx: 160, cy: 50, color: '#6366f1', desc: 'PO-928410 (500 Tons)' },
-    { id: 'shipment', label: 'Shipment', cx: 260, cy: 50, color: '#3b82f6', desc: 'SHP-CT-90481' },
-    { id: 'truck', label: 'Truck', cx: 360, cy: 50, color: '#22c55e', desc: 'TRK-90482 (Tata Prima)' },
-    { id: 'driver', label: 'Driver', cx: 460, cy: 50, color: '#f59e0b', desc: 'Rajesh Kumar' },
-    { id: 'route', label: 'Route', cx: 460, cy: 125, color: '#ec4899', desc: 'Delhi-Mumbai NH48 Corridor' },
-    { id: 'fuel', label: 'Fuel', cx: 460, cy: 200, color: '#f97316', desc: 'Diesel card ledger pre-buy' },
-    { id: 'toll', label: 'Toll', cx: 360, cy: 200, color: '#ef4444', desc: 'FASTag accounts FT82481029' },
-    { id: 'warehouse', label: 'Warehouse', cx: 160, cy: 125, color: '#06b6d4', desc: 'Panvel dock storage' },
-    { id: 'carrier', label: 'Carrier', cx: 360, cy: 125, color: '#8b5cf6', desc: 'Tata Dedicated Transporter' },
-    { id: 'invoice', label: 'Invoice', cx: 260, cy: 125, color: '#a855f7', desc: 'INV-90481 (₹96,000)' },
-    { id: 'payment', label: 'Payment', cx: 260, cy: 200, color: '#14b8a6', desc: 'ZKP accounts settle ledger' },
-  ];
-
-  const graphEdges = [
-    { from: 'customer', to: 'order' },
-    { from: 'order', to: 'shipment' },
-    { from: 'shipment', to: 'truck' },
-    { from: 'truck', to: 'driver' },
-    { from: 'driver', to: 'route' },
-    { from: 'route', to: 'fuel' },
-    { from: 'route', to: 'toll' },
-    { from: 'truck', to: 'carrier' },
-    { from: 'shipment', to: 'warehouse' },
-    { from: 'shipment', to: 'invoice' },
-    { from: 'invoice', to: 'payment' },
-    { from: 'carrier', to: 'invoice' }
-  ];
-
-  const isNodeImpacted = (nodeId) => {
-    if (engineState.entities.truck.state !== 'broken_down') return false;
-    const impacted = ['truck', 'driver', 'route', 'shipment', 'order', 'customer', 'warehouse', 'invoice', 'payment'];
-    return impacted.includes(nodeId);
-  };
-
-  const activeRoleDetails = getRoleDetails(currentRole);
-
+// ---- MINI COMPONENTS ----
+function HealthRing({ value, label: lbl2, size = 48 }) {
+  const color = getHealthColor(value);
+  const r = (size / 2) - 5;
+  const circ = 2 * Math.PI * r;
+  const dash = (value / 100) * circ;
   return (
-    <div style={{
-      padding: 'var(--space-6)',
-      background: '#040711',
-      minHeight: 'calc(100vh - var(--topbar-height))',
-      color: '#f9fafb',
-      fontFamily: 'var(--font-sans)',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 'var(--space-5)',
-      position: 'relative'
-    }}>
-
-      {/* TOP HEADER SECTION & MODE/ROLE SELECTORS */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        borderBottom: '1px solid rgba(255,255,255,0.05)',
-        paddingBottom: 'var(--space-4)',
-        flexWrap: 'wrap',
-        gap: 12
-      }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Building2 size={24} color="#6366f1" />
-            <h1 style={{ fontSize: 'var(--text-xl)', fontWeight: 800, background: 'linear-gradient(90deg, #6366f1, #06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              Customer Workspace • Shipper Digital Twin & Reality Engine (TRE)
-            </h1>
-          </div>
-          <p style={{ color: '#9ca3af', fontSize: 'var(--text-xs)', marginTop: 4 }}>
-            {activeRoleDetails.title} — {activeRoleDetails.description}
-          </p>
-        </div>
-
-        {/* Stateful Controls Panel */}
-        <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-          
-          {/* Workspace Mode Switcher */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
-            <span style={{ fontSize: '9px', color: '#6b7280', textTransform: 'uppercase', fontWeight: 700 }}>Workspace Mode</span>
-            <div style={{
-              display: 'flex', gap: 2, background: 'rgba(255,255,255,0.02)',
-              border: '1px solid rgba(255,255,255,0.05)', padding: 2, borderRadius: 4
-            }}>
-              <button
-                onClick={() => setViewMode('workspace')}
-                style={{
-                  padding: '4px 10px', borderRadius: 2, border: 'none', cursor: 'pointer',
-                  fontSize: '9px', fontWeight: 800, textTransform: 'uppercase',
-                  background: viewMode === 'workspace' ? 'rgba(99,102,241,0.2)' : 'transparent',
-                  color: viewMode === 'workspace' ? '#818cf8' : '#6b7280'
-                }}
-              >
-                Customer Workspace
-              </button>
-              <button
-                onClick={() => setViewMode('engine')}
-                style={{
-                  padding: '4px 10px', borderRadius: 2, border: 'none', cursor: 'pointer',
-                  fontSize: '9px', fontWeight: 800, textTransform: 'uppercase',
-                  background: viewMode === 'engine' ? 'rgba(99,102,241,0.2)' : 'transparent',
-                  color: viewMode === 'engine' ? '#818cf8' : '#6b7280'
-                }}
-              >
-                10-Layer Core Engine
-              </button>
-            </div>
-          </div>
-
-          {/* Role Selector */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
-            <span style={{ fontSize: '9px', color: '#6b7280', textTransform: 'uppercase', fontWeight: 700 }}>Ecosystem Persona</span>
-            <div style={{
-              display: 'flex', gap: 2, background: 'rgba(255,255,255,0.02)',
-              border: '1px solid rgba(255,255,255,0.05)', padding: 2, borderRadius: 4, flexWrap: 'wrap'
-            }}>
-              {Object.keys(ROLE_DETAILS).map(role => (
-                <button
-                  key={role}
-                  onClick={() => setCurrentRole(role)}
-                  style={{
-                    padding: '3px 6px', borderRadius: 2, border: 'none', cursor: 'pointer',
-                    fontSize: '8px', fontWeight: 800, textTransform: 'uppercase',
-                    background: currentRole === role ? 'rgba(99,102,241,0.2)' : 'transparent',
-                    color: currentRole === role ? '#818cf8' : '#6b7280'
-                  }}
-                >
-                  {role}
-                </button>
-              ))}
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      {/* GLOBAL HUD: OPERATIONAL CERTAINTY INDEX */}
-      <div style={{
-        background: 'rgba(17, 24, 39, 0.6)', border: '1px solid rgba(255, 255, 255, 0.05)',
-        borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)', display: 'flex',
-        flexDirection: 'column', gap: 10
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 6 }}>
-          <h2 style={{ fontSize: 'var(--text-xs)', fontWeight: 800, color: '#818cf8', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Brain size={12} /> Live Operational Certainty Index (OCI) • Dynamic Twin Hydration
-          </h2>
-          <span style={{ fontSize: 'var(--text-lg)', fontWeight: 900, color: getCertaintyColor(engineState.oci.globalCertainty) }}>
-            {engineState.oci.globalCertainty}%
-          </span>
-        </div>
-
-        {/* Certainty Meter Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 8 }}>
-          {[
-            { label: 'ETA Certainty', val: engineState.oci.etaCertainty },
-            { label: 'Cost Certainty', val: engineState.oci.costCertainty },
-            { label: 'Capacity Certainty', val: engineState.oci.capacityCertainty },
-            { label: 'Demand Certainty', val: engineState.oci.demandCertainty },
-            { label: 'Customer Certainty', val: engineState.oci.customerCertainty },
-            { label: 'Driver Certainty', val: engineState.oci.driverCertainty },
-            { label: 'Network Certainty', val: engineState.oci.networkCertainty },
-            { label: 'Revenue Certainty', val: engineState.oci.revenueCertainty }
-          ].map((c, idx) => (
-            <div key={idx} style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', padding: '6px 8px', borderRadius: 4 }}>
-              <div style={{ fontSize: '8px', color: '#9ca3af', textTransform: 'uppercase', marginBottom: 4 }}>{c.label}</div>
-              <div style={{ height: 3, background: 'rgba(255,255,255,0.05)', borderRadius: 1.5, overflow: 'hidden' }}>
-                <div style={{ width: `${c.val}%`, height: '100%', background: getCertaintyColor(c.val) }} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* BOOKING LOOP TRACE ANIMATION MODAL PANEL */}
-      {activeTraceStep !== null && (
-        <div style={{
-          background: 'rgba(10,15,30,0.95)', border: '1.5px solid #6366f1',
-          padding: 'var(--space-4)', borderRadius: 'var(--radius-lg)', display: 'flex', flexDirection: 'column', gap: 10,
-          boxShadow: '0 0 20px rgba(99,102,241,0.4)', marginBottom: 10
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', fontWeight: 800, color: '#818cf8', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Brain size={12} className="animate-spin" /> CLOSED-LOOP SELF-IMPROVING BOOKING SIMULATOR ACTIVATED
-            </span>
-            <span style={{ fontSize: '10px', color: '#fff', fontWeight: 700 }}>Step {activeTraceStep} of 10</span>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: 4 }}>
-            {TRACE_STEPS.map(s => (
-              <div key={s.step} style={{
-                height: 4, borderRadius: 2,
-                background: s.step < activeTraceStep ? '#10b981' : s.step === activeTraceStep ? '#6366f1' : 'rgba(255,255,255,0.05)',
-                boxShadow: s.step === activeTraceStep ? '0 0 6px #6366f1' : 'none'
-              }} />
-            ))}
-          </div>
-
-          <div style={{
-            background: '#040711', border: '1px solid rgba(255,255,255,0.05)',
-            padding: 8, borderRadius: 4, maxHeight: '80px', overflowY: 'auto',
-            fontFamily: 'var(--font-mono)', fontSize: '9.5px', color: '#10b981'
-          }}>
-            {traceLogs.map((log, i) => <div key={i}>{log}</div>)}
-          </div>
-        </div>
-      )}
-
-      {/* VIEW MODE BRANCHING */}
-
-      {/* 1. CUSTOMER WORKSPACE VIEW MODE */}
-      {viewMode === 'workspace' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', flex: 1 }}>
-          
-          {/* Stateful Tabs selectors */}
-          <div style={{
-            display: 'flex', gap: 4, background: 'rgba(255,255,255,0.01)',
-            border: '1px solid rgba(255,255,255,0.05)', padding: 4, borderRadius: 'var(--radius-md)', flexWrap: 'wrap'
-          }}>
-            {[
-              { id: 'command', label: 'Command Center & Graph', icon: Compass },
-              { id: 'planning', label: 'Freight Designer & Sim', icon: Sliders },
-              { id: 'twins', label: 'Shipment Twins & Causality', icon: Activity },
-              { id: 'market', label: 'Market & Capacity Forecast', icon: Globe },
-              { id: 'cfo', label: 'CFO, Learning & Evolution', icon: Landmark }
-            ].map(tab => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px',
-                    borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
-                    fontSize: '11px', fontWeight: 700, textTransform: 'uppercase',
-                    background: isActive ? 'rgba(99,102,241,0.1)' : 'transparent',
-                    color: isActive ? '#818cf8' : '#9ca3af',
-                    transition: 'all var(--transition-fast)'
-                  }}
-                >
-                  <Icon size={13} color={isActive ? '#818cf8' : '#6b7280'} />
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Render Tab Contents */}
-          <div style={{ flex: 1 }}>
-            
-            {/* TAB 1: Command Center */}
-            {activeTab === 'command' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 'var(--space-5)' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-                  
-                  {/* KPIs */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--space-4)' }}>
-                    <div style={kpiCardStyle}>
-                      <div style={kpiLabelStyle}>Protected Revenue</div>
-                      <div style={kpiValStyle}>{activeRoleDetails.kpis.revProtected} <span style={{ fontSize: '9px', color: '#10b981' }}>{activeRoleDetails.kpis.revProtectedTrend}</span></div>
-                    </div>
-                    <div style={kpiCardStyle}>
-                      <div style={kpiLabelStyle}>At-Risk Revenue</div>
-                      <div style={{ ...kpiValStyle, color: '#ef4444' }}>{activeRoleDetails.kpis.revAtRisk} <span style={{ fontSize: '9px', color: '#ef4444' }}>{activeRoleDetails.kpis.revAtRiskTrend}</span></div>
-                    </div>
-                    <div style={kpiCardStyle}>
-                      <div style={kpiLabelStyle}>SLA Performance</div>
-                      <div style={kpiValStyle}>{activeRoleDetails.kpis.slaPredict}</div>
-                    </div>
-                    <div style={kpiCardStyle}>
-                      <div style={kpiLabelStyle}>Working Capital</div>
-                      <div style={kpiValStyle}>{activeRoleDetails.kpis.workingCapital}</div>
-                    </div>
-                  </div>
-
-                  {/* SVG Map and SVG Graph */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.1fr', gap: 'var(--space-4)' }}>
-                    <div style={{ background: 'rgba(17,24,39,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)' }}>
-                      <h3 style={{ fontSize: 'var(--text-xs)', fontWeight: 800, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <MapPin size={12} color="#6366f1" /> Transportation Control Tower Map
-                      </h3>
-                      <div style={{ background: '#02040a', borderRadius: 6, height: '170px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-                        <svg width="280" height="150" style={{ overflow: 'visible' }}>
-                          <path d="M 30,20 Q 90,70 40,130" fill="none" stroke="rgba(99,102,241,0.2)" strokeWidth="3" />
-                          <path d="M 40,20 Q 180,60 240,120" fill="none" stroke="rgba(6,182,212,0.3)" strokeWidth="2" strokeDasharray="4 4" />
-                          <circle cx="40" cy="50" r="5" fill={engineState.entities.truck.state === 'broken_down' ? '#ef4444' : '#10b981'} />
-                          <circle cx="180" cy="65" r="4" fill="#6366f1" />
-                          <circle cx="240" cy="120" r="4" fill="#f59e0b" />
-                          <text x="50" y="52" fill="#fff" fontSize="9px" fontWeight="700">TRK-90482 (NH48)</text>
-                          <text x="190" y="67" fill="#818cf8" fontSize="9px">Panvel Hub</text>
-                          <text x="245" y="123" fill="#f59e0b" fontSize="9px">Bengaluru DC</text>
-                        </svg>
-                      </div>
-                    </div>
-
-                    <div style={{ background: 'rgba(17,24,39,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column' }}>
-                      <h3 style={{ fontSize: 'var(--text-xs)', fontWeight: 800, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <Database size={12} color="#06b6d4" /> Connected Knowledge Graph
-                      </h3>
-                      <div style={{ height: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <svg width="260" height="120" style={{ overflow: 'visible' }}>
-                          {graphEdges.map((edge, idx) => {
-                            const fromNode = graphNodes.find(n => n.id === edge.from);
-                            const toNode = graphNodes.find(n => n.id === edge.to);
-                            if (!fromNode || !toNode) return null;
-                            const isImpactedEdge = isNodeImpacted(edge.from) && isNodeImpacted(edge.to);
-                            return (
-                              <line
-                                key={idx}
-                                x1={fromNode.cx / 2.0} y1={fromNode.cy / 1.8}
-                                x2={toNode.cx / 2.0} y2={toNode.cy / 1.8}
-                                stroke={isImpactedEdge ? '#ef4444' : 'rgba(255,255,255,0.1)'}
-                                strokeWidth={isImpactedEdge ? "1.5" : "1"}
-                              />
-                            );
-                          })}
-                          {graphNodes.map(node => (
-                            <circle
-                              key={node.id} cx={node.cx / 2.0} cy={node.cy / 1.8} r={selectedGraphNode?.id === node.id ? 6 : 4}
-                              fill={isNodeImpacted(node.id) ? '#ef4444' : node.color}
-                              style={{ cursor: 'pointer' }}
-                              onMouseEnter={() => setSelectedGraphNode(node)} onMouseLeave={() => setSelectedGraphNode(null)}
-                            />
-                          ))}
-                        </svg>
-                      </div>
-                      <div style={{ fontSize: '9px', color: '#9ca3af', minHeight: '14px' }}>
-                        {selectedGraphNode ? (
-                          <span style={{ color: '#818cf8', fontWeight: 700 }}>Node: {selectedGraphNode.label} • {selectedGraphNode.desc}</span>
-                        ) : (
-                          <span>Hover over graph nodes to inspect real-time topological links</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
-
-                {/* Right columns: Alerts & Copilot */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-                  <div style={{ background: 'rgba(17,24,39,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)' }}>
-                    <h3 style={{ fontSize: 'var(--text-xs)', fontWeight: 800, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <AlertTriangle size={12} color="#f59e0b" /> AI Alerts & Strategic Actions
-                    </h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {getAlertsForCurrentRole().map(alert => (
-                        <div key={alert.id} style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', padding: 8, borderRadius: 4, borderLeft: `3px solid ${alert.type === 'danger' ? '#ef4444' : '#f59e0b'}` }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '9.5px', fontWeight: 800, color: '#fff' }}>{alert.title}</span>
-                            <button onClick={() => handleResolveAlert(alert.id, alert.title)} style={{ background: 'transparent', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: '8px', fontWeight: 700 }}>RESOLVE</button>
-                          </div>
-                          <div style={{ fontSize: '8.5px', color: '#9ca3af', marginTop: 2 }}>{alert.desc}</div>
-                        </div>
-                      ))}
-                      {(activeRoleDetails.actions || []).map((act, idx) => (
-                        <div key={idx} style={{ background: 'rgba(99,102,241,0.04)', border: '1px solid rgba(99,102,241,0.1)', padding: 8, borderRadius: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div>
-                            <div style={{ fontSize: '9px', color: '#818cf8', fontWeight: 700 }}>{act.label}</div>
-                            <div style={{ fontSize: '8px', color: '#9ca3af' }}>{act.detail}</div>
-                          </div>
-                          <button onClick={() => handleActionClick(act)} style={{ background: '#6366f1', border: 'none', color: '#fff', padding: '3px 8px', borderRadius: 3, fontSize: '8px', fontWeight: 800, cursor: 'pointer' }}>EXECUTE</button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div style={{ background: 'rgba(17,24,39,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 'var(--radius-lg)', display: 'flex', flexDirection: 'column', height: '220px' }}>
-                    <div style={{ padding: '8px 10px', borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: '10px', fontWeight: 800, color: '#818cf8', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <Sparkles size={11} /> Shipper Copilot Assistant
-                    </div>
-                    <div style={{ flex: 1, overflowY: 'auto', padding: 8, fontSize: '9px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {copilotMsgs.map((m, idx) => (
-                        <div key={idx} style={{ padding: 6, borderRadius: 4, background: m.sender === 'user' ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.03)' }}>
-                          <span style={{ fontWeight: 700, color: m.sender === 'user' ? '#818cf8' : '#10b981', display: 'block', marginBottom: 2 }}>{m.sender === 'user' ? 'You' : 'GatiFleet TRE Advisor'}</span>
-                          {m.text}
-                        </div>
-                      ))}
-                      {isTyping && <div style={{ color: '#6b7280', fontSize: '8px', fontStyle: 'italic' }}>AI is formulating response...</div>}
-                    </div>
-                    <div style={{ padding: 6, display: 'flex', gap: 4, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                      <input type="text" placeholder="Ask about routes, rates, or risks..." value={copilotInput} onChange={e => setCopilotInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handleCopilotSubmit(copilotInput); }} style={{ flex: 1, background: '#090d16', border: '1px solid rgba(255,255,255,0.05)', color: '#fff', fontSize: '9px', padding: '4px 8px', borderRadius: 3, outline: 'none' }} />
-                      <button onClick={() => handleCopilotSubmit(copilotInput)} style={{ background: '#6366f1', border: 'none', color: '#fff', padding: '0 8px', borderRadius: 3, cursor: 'pointer' }}><Send size={10} /></button>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-            )}
-
-            {/* TAB 2: Freight Planning */}
-            {activeTab === 'planning' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 'var(--space-5)' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-                  <div style={{ background: 'rgba(17,24,39,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)' }}>
-                    <h3 style={{ fontSize: 'var(--text-xs)', fontWeight: 800, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <Sliders size={13} color="#6366f1" /> Autonomous AI Route & Corridor Designer
-                    </h3>
-                    
-                    {/* Form Controls */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 14 }}>
-                      <div>
-                        <label style={{ fontSize: '8.5px', color: '#9ca3af', display: 'block', marginBottom: 3, textTransform: 'uppercase', fontWeight: 700 }}>Origin City</label>
-                        <select value={bookingOrigin} onChange={e => setBookingOrigin(e.target.value)} style={formInputStyle}>
-                          {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label style={{ fontSize: '8.5px', color: '#9ca3af', display: 'block', marginBottom: 3, textTransform: 'uppercase', fontWeight: 700 }}>Destination City</label>
-                        <select value={bookingDest} onChange={e => setBookingDest(e.target.value)} style={formInputStyle}>
-                          {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label style={{ fontSize: '8.5px', color: '#9ca3af', display: 'block', marginBottom: 3, textTransform: 'uppercase', fontWeight: 700 }}>Cargo Volume (Tons)</label>
-                        <input type="number" min="1" max="5000" value={tonsInput} onChange={e => setTonsInput(parseInt(e.target.value) || 0)} style={formInputStyle} />
-                      </div>
-                    </div>
-
-                    {/* Strategic Objective Selector */}
-                    <div style={{ marginBottom: 14 }}>
-                      <label style={{ fontSize: '8.5px', color: '#9ca3af', display: 'block', marginBottom: 4, textTransform: 'uppercase', fontWeight: 700 }}>Optimization Objective</label>
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        {[
-                          { id: 'minimize_cost', label: 'Lowest Freight Tariff' },
-                          { id: 'maximize_speed', label: 'Fastest Transit ETA' },
-                          { id: 'zero_carbon', label: 'Zero Carbon / Green' },
-                          { id: 'high_reliability', label: '99.9% SLA Guarantee' }
-                        ].map(obj => (
-                          <button
-                            key={obj.id}
-                            onClick={() => setSelectedObjective(obj.id)}
-                            style={{
-                              padding: '4px 10px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.05)',
-                              fontSize: '8.5px', fontWeight: 700, cursor: 'pointer',
-                              background: selectedObjective === obj.id ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.01)',
-                              color: selectedObjective === obj.id ? '#818cf8' : '#9ca3af'
-                            }}
-                          >
-                            {obj.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* All 5 Generated Plans */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <span style={{ fontSize: '9px', color: '#6b7280', textTransform: 'uppercase', fontWeight: 700 }}>Evaluated Route Options ({planningPlans.length})</span>
-                      {planningPlans.map((opt, idx) => (
-                        <div key={idx} style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', padding: 10, borderRadius: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div>
-                            <div style={{ fontSize: '10px', fontWeight: 800, color: '#fff' }}>{opt.name}</div>
-                            <div style={{ display: 'flex', gap: 12, marginTop: 4, fontSize: '8.5px', color: '#9ca3af' }}>
-                              <span>ETA: <strong style={{ color: '#fff' }}>{opt.hours}h</strong></span>
-                              <span>Cost: <strong style={{ color: '#10b981' }}>₹{opt.cost.toLocaleString()}</strong></span>
-                              <span>CO2: <strong style={{ color: '#06b6d4' }}>{opt.carbon}T</strong></span>
-                              <span>Reliability: <strong style={{ color: '#818cf8' }}>{opt.reliability}%</strong></span>
-                            </div>
-                          </div>
-                          <button onClick={() => handleBookOption(opt.name, opt.cost)} style={{ background: '#10b981', border: 'none', color: '#fff', fontSize: '9px', fontWeight: 800, padding: '5px 12px', borderRadius: 4, cursor: 'pointer' }}>Book Corridor</button>
-                        </div>
-                      ))}
-                    </div>
-
-                  </div>
-                </div>
-
-                {/* Sandbox */}
-                <div style={{ background: 'rgba(17,24,39,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <h3 style={{ fontSize: 'var(--text-xs)', fontWeight: 800 }}>Corridor Impact Sandbox</h3>
-                  <div>
-                    <label style={{ fontSize: '9px', color: '#9ca3af', display: 'block', marginBottom: 4 }}>Diesel Rate Sensitivity: +{engineState.simulationState.dieselIncrease}%</label>
-                    <input type="range" min="0" max="50" value={engineState.simulationState.dieselIncrease} onChange={e => RealityEngine.setDieselSimulation(parseInt(e.target.value))} style={{ width: '100%' }} />
-                  </div>
-                  <div style={{ background: 'rgba(255,255,255,0.01)', padding: 8, borderRadius: 4, fontSize: '8.5px', color: '#9ca3af' }}>
-                    <div>Projected Tariff Surge: <strong style={{ color: '#ef4444' }}>+{(engineState.simulationState.dieselIncrease * 0.45).toFixed(1)}%</strong></div>
-                    <div>Recommended Action: Lock 30-day DFC rail forward contract to hedge road fuel variance.</div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* TAB 3: Twins */}
-            {activeTab === 'twins' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 'var(--space-5)' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-                  <div style={{ background: 'rgba(17,24,39,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)' }}>
-                    
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                      <span style={{ fontSize: '11px', fontWeight: 800, color: '#818cf8', display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <Activity size={12} /> Digital Twins & Causality State Machine
-                      </span>
-                      <div style={{ display: 'flex', gap: 4 }}>
-                        {['shipment', 'driver', 'route', 'customer'].map(t => (
-                          <button
-                            key={t}
-                            onClick={() => setSelectedTwin(t)}
-                            style={{
-                              fontSize: '8.5px', fontWeight: 700, textTransform: 'uppercase',
-                              padding: '3px 8px', borderRadius: 3, border: 'none', cursor: 'pointer',
-                              background: selectedTwin === t ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.02)',
-                              color: selectedTwin === t ? '#818cf8' : '#6b7280'
-                            }}
-                          >
-                            {t}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Time Machine Slider */}
-                    <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', padding: 10, borderRadius: 6, marginBottom: 14 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', marginBottom: 4 }}>
-                        <span style={{ color: '#9ca3af', fontWeight: 700 }}>Future Digital Twin Projection Time-Machine</span>
-                        <span style={{ color: '#818cf8', fontWeight: 800 }}>+{futureSlider} Hours Horizon</span>
-                      </div>
-                      <input type="range" min="0" max="24" value={futureSlider} onChange={e => setFutureSlider(parseInt(e.target.value))} style={{ width: '100%' }} />
-                    </div>
-
-                    {/* Twin State Render */}
-                    {selectedTwin === 'shipment' && (
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
-                        <div style={twinBoxStyle}>
-                          <span style={twinHeaderStyle}>Physical Brain</span>
-                          <div>Cabinet Temp: 2.1°C (Reefer Active)</div>
-                          <div>Location: 82km North of Panvel</div>
-                        </div>
-                        <div style={twinBoxStyle}>
-                          <span style={twinHeaderStyle}>Operational Brain</span>
-                          <div>ETA: {(42.5 - futureSlider * 0.9).toFixed(1)} Hours</div>
-                          <div>SLA Status: On-Time (99.2%)</div>
-                        </div>
-                        <div style={twinBoxStyle}>
-                          <span style={twinHeaderStyle}>Financial Brain</span>
-                          <div>Freight Tariff: ₹96,000</div>
-                          <div>FASTag Toll Accrued: ₹4,200</div>
-                        </div>
-                        <div style={twinBoxStyle}>
-                          <span style={twinHeaderStyle}>Risk Brain</span>
-                          <div>Theft Vulnerability: 2.1% (Low)</div>
-                          <div>Breakdown Probability: 1.4%</div>
-                        </div>
-                      </div>
-                    )}
-
-                    {selectedTwin === 'driver' && (
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
-                        <div style={twinBoxStyle}>
-                          <span style={twinHeaderStyle}>Physical Brain</span>
-                          <div>Driver: Rajesh Kumar (ID #8924)</div>
-                          <div>Continuous Duty: {(6.2 + futureSlider * 0.8).toFixed(1)} Hours</div>
-                        </div>
-                        <div style={twinBoxStyle}>
-                          <span style={twinHeaderStyle}>Behavioral Brain</span>
-                          <div>Safety Score: 98.4/100</div>
-                          <div>Fatigue Index: {futureSlider > 12 ? 'HIGH (Rest Required)' : 'LOW (Optimal)'}</div>
-                        </div>
-                        <div style={twinBoxStyle}>
-                          <span style={twinHeaderStyle}>Operational Brain</span>
-                          <div>Route Familiarity: 98% (NH48)</div>
-                          <div>License Status: Active (Verified)</div>
-                        </div>
-                        <div style={twinBoxStyle}>
-                          <span style={twinHeaderStyle}>Financial Brain</span>
-                          <div>Safety Bonus Accrued: ₹1,450</div>
-                          <div>Fuel Efficiency Incentive: +₹820</div>
-                        </div>
-                      </div>
-                    )}
-
-                    {selectedTwin === 'route' && (
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
-                        <div style={twinBoxStyle}>
-                          <span style={twinHeaderStyle}>Physical Brain</span>
-                          <div>Corridor: Delhi-Mumbai NH48</div>
-                          <div>Toll Checkpoints: 14 Active</div>
-                        </div>
-                        <div style={twinBoxStyle}>
-                          <span style={twinHeaderStyle}>Operational Brain</span>
-                          <div>Transit Congestion: Medium</div>
-                          <div>Monsoon Delay Risk: 12%</div>
-                        </div>
-                      </div>
-                    )}
-
-                    {selectedTwin === 'customer' && (
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
-                        <div style={twinBoxStyle}>
-                          <span style={twinHeaderStyle}>Commercial Brain</span>
-                          <div>Account: Tata Motors Logistics</div>
-                          <div>LTV Projections: ₹42.9 Cr</div>
-                        </div>
-                        <div style={twinBoxStyle}>
-                          <span style={twinHeaderStyle}>Financial Brain</span>
-                          <div>Credit Line Approved: ₹5.0 Cr</div>
-                          <div>Outstanding AR: ₹1.8 Cr</div>
-                        </div>
-                      </div>
-                    )}
-
-                  </div>
-                </div>
-
-                {/* Autonomy breakdown */}
-                <div style={{ background: 'rgba(17,24,39,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)' }}>
-                  <h3 style={{ fontSize: 'var(--text-xs)', fontWeight: 800, marginBottom: 10 }}>Autonomy Event Injector</h3>
-                  {engineState.entities.truck.state === 'broken_down' ? (
-                    <button onClick={() => RealityEngine.resolveIncidentBreakdown()} style={{ width: '100%', padding: '8px 0', border: 'none', borderRadius: 4, background: '#10b981', color: '#fff', fontSize: '9px', fontWeight: 800, cursor: 'pointer' }}>Resolve Mechanical Breakdown</button>
-                  ) : (
-                    <button onClick={() => RealityEngine.triggerIncidentBreakdown()} style={{ width: '100%', padding: '8px 0', border: '1px solid #ef4444', color: '#ef4444', background: 'transparent', borderRadius: 4, fontSize: '9px', fontWeight: 800, cursor: 'pointer' }}>Simulate Mechanical Breakdown</button>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* TAB 4: Market */}
-            {activeTab === 'market' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 'var(--space-5)' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-                  
-                  <div style={{ background: 'rgba(17,24,39,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)' }}>
-                    <h3 style={{ fontSize: 'var(--text-xs)', fontWeight: 800, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <Globe size={13} color="#06b6d4" /> Regional Freight Capacity & Demand Index
-                    </h3>
-
-                    {/* Corridor Density Cards */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 14 }}>
-                      {[
-                        { name: 'NH48 Western Corridor (DEL-BOM)', density: 'High (89%)', tariffTrend: '+2.4%', availability: 'Tight', rec: 'Book DFC Rail' },
-                        { name: 'NH44 North-South (DEL-BLR)', density: 'Optimal (72%)', tariffTrend: '-0.8%', availability: 'Surplus', rec: 'Road Freight' },
-                        { name: 'Dedicated Freight Rail Line', density: 'Moderate (54%)', tariffTrend: '-24.0%', availability: 'Abundant', rec: 'Primary Recommended' },
-                        { name: 'Eastern Maritime Hub (CCU-MAS)', density: 'Balanced (68%)', tariffTrend: '+1.1%', availability: 'Stable', rec: 'Multimodal' }
-                      ].map((c, i) => (
-                        <div key={i} style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', padding: 10, borderRadius: 6 }}>
-                          <div style={{ fontSize: '9.5px', fontWeight: 800, color: '#fff' }}>{c.name}</div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '8.5px', color: '#9ca3af', marginTop: 4 }}>
-                            <span>Capacity Density: <strong style={{ color: '#818cf8' }}>{c.density}</strong></span>
-                            <span>Tariff Rate: <strong style={{ color: c.tariffTrend.startsWith('+') ? '#f59e0b' : '#10b981' }}>{c.tariffTrend}</strong></span>
-                          </div>
-                          <div style={{ fontSize: '8px', color: '#06b6d4', marginTop: 4, fontWeight: 700 }}>Strategy: {c.rec}</div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div style={{ fontSize: '9px', color: '#9ca3af' }}>
-                      AI Market Forecast: <strong style={{ color: '#fff' }}>{engineState.predictions.capacity.reason}</strong>
-                    </div>
-                  </div>
-
-                </div>
-
-                <div style={{ background: 'rgba(17,24,39,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <h3 style={{ fontSize: 'var(--text-xs)', fontWeight: 800 }}>Equipment Availability</h3>
-                  {[
-                    { type: '32ft Multi-Axle Trailer', count: '142 Units', status: 'Available' },
-                    { type: 'Cold-Chain Reefer (-20°C)', count: '28 Units', status: 'High Demand' },
-                    { type: '40ft Container High Cube', count: '89 Units', status: 'Available' }
-                  ].map((e, idx) => (
-                    <div key={idx} style={{ background: 'rgba(255,255,255,0.01)', padding: 8, borderRadius: 4, fontSize: '8.5px', display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#fff', fontWeight: 700 }}>{e.type}</span>
-                      <span style={{ color: '#10b981' }}>{e.count}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* TAB 5: CFO */}
-            {activeTab === 'cfo' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 'var(--space-5)' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-                  
-                  <div style={{ background: 'rgba(17,24,39,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)' }}>
-                    <h3 style={{ fontSize: 'var(--text-xs)', fontWeight: 800, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <Landmark size={13} color="#10b981" /> Financial Ledger & Closed-Loop Reinforcement Intelligence
-                    </h3>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 14 }}>
-                      <div style={kpiCardStyle}>
-                        <div style={kpiLabelStyle}>Accrued Customer Spend</div>
-                        <div style={kpiValStyle}>{engineState.twins.customer.financial}</div>
-                      </div>
-                      <div style={kpiCardStyle}>
-                        <div style={kpiLabelStyle}>GST ITC Reconciled</div>
-                        <div style={{ ...kpiValStyle, color: '#10b981' }}>99.4%</div>
-                      </div>
-                      <div style={kpiCardStyle}>
-                        <div style={kpiLabelStyle}>Demurrage Leakage</div>
-                        <div style={{ ...kpiValStyle, color: '#ef4444' }}>₹0.00 (Zero Leakage)</div>
-                      </div>
-                    </div>
-
-                    <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', padding: 10, borderRadius: 6 }}>
-                      <span style={{ fontSize: '9px', fontWeight: 800, color: '#818cf8', display: 'block', marginBottom: 6 }}>Closed-Loop Model Evolution Matrix (Prediction vs Reality)</span>
-                      <div style={{ fontSize: '8.5px', color: '#9ca3af', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        <div>Identified Weakness: <strong style={{ color: '#ef4444' }}>{engineState.evolutionMatrix.selfUpgrades.weakness}</strong></div>
-                        <div>Root Cause: <strong>{engineState.evolutionMatrix.selfUpgrades.rootCause}</strong></div>
-                        <div>Corrective Policy Upgrade: <strong style={{ color: '#10b981' }}>{engineState.evolutionMatrix.selfUpgrades.newRequirement}</strong></div>
-                        <div>Model Status: <strong style={{ color: '#10b981' }}>{engineState.evolutionMatrix.selfUpgrades.modelStatus}</strong></div>
-                      </div>
-                    </div>
-
-                  </div>
-
-                </div>
-
-                <div style={{ background: 'rgba(17,24,39,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <h3 style={{ fontSize: 'var(--text-xs)', fontWeight: 800 }}>Audit Memory Ledger</h3>
-                  {engineState.lessons.slice(0, 3).map((l, i) => (
-                    <div key={i} style={{ background: 'rgba(255,255,255,0.01)', padding: 8, borderRadius: 4, fontSize: '8.5px', color: '#9ca3af' }}>
-                      <strong style={{ color: '#fff' }}>{l.event}</strong>
-                      <div style={{ marginTop: 2 }}>{l.factors}</div>
-                      <div style={{ color: '#10b981', marginTop: 2 }}>{l.recovery}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-          </div>
-
-        </div>
-      )}
-
-      {/* 2. REALITY ENGINE VIEW MODE */}
-      {viewMode === 'engine' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 'var(--space-5)', flex: 1 }}>
-          
-          {/* Sidebar */}
-          <div style={{
-            background: 'rgba(17, 24, 39, 0.4)', border: '1px solid rgba(255, 255, 255, 0.05)',
-            borderRadius: 'var(--radius-lg)', padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 6
-          }}>
-            {[
-              { id: 1, label: 'L1 Event Layer', icon: Compass },
-              { id: 2, label: 'L2 Entity Layer', icon: Database },
-              { id: 3, label: 'L3 Digital Twin Layer', icon: Layers },
-              { id: 4, label: 'L4 Memory Layer', icon: FileText },
-              { id: 5, label: 'L5 Learning Layer', icon: RefreshCw },
-              { id: 6, label: 'L6 Prediction Layer', icon: Cpu },
-              { id: 7, label: 'L7 Simulation Layer', icon: Sliders },
-              { id: 8, label: 'L8 Decision Layer', icon: Brain },
-              { id: 9, label: 'L9 Execution Layer', icon: ShieldCheck },
-              { id: 10, label: 'L10 Evolution Layer', icon: TrendingUp }
-            ].map(layer => {
-              const Icon = layer.icon;
-              const active = activeLayer === layer.id;
-              return (
-                <button
-                  key={layer.id} onClick={() => setActiveLayer(layer.id)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px',
-                    borderRadius: 4, border: 'none', cursor: 'pointer',
-                    fontSize: '10px', fontWeight: active ? 800 : 500, textAlign: 'left',
-                    background: active ? 'rgba(99,102,241,0.15)' : 'transparent',
-                    color: active ? '#818cf8' : '#9ca3af'
-                  }}
-                >
-                  <Icon size={12} />
-                  {layer.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Engine Workspace */}
-          <div style={{
-            background: 'rgba(17, 24, 39, 0.2)', border: '1px solid rgba(255, 255, 255, 0.03)',
-            borderRadius: 'var(--radius-lg)', padding: 'var(--space-5)', minHeight: '360px'
-          }}>
-            
-            {/* L1 Event */}
-            {activeLayer === 1 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <h4 style={{ fontSize: '11px', fontWeight: 800 }}>Layer 1: Event Capture</h4>
-                <div style={{ display: 'flex', gap: 4 }}>
-                  <input type="text" placeholder="Inject custom L1 event..." value={customEventText} onChange={e => setCustomEventText(e.target.value)} style={{ flex: 1, background: '#090d16', border: '1px solid rgba(255,255,255,0.05)', color: '#fff', fontSize: '9px', padding: 6 }} />
-                  <button onClick={handleManualEventInject} style={{ background: '#6366f1', border: 'none', color: '#fff', padding: '0 10px', fontSize: '9px', borderRadius: 2, cursor: 'pointer' }}>Inject Event</button>
-                </div>
-              </div>
-            )}
-
-            {/* L2 Entity */}
-            {activeLayer === 2 && (
-              <div>
-                <h4 style={{ fontSize: '11px', fontWeight: 800, marginBottom: 8 }}>Layer 2: Universal Entity Graph</h4>
-                <div style={{ background: '#02040a', borderRadius: 4, height: '180px', display: 'flex', alignItems: 'center', justify: 'center' }}>
-                  <svg width="240" height="130" style={{ overflow: 'visible' }}>
-                    {graphNodes.map(n => (
-                      <circle key={n.id} cx={n.cx / 2} cy={n.cy / 2} r="4" fill={isNodeImpacted(n.id) ? '#ef4444' : n.color} />
-                    ))}
-                  </svg>
-                </div>
-              </div>
-            )}
-
-            {/* L3 Twins */}
-            {activeLayer === 3 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <h4 style={{ fontSize: '11px', fontWeight: 800, marginBottom: 6 }}>Layer 3: 5-Dimension Digital Twins</h4>
-                <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', padding: 10, borderRadius: 4, fontSize: '9px', color: '#9ca3af' }}>
-                  <strong style={{ color: '#fff' }}>Driver Twin (Rajesh Kumar):</strong>
-                  <ul style={{ margin: '4px 0 0 10px', padding: 0 }}>
-                    <li>Physical: {engineState.twins.driver.physical}</li>
-                    <li>Operational: {engineState.twins.driver.operational}</li>
-                    <li>Financial: {engineState.twins.driver.financial}</li>
-                    <li>Behavioral: {engineState.twins.driver.behavioral}</li>
-                    <li>Risk: {engineState.twins.driver.risk}</li>
-                  </ul>
-                </div>
-              </div>
-            )}
-
-            {/* L4 Memory */}
-            {activeLayer === 4 && (
-              <div>
-                <h4 style={{ fontSize: '11px', fontWeight: 800, marginBottom: 6 }}>Layer 4: Memory Lessons</h4>
-                {engineState.lessons.map((l, i) => (
-                  <div key={i} style={{ fontSize: '9px', color: '#9ca3af', marginBottom: 6, background: 'rgba(255,255,255,0.01)', padding: 6, borderRadius: 2 }}>
-                    <strong>{l.event}</strong>: Factors: {l.factors}
-                    <div style={{ color: '#10b981', marginTop: 2 }}>Prevention: {l.recovery}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* L5 Learning */}
-            {activeLayer === 5 && (
-              <div>
-                <h4 style={{ fontSize: '11px', fontWeight: 800, marginBottom: 6 }}>Layer 5: Continuous Learning Patterns</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {engineState.learningStats.learnedFeatures.map((f, i) => (
-                    <div key={i} style={{ background: 'rgba(99,102,241,0.03)', padding: 6, borderRadius: 2, fontSize: '9px' }}>
-                      <strong style={{ color: '#818cf8' }}>{f.name}</strong>: {f.impact}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* L6 Predictions */}
-            {activeLayer === 6 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <h4 style={{ fontSize: '11px', fontWeight: 800, marginBottom: 6 }}>Layer 6: Foresight Predictions</h4>
-                <div style={{ background: 'rgba(255,255,255,0.01)', padding: 10, borderRadius: 4, fontSize: '9.5px' }}>
-                  <div style={{ color: '#ef4444', fontWeight: 800 }}>Resignation Risk: {engineState.predictions.resignation.probability}</div>
-                  <div style={{ color: '#9ca3af', marginTop: 4 }}>Driver: {engineState.predictions.resignation.driver}</div>
-                  <div style={{ color: '#9ca3af', marginTop: 2 }}>Causal factors: {engineState.predictions.resignation.reason}</div>
-                </div>
-              </div>
-            )}
-
-            {/* L7 Simulation */}
-            {activeLayer === 7 && (
-              <div>
-                <h4 style={{ fontSize: '11px', fontWeight: 800, marginBottom: 6 }}>Layer 7: Scenario Simulation Sandbox</h4>
-                <label style={{ fontSize: '9px', display: 'block', marginBottom: 4 }}>Diesel Spike: +{engineState.simulationState.dieselIncrease}%</label>
-                <input type="range" min="0" max="50" value={engineState.simulationState.dieselIncrease} onChange={e => RealityEngine.setDieselSimulation(parseInt(e.target.value))} />
-                {engineState.simulationState.scenarioResult && (
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: 6, borderRadius: 2, fontSize: '9px', color: '#9ca3af', marginTop: 8 }}>
-                    <div>Margin impact: <strong style={{ color: '#ef4444' }}>{engineState.simulationState.scenarioResult.marginImpact}</strong></div>
-                    <div>Region risk: <strong>{engineState.simulationState.scenarioResult.regionRisk}</strong></div>
-                    <div style={{ color: '#10b981', marginTop: 2 }}>Proposal: {engineState.simulationState.scenarioResult.recommendation}</div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* L8 Decision */}
-            {activeLayer === 8 && (
-              <div>
-                <h4 style={{ fontSize: '11px', fontWeight: 800, marginBottom: 6 }}>Layer 8: Decision Engine</h4>
-                <div style={{ background: 'rgba(255,255,255,0.01)', padding: 8, borderRadius: 4, fontSize: '9.5px', color: '#9ca3af' }}>
-                  <div>Target order: {engineState.decisionPackage.target}</div>
-                  <div>Simulated possibilities: <strong>30,000,000</strong></div>
-                  <div>Plan Selected: <strong style={{ color: '#10b981' }}>{engineState.decisionPackage.selectedPlan}</strong></div>
-                  <div style={{ marginTop: 4 }}>Reasoning: {engineState.decisionPackage.reasoning}</div>
-                </div>
-              </div>
-            )}
-
-            {/* L9 Execution */}
-            {activeLayer === 9 && (
-              <div>
-                <h4 style={{ fontSize: '11px', fontWeight: 800, marginBottom: 6 }}>Layer 9: Autonomous Execution Agents</h4>
-                <div style={{ fontSize: '9.5px', color: '#9ca3af' }}>
-                  <div>Last automated execution: <strong style={{ color: '#fff' }}>{engineState.executionAgentStatus.lastExecutedAction}</strong></div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 6 }}>
-                    {engineState.executionAgentStatus.autoDispatches.map((d, i) => <div key={i} style={{ color: '#10b981' }}>✓ {d}</div>)}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* L10 Evolution */}
-            {activeLayer === 10 && (
-              <div>
-                <h4 style={{ fontSize: '11px', fontWeight: 800, marginBottom: 6 }}>Layer 10: Self-Audit Evolution</h4>
-                <div style={{ background: 'rgba(255,255,255,0.01)', padding: 8, borderRadius: 4, fontSize: '9.5px', color: '#9ca3af' }}>
-                  <div style={{ color: '#ef4444', fontWeight: 800 }}>Weakness: {engineState.evolutionMatrix.selfUpgrades.weakness}</div>
-                  <div>Root Cause: {engineState.evolutionMatrix.selfUpgrades.rootCause}</div>
-                  <div style={{ color: '#10b981' }}>Action: {engineState.evolutionMatrix.selfUpgrades.newRequirement}</div>
-                  <div style={{ color: '#10b981', fontWeight: 800, marginTop: 4 }}>Status: {engineState.evolutionMatrix.selfUpgrades.modelStatus}</div>
-                </div>
-              </div>
-            )}
-
-          </div>
-
-        </div>
-      )}
-
-      {/* Footer Event Ledger Stream */}
-      <div style={{
-        background: 'rgba(17,24,39,0.3)', border: '1px solid rgba(255,255,255,0.05)',
-        borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)', display: 'flex',
-        flexDirection: 'column', gap: 8
-      }}>
-        <div style={{ display: 'flex', justify: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 6 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Activity size={12} color="#10b981" />
-            <h3 style={{ fontSize: 'var(--text-xs)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Ecosystem Event Stream Ledger (Layer 1)</h3>
-          </div>
-        </div>
-
-        <div style={{
-          background: '#02040a', border: '1px solid rgba(255,255,255,0.03)',
-          borderRadius: 'var(--radius-md)', padding: 8, fontFamily: 'var(--font-mono)',
-          fontSize: '9px', display: 'flex', flexDirection: 'column', gap: 4,
-          height: '95px', overflowY: 'auto', color: '#10b981'
-        }}>
-          {engineState.events.map((e, idx) => (
-            <div key={e.id || idx} style={{ display: 'flex', gap: 6, alignItems: 'flex-start' }}>
-              <span style={{ color: '#6b7280', flexShrink: 0 }}>[{e.timestamp ? e.timestamp.substring(11, 19) : ''}]</span>
-              <span style={{ color: '#818cf8', fontWeight: 700, flexShrink: 0 }}>[{e.type}]</span>
-              <span style={{ color: '#fff', flexShrink: 0 }}>{e.source}:</span>
-              <span style={{ color: '#10b981' }}>{e.desc}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+      <svg width={size} height={size}>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={5} />
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={5}
+          strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" transform={`rotate(-90 ${size/2} ${size/2})`} />
+        <text x={size/2} y={size/2+1} textAnchor="middle" dominantBaseline="middle" fontSize={9} fontWeight={800} fill={color}>{value}</text>
+      </svg>
+      <span style={{ fontSize: 8, color: '#6b7280', textTransform: 'uppercase', textAlign: 'center', maxWidth: 52, lineHeight: 1.2 }}>{lbl2}</span>
     </div>
   );
 }
 
-// ---- STYLES ----
-const formInputStyle = {
-  background: '#090d16',
-  border: '1px solid rgba(255,255,255,0.08)',
-  color: '#fff',
-  padding: '6px 10px',
-  fontSize: 'var(--text-xs)',
-  borderRadius: 'var(--radius-sm)',
-  outline: 'none',
-  width: '100%'
-};
+function StatBar({ label: lbl2, value, max = 100, color = '#6366f1' }) {
+  const numVal = typeof value === 'number' ? value : parseFloat(value) || 0;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={lbl()}>{lbl2}</span>
+        <span style={{ fontSize: 10, fontWeight: 700, color }}>{value}{typeof value === 'number' ? '%' : ''}</span>
+      </div>
+      <div style={{ height: 3, background: 'rgba(255,255,255,0.05)', borderRadius: 2, overflow: 'hidden' }}>
+        <div style={{ width: `${Math.min(numVal / max * 100, 100)}%`, height: '100%', background: color, borderRadius: 2, transition: 'width 0.6s ease' }} />
+      </div>
+    </div>
+  );
+}
 
-const kpiCardStyle = {
-  background: 'rgba(17,24,39,0.3)',
-  border: '1px solid rgba(255,255,255,0.05)',
-  padding: '10px 12px',
-  borderRadius: 'var(--radius-lg)'
-};
+function KpiCard({ label: lbl2, value, trend, icon: Icon, color = '#6366f1' }) {
+  return (
+    <div style={{ ...card(), display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <span style={lbl()}>{lbl2}</span>
+        {Icon && <Icon size={12} color={color} />}
+      </div>
+      <div style={{ fontSize: 14, fontWeight: 800, color, lineHeight: 1 }}>{value}</div>
+      {trend && <div style={{ fontSize: 9, color: trend.startsWith('+') ? '#10b981' : trend.startsWith('-') ? '#ef4444' : '#6b7280' }}>{trend}</div>}
+    </div>
+  );
+}
 
-const kpiLabelStyle = {
-  fontSize: '8px',
-  color: '#6b7280',
-  textTransform: 'uppercase',
-  marginBottom: 2
-};
+function ActionBtn({ children, onClick, color = '#6366f1', size = 'sm', disabled = false }) {
+  return (
+    <button onClick={disabled ? undefined : onClick} style={{
+      padding: size === 'sm' ? '5px 12px' : '8px 18px', borderRadius: 6, border: `1px solid ${color}40`,
+      cursor: disabled ? 'not-allowed' : 'pointer', background: `${color}15`, color,
+      fontSize: size === 'sm' ? 10 : 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em',
+      transition: 'all 0.2s', opacity: disabled ? 0.5 : 1,
+    }}>{children}</button>
+  );
+}
 
-const kpiValStyle = {
-  fontSize: '13px',
-  fontWeight: 800,
-  color: '#fff'
-};
+function SectionHeader({ icon: Icon, title, color = '#818cf8', children }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+      <h3 style={{ fontSize: 10, fontWeight: 800, color, textTransform: 'uppercase', letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: 6, margin: 0 }}>
+        {Icon && <Icon size={12} />}{title}
+      </h3>
+      {children}
+    </div>
+  );
+}
 
-const twinBoxStyle = {
-  background: 'rgba(255,255,255,0.01)',
-  border: '1px solid rgba(255,255,255,0.04)',
-  padding: 10,
-  borderRadius: 6,
-  fontSize: '9px',
-  color: '#9ca3af',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 3
-};
+// ---- MAIN COMPONENT ----
+export default function CustomerPortal() {
+  const { userRole } = useTheme();
+  const [viewMode, setViewMode] = useState('internal');
+  const [selectedId, setSelectedId] = useState('CUS-001');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [stateFilter, setStateFilter] = useState('All');
+  const [activeTab, setActiveTab] = useState('profile');
+  const [shipperTab, setShipperTab] = useState('my_shipments');
+  const [engineState, setEngineState] = useState(RealityEngine.getState());
+  const [notification, setNotification] = useState(null);
+  const [bookingForm, setBookingForm] = useState({ origin: 'Delhi', destination: 'Mumbai', cargo: '', tons: 50, value: '' });
+  const [bookingSubmitted, setBookingSubmitted] = useState(false);
+  const [ticketForm, setTicketForm] = useState({ type: 'SLA Breach', priority: 'High', desc: '' });
+  const [showTicketForm, setShowTicketForm] = useState(false);
+  const [aiMessages, setAiMessages] = useState([{ sender: 'ai', text: 'GatiFleet Intelligence ready. Select a customer or ask me anything.' }]);
+  const [aiInput, setAiInput] = useState('');
+  const [aiTyping, setAiTyping] = useState(false);
 
-const twinHeaderStyle = {
-  fontSize: '9.5px',
-  fontWeight: 800,
-  color: '#818cf8',
-  marginBottom: 2
-};
+  useEffect(() => {
+    const unsub = RealityEngine.subscribe(state => setEngineState(state));
+    return () => unsub();
+  }, []);
+
+  const customer = useMemo(() => ALL_CUSTOMERS.find(c => c.id === selectedId) || ALL_CUSTOMERS[0], [selectedId]);
+
+  const filteredCustomers = useMemo(() => {
+    let list = ALL_CUSTOMERS;
+    if (searchQuery) list = list.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.id.toLowerCase().includes(searchQuery.toLowerCase()));
+    if (stateFilter !== 'All') list = list.filter(c => c.lifecycleState === stateFilter);
+    return list;
+  }, [searchQuery, stateFilter]);
+
+  const notify = (msg, type = 'success') => { setNotification({ msg, type }); setTimeout(() => setNotification(null), 3000); };
+  const dispatchAction = (eventType, desc) => { emitEvent(eventType, desc); notify(`Event: ${eventType}`); };
+
+  const handleAISubmit = (query) => {
+    if (!query.trim()) return;
+    setAiMessages(prev => [...prev, { sender: 'user', text: query }]);
+    setAiTyping(true);
+    setAiInput('');
+    setTimeout(() => {
+      const q = query.toLowerCase();
+      let reply = '';
+      if (q.includes('churn') || q.includes('risk')) {
+        reply = `Churn analysis for ${customer.name}: Risk ${customer.predictions.churnRisk}%. Factors: ${customer.predictions.churnFactors.join(', ')}. Action: ${customer.predictions.nextBestAction}.`;
+      } else if (q.includes('ltv') || q.includes('value')) {
+        reply = `LTV for ${customer.name}: ${customer.kpis.ltv} total. 12-month forecast: ${customer.predictions.ltv12m}. Deal health: ${customer.predictions.dealHealthIndex}/100.`;
+      } else if (q.includes('contract') || q.includes('renewal')) {
+        reply = customer.contracts.length > 0
+          ? `${customer.name} has ${customer.contracts.length} contract(s). Renewal likelihood: ${customer.kpis.renewalLikelihood}%. Risk index: ${customer.contracts[0]?.riskIndex}/100.`
+          : `${customer.name} has no contracts yet (${customer.lifecycleState} stage). Next: ${customer.predictions.nextBestAction}.`;
+      } else if (q.includes('health') || q.includes('score')) {
+        reply = `${customer.name} health: ${customer.health.overall}/100. Commercial: ${customer.health.commercial}, Operational: ${customer.health.operational}, Financial: ${customer.health.financial}, Relationship: ${customer.health.relationship}, Strategic: ${customer.health.strategic}.`;
+      } else {
+        reply = `${customer.name} (${customer.lifecycleState}) — Deal health: ${customer.predictions.dealHealthIndex}/100. Next action: ${customer.predictions.nextBestAction}. Ask me about churn, LTV, contracts, or health.`;
+      }
+      setAiMessages(prev => [...prev, { sender: 'ai', text: reply }]);
+      setAiTyping(false);
+    }, 1000);
+  };
+
+  // ---- LEFT PANEL ----
+  const renderLeftPanel = () => (
+    <div style={{ width: 264, minWidth: 264, background: 'rgba(10,14,25,0.9)', borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div style={{ padding: '14px 14px 10px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+          <Building2 size={16} color="#6366f1" />
+          <span style={{ fontSize: 12, fontWeight: 800, color: '#e5e7eb' }}>Customers</span>
+          <span style={{ ...pill('#6366f1'), marginLeft: 'auto' }}>{filteredCustomers.length}</span>
+        </div>
+        <div style={{ position: 'relative' }}>
+          <Search size={11} color="#6b7280" style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)' }} />
+          <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search customers..."
+            style={{ width: '100%', padding: '6px 8px 6px 26px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, color: '#e5e7eb', fontSize: 10, outline: 'none', boxSizing: 'border-box' }} />
+        </div>
+        <div style={{ display: 'flex', gap: 4, marginTop: 8, flexWrap: 'wrap' }}>
+          {['All', 'Strategic', 'Active', 'At Risk', 'Prospect'].map(s => (
+            <button key={s} onClick={() => setStateFilter(s)} style={{ padding: '2px 7px', borderRadius: 99, fontSize: 8, fontWeight: 700, border: 'none', cursor: 'pointer', background: stateFilter === s ? '#6366f1' : 'rgba(255,255,255,0.05)', color: stateFilter === s ? '#fff' : '#9ca3af' }}>{s}</button>
+          ))}
+        </div>
+      </div>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '6px 8px' }}>
+        {filteredCustomers.map(c => {
+          const isActive = c.id === selectedId;
+          const hc = getHealthColor(c.health.overall);
+          const lc = getLifecycleColor(c.lifecycleState);
+          const urgentTickets = c.supportTickets?.filter(t => t.priority === 'Urgent').length || 0;
+          return (
+            <motion.div key={c.id} whileHover={{ scale: 1.01 }} onClick={() => { setSelectedId(c.id); setActiveTab('profile'); }}
+              style={{ padding: '9px 10px', borderRadius: 8, marginBottom: 4, cursor: 'pointer', background: isActive ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.02)', border: `1px solid ${isActive ? 'rgba(99,102,241,0.4)' : 'rgba(255,255,255,0.04)'}`, transition: 'all 0.15s' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: isActive ? '#a5b4fc' : '#e5e7eb', lineHeight: 1.2, maxWidth: 160 }}>{c.name}</div>
+                  <div style={{ fontSize: 8, color: '#6b7280', marginTop: 1 }}>{c.id} · {c.industry}</div>
+                </div>
+                <div style={{ width: 28, height: 28, borderRadius: '50%', background: `${hc}20`, border: `2px solid ${hc}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: 8, fontWeight: 800, color: hc }}>{c.health.overall}</span>
+                </div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ ...pill(lc, `${lc}15`) }}>{c.lifecycleState}</span>
+                <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                  {urgentTickets > 0 && <span style={{ ...pill('#ef4444', 'rgba(239,68,68,0.1)') }}>🔴 {urgentTickets}</span>}
+                  <span style={{ fontSize: 8, color: '#6b7280' }}>{c.accountManager?.split(' ')[0]}</span>
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+      <div style={{ padding: '10px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <button onClick={() => dispatchAction('CUSTOMER_CREATE_REQUESTED', 'New customer creation initiated from Customer Workspace.')}
+          style={{ width: '100%', padding: '8px', background: 'rgba(99,102,241,0.1)', border: '1px dashed rgba(99,102,241,0.4)', borderRadius: 8, color: '#818cf8', fontSize: 10, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+          <Plus size={12} /> New Customer
+        </button>
+      </div>
+    </div>
+  );
+
+  // ---- HEADER ----
+  const renderHeader = () => {
+    const hc = getHealthColor(customer.health.overall);
+    const lc = getLifecycleColor(customer.lifecycleState);
+    const cc = getChurnColor(customer.predictions.churnRisk);
+    return (
+      <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(10,14,25,0.5)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+          <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+            <div style={{ width: 48, height: 48, borderRadius: 10, background: 'linear-gradient(135deg, #6366f1, #06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900, color: '#fff', flexShrink: 0 }}>
+              {customer.shortName?.charAt(0)}
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <h1 style={{ fontSize: 18, fontWeight: 900, color: '#f9fafb', margin: 0 }}>{customer.name}</h1>
+                <span style={pill(lc, `${lc}18`)}>{customer.lifecycleState}</span>
+                {customer.predictions.churnRisk >= 50 && <span style={pill('#ef4444', 'rgba(239,68,68,0.12)')}>⚠ High Churn Risk</span>}
+              </div>
+              <div style={{ display: 'flex', gap: 12, marginTop: 4, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 9, color: '#6b7280' }}>{customer.id} · {customer.gstin}</span>
+                <span style={{ fontSize: 9, color: '#6b7280' }}>{customer.industry} · {customer.legalForm}</span>
+                <span style={{ fontSize: 9, color: '#6b7280' }}>📍 {customer.hq}</span>
+                <span style={{ fontSize: 9, color: '#6b7280' }}>🕐 {customer.accountAge} tenure</span>
+              </div>
+              <div style={{ fontSize: 9, color: '#9ca3af', marginTop: 3 }}>
+                <span style={{ color: '#818cf8' }}>AM:</span> {customer.accountManager} · <span style={{ color: '#818cf8' }}>Sponsor:</span> {customer.executiveSponsor}
+              </div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 2, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', padding: 2, borderRadius: 6 }}>
+              {['internal', 'shipper'].map(m => (
+                <button key={m} onClick={() => { setViewMode(m); setShipperTab('my_shipments'); setActiveTab('profile'); }}
+                  style={{ padding: '4px 10px', borderRadius: 4, border: 'none', cursor: 'pointer', fontSize: 9, fontWeight: 800, textTransform: 'uppercase', background: viewMode === m ? 'rgba(99,102,241,0.25)' : 'transparent', color: viewMode === m ? '#818cf8' : '#6b7280' }}>
+                  {m === 'internal' ? '🏢 Internal CRM' : '📦 Shipper View'}
+                </button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {[{ l: 'Health', v: customer.health.overall, c: hc }, { l: 'Churn Risk', v: `${customer.predictions.churnRisk}%`, c: cc }, { l: 'ACV', v: customer.kpis.acrRevenue, c: '#06b6d4' }, { l: 'LTV', v: customer.kpis.ltv, c: '#a855f7' }, { l: 'NPS', v: customer.kpis.nps ?? 'N/A', c: '#f59e0b' }].map((k, i) => (
+                <div key={i} style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: k.c }}>{k.v}</div>
+                  <div style={{ fontSize: 7, color: '#6b7280', textTransform: 'uppercase' }}>{k.l}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <ActionBtn onClick={() => dispatchAction('CUSTOMER_CALL_SCHEDULED', `Call scheduled with ${customer.name}`)} color="#10b981">📞 Call</ActionBtn>
+              <ActionBtn onClick={() => dispatchAction('CHURN_ANALYSIS_TRIGGERED', `Churn analysis for ${customer.id}`)} color="#f59e0b">🔍 Analyse</ActionBtn>
+              <ActionBtn onClick={() => dispatchAction('EXECUTIVE_BRIEFING_GENERATED', `Executive briefing for ${customer.name}`)} color="#6366f1">📋 Brief</ActionBtn>
+            </div>
+          </div>
+        </div>
+        {customer.predictions.nextBestAction && (
+          <div style={{ marginTop: 10, padding: '6px 12px', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Sparkles size={11} color="#818cf8" />
+            <span style={{ fontSize: 9, color: '#a5b4fc', fontWeight: 600 }}>AI Next-Best-Action:</span>
+            <span style={{ fontSize: 9, color: '#e5e7eb' }}>{customer.predictions.nextBestAction}</span>
+            <button onClick={() => dispatchAction('AI_RECOMMENDATION_ACCEPTED', `Accepted: ${customer.predictions.nextBestAction}`)} style={{ marginLeft: 'auto', ...pill('#10b981', 'rgba(16,185,129,0.1)'), cursor: 'pointer', border: '1px solid rgba(16,185,129,0.3)' }}>✓ Accept</button>
+            <button onClick={() => dispatchAction('AI_RECOMMENDATION_OVERRIDDEN', `Overridden: ${customer.predictions.nextBestAction}`)} style={{ ...pill('#6b7280', 'rgba(107,114,128,0.1)'), cursor: 'pointer', border: '1px solid rgba(107,114,128,0.3)' }}>Override</button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ---- TAB BAR ----
+  const renderTabBar = () => {
+    const tabs = viewMode === 'internal' ? TABS : SHIPPER_TABS;
+    const active = viewMode === 'internal' ? activeTab : shipperTab;
+    const setActive = viewMode === 'internal' ? setActiveTab : setShipperTab;
+    return (
+      <div style={{ display: 'flex', gap: 2, padding: '8px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', overflowX: 'auto', background: 'rgba(7,10,20,0.4)' }}>
+        {tabs.map(t => {
+          const isActive = active === t.id;
+          const Icon = t.icon;
+          const badge = t.id === 'support' ? customer.supportTickets?.filter(x => x.priority === 'Urgent').length : null;
+          return (
+            <button key={t.id} onClick={() => setActive(t.id)} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 6, border: 'none', cursor: 'pointer', background: isActive ? 'rgba(99,102,241,0.2)' : 'transparent', color: isActive ? '#a5b4fc' : '#6b7280', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap', transition: 'all 0.15s' }}>
+              <Icon size={11} />{t.label}
+              {badge > 0 && <span style={{ ...pill('#ef4444', 'rgba(239,68,68,0.2)'), marginLeft: 4 }}>{badge}</span>}
+            </button>
+          );
+        })}
+      </div>
+    );
+  };
+
+  // ---- TAB 1: PROFILE ----
+  const renderProfile = () => (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+      <div style={card()}>
+        <SectionHeader icon={Heart} title="Health Score Engine" color="#10b981" />
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'space-around', flexWrap: 'wrap' }}>
+          {[{k:'commercial',l:'Commercial'},{k:'operational',l:'Operational'},{k:'financial',l:'Financial'},{k:'relationship',l:'Relationship'},{k:'strategic',l:'Strategic'}].map(d => <HealthRing key={d.k} value={customer.health[d.k] || 0} label={d.l} size={52} />)}
+        </div>
+        <div style={{ marginTop: 12, padding: '8px 12px', background: `${getHealthColor(customer.health.overall)}15`, border: `1px solid ${getHealthColor(customer.health.overall)}30`, borderRadius: 8, textAlign: 'center' }}>
+          <div style={{ fontSize: 24, fontWeight: 900, color: getHealthColor(customer.health.overall) }}>{customer.health.overall}</div>
+          <div style={{ fontSize: 9, color: '#9ca3af', textTransform: 'uppercase' }}>Overall Health Score</div>
+        </div>
+      </div>
+      <div style={card()}>
+        <SectionHeader icon={BarChart3} title="Key Performance Indicators" color="#06b6d4" />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          {[{l:'Annual Contract Value',v:customer.kpis.acrRevenue,c:'#06b6d4',icon:IndianRupee},{l:'Lifetime Value',v:customer.kpis.ltv,c:'#a855f7',icon:TrendingUp},{l:'Shipments/Month',v:customer.kpis.shipmentsMonth||'N/A',c:'#10b981',icon:Truck},{l:'OTD Rate',v:customer.kpis.otdRate?`${customer.kpis.otdRate}%`:'N/A',c:'#f59e0b',icon:CheckCircle},{l:'SLA Compliance',v:customer.kpis.slaCompliance?`${customer.kpis.slaCompliance}%`:'N/A',c:'#10b981',icon:Shield},{l:'Credit Used',v:`${customer.kpis.creditUsed}%`,c:customer.kpis.creditUsed>70?'#ef4444':'#06b6d4',icon:CreditCard}].map((k,i) => <KpiCard key={i} label={k.l} value={k.v} color={k.c} icon={k.icon} />)}
+        </div>
+      </div>
+      <div style={card()}>
+        <SectionHeader icon={Users} title="Buying Committee & Contacts" color="#8b5cf6">
+          <ActionBtn onClick={() => dispatchAction('CONTACT_ADDED', `Contact added for ${customer.id}`)} color="#8b5cf6">+ Add</ActionBtn>
+        </SectionHeader>
+        {customer.contacts.map((c, i) => (
+          <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '8px 10px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.04)', marginBottom: 6 }}>
+            <div style={{ width: 32, height: 32, borderRadius: '50%', background: c.champion ? 'rgba(16,185,129,0.2)' : 'rgba(99,102,241,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: c.champion ? '#10b981' : '#818cf8', flexShrink: 0 }}>{c.name.charAt(0)}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#e5e7eb' }}>{c.name}</span>
+                {c.champion && <span style={pill('#10b981', 'rgba(16,185,129,0.1)')}>Champion</span>}
+              </div>
+              <div style={{ fontSize: 8, color: '#9ca3af' }}>{c.role} · {c.email}</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
+              <span style={{ ...pill(SENTIMENT_COLORS[c.sentiment]||'#6b7280', `${SENTIMENT_COLORS[c.sentiment]}15`) }}>{c.sentiment}</span>
+              <span style={{ fontSize: 8, color: '#6b7280' }}>Influence: {c.influence}/100</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={card()}>
+        <SectionHeader icon={GitBranch} title="Lifecycle State Machine" color="#f59e0b" />
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 12 }}>
+          {LIFECYCLE_STATES.map(s => {
+            const isActive = customer.lifecycleState === s.id;
+            return (
+              <button key={s.id} onClick={() => { dispatchAction('CUSTOMER_STATE_TRANSITION', `${customer.name}: ${customer.lifecycleState} → ${s.id}`); notify(`State emitted → ${s.id}`); }}
+                style={{ padding: '4px 8px', borderRadius: 99, border: `1px solid ${s.color}${isActive?'ff':'40'}`, background: isActive?`${s.color}25`:'rgba(255,255,255,0.02)', color: isActive?s.color:'#6b7280', fontSize: 9, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase' }}>
+                {s.id}
+              </button>
+            );
+          })}
+        </div>
+        <div style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: `1px solid ${getLifecycleColor(customer.lifecycleState)}30` }}>
+          <div style={{ fontSize: 9, color: '#9ca3af' }}>Current State</div>
+          <div style={{ fontSize: 14, fontWeight: 800, color: getLifecycleColor(customer.lifecycleState), marginTop: 2 }}>{customer.lifecycleState}</div>
+          <div style={{ fontSize: 9, color: '#6b7280', marginTop: 2 }}>Renewal: {customer.kpis.renewalLikelihood??'N/A'}% · Tenure: {customer.accountAge}</div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ---- TAB 2: DIGITAL TWINS ----
+  const renderTwins = () => {
+    const brains = [
+      {key:'commercial',label:'Commercial Brain',icon:IndianRupee,color:'#6366f1'},
+      {key:'operational',label:'Operational Brain',icon:Truck,color:'#10b981'},
+      {key:'financial',label:'Financial Brain',icon:CreditCard,color:'#06b6d4'},
+      {key:'relationship',label:'Relationship Brain',icon:Heart,color:'#ec4899'},
+      {key:'strategic',label:'Strategic Brain',icon:Target,color:'#a855f7'},
+      {key:'learning',label:'Learning Brain',icon:Brain,color:'#f59e0b'},
+    ];
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>
+        {brains.map(b => {
+          const data = customer.digitalTwin[b.key] || {};
+          return (
+            <div key={b.key} style={{ ...card(), borderLeft: `3px solid ${b.color}` }}>
+              <SectionHeader icon={b.icon} title={b.label} color={b.color}>
+                <ActionBtn onClick={() => dispatchAction('DIGITAL_TWIN_SIMULATED', `${b.label} simulation for ${customer.id}`)} color={b.color}>Simulate</ActionBtn>
+              </SectionHeader>
+              {Object.entries(data).map(([k, v]) => (
+                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '4px 0', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                  <span style={lbl()}>{k.replace(/([A-Z])/g,' $1').trim()}</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: '#e5e7eb', textAlign: 'right', maxWidth: 140 }}>{String(v)}</span>
+                </div>
+              ))}
+              {Object.keys(data).length === 0 && <span style={{ fontSize: 9, color: '#6b7280', fontStyle: 'italic' }}>No data — early stage customer</span>}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  // ---- TAB 3: PIPELINE ----
+  const renderPipeline = () => (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+      <div style={card()}>
+        <SectionHeader icon={Target} title="Active Opportunities" color="#a855f7">
+          <ActionBtn onClick={() => dispatchAction('OPPORTUNITY_CREATED', `New opportunity for ${customer.id}`)} color="#a855f7">+ New Opp</ActionBtn>
+        </SectionHeader>
+        {customer.opportunities.length === 0 && <div style={{ fontSize: 10, color: '#6b7280', textAlign: 'center', padding: '20px 0' }}>No active opportunities</div>}
+        {customer.opportunities.map(opp => (
+          <div key={opp.id} style={{ padding: '10px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.05)', marginBottom: 8 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#e5e7eb' }}>{opp.name}</div>
+                <div style={{ fontSize: 8, color: '#6b7280', marginTop: 2 }}>{opp.id} · Close: {opp.closingDate}</div>
+              </div>
+              <span style={pill(STAGE_COLORS[opp.stage]||'#6b7280', `${STAGE_COLORS[opp.stage]}18`)}>{opp.stage}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 14, fontWeight: 800, color: '#a855f7' }}>{opp.value}</span>
+              <span style={{ fontSize: 10, color: '#f59e0b' }}>{opp.probability}% win prob.</span>
+            </div>
+            <div style={{ marginTop: 8, height: 3, background: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
+              <div style={{ width: `${opp.probability}%`, height: '100%', background: 'linear-gradient(90deg,#8b5cf6,#6366f1)', borderRadius: 2 }} />
+            </div>
+            <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+              <ActionBtn onClick={() => dispatchAction('PROPOSAL_GENERATED', `Proposal for ${opp.id}`)} color="#6366f1">Generate Proposal</ActionBtn>
+              <ActionBtn onClick={() => dispatchAction('OPPORTUNITY_WON', `${opp.id} won`)} color="#10b981">Mark Won</ActionBtn>
+              <ActionBtn onClick={() => dispatchAction('OPPORTUNITY_LOST', `${opp.id} lost`)} color="#ef4444">Mark Lost</ActionBtn>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={card()}>
+        <SectionHeader icon={Cpu} title="AI Pricing Engine" color="#06b6d4" />
+        {[
+          {label:'Best Price',desc:'Win probability optimized',value:'₹2.4 Cr',margin:'18.4%',color:'#10b981'},
+          {label:'Best Margin',desc:'Peak tariff — seasonal demand',value:'₹3.2 Cr',margin:'26.8%',color:'#6366f1'},
+          {label:'Negotiation Floor',desc:'Minimum viable — covers opex',value:'₹1.8 Cr',margin:'12.2%',color:'#f59e0b'},
+        ].map((tier, i) => (
+          <div key={i} style={{ padding: '10px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: `1px solid ${tier.color}25`, marginBottom: 8 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: tier.color }}>{tier.label}</span>
+              <span style={{ fontSize: 8, color: '#6b7280' }}>{tier.desc}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 16, fontWeight: 900, color: '#f9fafb' }}>{tier.value}</span>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: tier.color }}>{tier.margin} margin</div>
+                <ActionBtn onClick={() => dispatchAction('PRICING_TIER_SELECTED', `${tier.label} selected for ${customer.id}`)} color={tier.color}>Select</ActionBtn>
+              </div>
+            </div>
+          </div>
+        ))}
+        <SectionHeader icon={Network} title="Buying Committee Influence" color="#8b5cf6" />
+        {customer.contacts.slice(0, 3).map((c, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            <div style={{ width: `${c.influence}%`, height: 4, background: c.champion ? '#8b5cf6' : '#374151', borderRadius: 2, maxWidth: 120 }} />
+            <span style={{ fontSize: 9, color: '#9ca3af' }}>{c.name} ({c.role}) — {c.influence}/100</span>
+            {c.champion && <span style={pill('#8b5cf6', 'rgba(139,92,246,0.1)')}>Champion</span>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  // ---- TAB 4: CONTRACTS ----
+  const renderContracts = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {customer.contracts.length === 0 && (
+        <div style={{ ...card(), textAlign: 'center', padding: '30px' }}>
+          <FileText size={32} color="#6b7280" style={{ margin: '0 auto 10px' }} />
+          <div style={{ fontSize: 12, color: '#6b7280' }}>No active contracts</div>
+          <div style={{ fontSize: 9, color: '#4b5563', marginTop: 4 }}>Customer is in {customer.lifecycleState} stage.</div>
+          <div style={{ marginTop: 12 }}><ActionBtn onClick={() => dispatchAction('CONTRACT_CREATION_REQUESTED', `Contract creation for ${customer.id}`)} color="#6366f1" size="lg">Create Contract</ActionBtn></div>
+        </div>
+      )}
+      {customer.contracts.map(ctr => (
+        <div key={ctr.id} style={card()}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <span style={{ fontSize: 13, fontWeight: 800, color: '#e5e7eb' }}>{ctr.id}</span>
+                <span style={pill(ctr.status==='Active'?'#10b981':'#f59e0b')}>{ctr.status}</span>
+              </div>
+              <div style={{ fontSize: 9, color: '#9ca3af' }}>Lanes: {ctr.lanes}</div>
+              <div style={{ fontSize: 9, color: '#9ca3af', marginTop: 2 }}>SLA: {ctr.sla}</div>
+              <div style={{ fontSize: 9, color: '#9ca3af', marginTop: 2 }}>{ctr.start} → {ctr.end}</div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 20, fontWeight: 900, color: '#06b6d4' }}>{ctr.value}</div>
+              <div style={{ fontSize: 9, color: '#6b7280', marginTop: 2 }}>Commercial Risk Index</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: ctr.riskIndex<25?'#10b981':ctr.riskIndex<50?'#f59e0b':'#ef4444' }}>{ctr.riskIndex}/100</div>
+            </div>
+          </div>
+          <SectionHeader icon={Shield} title="Executable SLA Clauses" color="#f59e0b" />
+          {[
+            {clause:'IF Transit_Time > SLA_Target THEN Apply_Penalty(5%)',status:'Active'},
+            {clause:'IF Monthly_Volume > Committed_Volume THEN Volume_Rebate(2%)',status:'Active'},
+            {clause:'IF Fuel_Price_Delta > 10% THEN Fuel_Surcharge_Revision()',status:'Watching'},
+          ].map((cl, i) => (
+            <div key={i} style={{ padding: '6px 10px', background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.15)', borderRadius: 6, marginBottom: 6, fontFamily: 'monospace', fontSize: 9, color: '#fbbf24' }}>
+              {cl.clause} <span style={{ float: 'right', ...pill(cl.status==='Active'?'#10b981':'#f59e0b') }}>{cl.status}</span>
+            </div>
+          ))}
+          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+            <ActionBtn onClick={() => dispatchAction('CONTRACT_RENEWAL_INITIATED', `Renewal for ${ctr.id}`)} color="#10b981">Initiate Renewal</ActionBtn>
+            <ActionBtn onClick={() => dispatchAction('CONTRACT_AMENDMENT_REQUESTED', `Amendment for ${ctr.id}`)} color="#f59e0b">Request Amendment</ActionBtn>
+            <ActionBtn onClick={() => dispatchAction('CONTRACT_AUDIT_REQUESTED', `Compliance audit for ${ctr.id}`)} color="#6366f1">Compliance Audit</ActionBtn>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  // ---- TAB 5: BILLING ----
+  const renderBilling = () => {
+    const b = customer.billing;
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+        <div style={card()}>
+          <SectionHeader icon={IndianRupee} title="Revenue Ledger" color="#10b981" />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
+            {[{l:'Total Billed',v:b.totalBilled,c:'#06b6d4'},{l:'Collected',v:b.paid,c:'#10b981'},{l:'Pending',v:b.pending,c:'#f59e0b'},{l:'Overdue',v:b.overdue,c:'#ef4444'}].map((k,i) => <KpiCard key={i} label={k.l} value={k.v} color={k.c} />)}
+          </div>
+          <SectionHeader icon={Receipt} title="Invoice Register" color="#06b6d4">
+            <ActionBtn onClick={() => dispatchAction('INVOICE_GENERATED', `Invoice batch for ${customer.id}`)} color="#06b6d4">+ Generate</ActionBtn>
+          </SectionHeader>
+          {[
+            {id:'INV-4821',amount:'₹18.4 L',status:'Paid',due:'2026-07-15'},
+            {id:'INV-4822',amount:'₹14.2 L',status:'Pending',due:'2026-08-20'},
+            {id:'INV-4823',amount:'₹9.8 L',status:'Overdue',due:'2026-07-28'},
+          ].map((inv, i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 10px', background: 'rgba(255,255,255,0.02)', borderRadius: 6, marginBottom: 5 }}>
+              <div><span style={{ fontSize: 10, fontWeight: 700, color: '#e5e7eb' }}>{inv.id}</span><span style={{ fontSize: 8, color: '#6b7280', marginLeft: 8 }}>Due: {inv.due}</span></div>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#f9fafb' }}>{inv.amount}</span>
+                <span style={pill(inv.status==='Paid'?'#10b981':inv.status==='Pending'?'#f59e0b':'#ef4444')}>{inv.status}</span>
+                <button onClick={() => dispatchAction('INVOICE_DISPUTED', `Invoice ${inv.id} disputed`)} style={{ fontSize: 8, color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer' }}>Dispute</button>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={card()}>
+            <SectionHeader icon={AlertTriangle} title="Active Disputes" color="#ef4444" />
+            {b.disputes === 0 ? <div style={{ fontSize: 10, color: '#10b981', textAlign: 'center', padding: '12px 0' }}>✓ No active disputes</div> : (
+              <>
+                <div style={{ fontSize: 22, fontWeight: 900, color: '#ef4444' }}>{b.disputes} disputes</div>
+                <div style={{ fontSize: 9, color: '#9ca3af', marginTop: 2 }}>Overdue exposure: {b.overdue}</div>
+                <ActionBtn onClick={() => dispatchAction('DISPUTE_RESOLUTION_INITIATED', `Dispute resolution for ${customer.id}`)} color="#ef4444">Initiate Resolution</ActionBtn>
+              </>
+            )}
+          </div>
+          <div style={card()}>
+            <SectionHeader icon={ShieldCheck} title="GST ITC Reconciliation" color="#a855f7" />
+            {[{l:'ITC Claimed',v:'₹4.2 L',s:'OK'},{l:'ITC Pending Match',v:'₹0.8 L',s:'Pending'},{l:'Compliance Rate',v:'97.4%',s:'OK'},{l:'Filing Status',v:'GSTR-2B Matched',s:'OK'}].map((r,i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                <span style={lbl()}>{r.l}</span>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: '#e5e7eb' }}>{r.v}</span>
+                  <span style={pill(r.s==='OK'?'#10b981':'#f59e0b')}>{r.s}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={card()}>
+            <SectionHeader icon={TrendingUp} title="Payment Health" color="#06b6d4" />
+            <StatBar label="Avg Payment Days" value={customer.kpis.avgPaymentDays||0} max={60} color={customer.kpis.avgPaymentDays>30?'#ef4444':'#10b981'} />
+            <div style={{ marginTop: 8 }}><StatBar label="Credit Line Used" value={customer.kpis.creditUsed} color={customer.kpis.creditUsed>70?'#ef4444':'#06b6d4'} /></div>
+            <div style={{ marginTop: 8, fontSize: 9, color: '#9ca3af' }}>Credit Limit: {customer.kpis.creditLine}</div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ---- TAB 6: OPERATIONS ----
+  const renderOperations = () => (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+      <div style={card()}>
+        <SectionHeader icon={Truck} title="Active Shipments" color="#06b6d4">
+          <ActionBtn onClick={() => dispatchAction('SHIPMENT_BOOKING_INITIATED', `Shipment booking for ${customer.id}`)} color="#06b6d4">+ Book</ActionBtn>
+        </SectionHeader>
+        {customer.recentShipments.length === 0 && <div style={{ fontSize: 10, color: '#6b7280', textAlign: 'center', padding: '20px 0' }}>No shipments in record</div>}
+        {customer.recentShipments.map((s, i) => {
+          const sc = STATUS_COLORS[s.status]||'#6b7280';
+          const rc = SLA_RISK_COLORS[s.slaRisk]||'#6b7280';
+          return (
+            <div key={i} style={{ padding: '9px 10px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: `1px solid ${s.status==='delayed'?'rgba(239,68,68,0.3)':'rgba(255,255,255,0.05)'}`, marginBottom: 7 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+                <div><span style={{ fontSize: 10, fontWeight: 700, color: '#e5e7eb' }}>{s.id}</span><div style={{ fontSize: 8, color: '#9ca3af', marginTop: 2 }}>🚛 {s.route}</div></div>
+                <span style={pill(sc, `${sc}15`)}>{s.status.replace('_',' ')}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#f9fafb' }}>{s.value}</span>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <span style={{ fontSize: 9, color: '#9ca3af' }}>ETA: {s.eta}</span>
+                  <span style={pill(rc, `${rc}15`)}>SLA: {s.slaRisk}</span>
+                </div>
+              </div>
+              {s.status === 'delayed' && <ActionBtn onClick={() => dispatchAction('INCIDENT_ESCALATED', `Delay escalation for ${s.id}`)} color="#ef4444">🚨 Escalate Delay</ActionBtn>}
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={card()}>
+          <SectionHeader icon={Activity} title="Operational Performance" color="#10b981" />
+          <StatBar label="OTD Rate" value={customer.kpis.otdRate||0} color={customer.kpis.otdRate>=96?'#10b981':'#f59e0b'} />
+          <div style={{ marginTop: 8 }}><StatBar label="SLA Compliance" value={customer.kpis.slaCompliance||0} color="#06b6d4" /></div>
+          <div style={{ marginTop: 8 }}><StatBar label="Fleet Utilization" value={parseInt(customer.digitalTwin.operational?.fleetUtilization)||0} color="#a855f7" /></div>
+        </div>
+        <div style={card()}>
+          <SectionHeader icon={AlertTriangle} title="Proactive Risk Radar" color="#f59e0b" />
+          {[
+            {risk:'Monsoon disruption on NH48 corridor',prob:'28%',impact:'+4.2h delay',severity:'Medium'},
+            {risk:'Driver fatigue alert — 2 routes',prob:'14%',impact:'SLA breach risk',severity:'High'},
+            {risk:'Fuel price revision scheduled',prob:'82%',impact:'+₹0.8/km surcharge',severity:'Low'},
+          ].map((r, i) => (
+            <div key={i} style={{ padding: '7px 9px', background: 'rgba(245,158,11,0.04)', borderRadius: 7, border: '1px solid rgba(245,158,11,0.12)', marginBottom: 6 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+                <span style={{ fontSize: 9, fontWeight: 600, color: '#fbbf24' }}>{r.risk}</span>
+                <span style={pill(PRIORITY_COLORS[r.severity]||'#6b7280', `${PRIORITY_COLORS[r.severity]}15`)}>{r.severity}</span>
+              </div>
+              <div style={{ fontSize: 8, color: '#9ca3af' }}>Prob: {r.prob} · Impact: {r.impact}</div>
+            </div>
+          ))}
+          <ActionBtn onClick={() => dispatchAction('RISK_SIMULATION_TRIGGERED', `Risk simulation for ${customer.id}`)} color="#f59e0b">Run Recovery Simulation</ActionBtn>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ---- TAB 7: SUPPORT ----
+  const renderSupport = () => (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 14 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={card()}>
+          <SectionHeader icon={MessageSquare} title="Ticket Command Center" color="#ec4899">
+            <ActionBtn onClick={() => setShowTicketForm(true)} color="#ec4899">+ Raise Ticket</ActionBtn>
+          </SectionHeader>
+          {showTicketForm && (
+            <div style={{ padding: '12px', background: 'rgba(236,72,153,0.06)', border: '1px solid rgba(236,72,153,0.2)', borderRadius: 8, marginBottom: 12 }}>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                <select value={ticketForm.type} onChange={e => setTicketForm(p => ({...p, type: e.target.value}))} style={{ flex: 1, padding: '5px 8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 5, color: '#e5e7eb', fontSize: 10 }}>
+                  {['SLA Breach','Billing Dispute','Documentation','Operations Issue','Technical'].map(t => <option key={t}>{t}</option>)}
+                </select>
+                <select value={ticketForm.priority} onChange={e => setTicketForm(p => ({...p, priority: e.target.value}))} style={{ flex: 1, padding: '5px 8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 5, color: '#e5e7eb', fontSize: 10 }}>
+                  {['Urgent','High','Medium','Low'].map(t => <option key={t}>{t}</option>)}
+                </select>
+              </div>
+              <textarea value={ticketForm.desc} onChange={e => setTicketForm(p => ({...p, desc: e.target.value}))} placeholder="Describe the issue..."
+                style={{ width: '100%', padding: '6px 8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 5, color: '#e5e7eb', fontSize: 10, resize: 'vertical', minHeight: 60, boxSizing: 'border-box' }} />
+              <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                <ActionBtn onClick={() => { dispatchAction('SUPPORT_CASE_CREATED', `Support ticket for ${customer.id}: ${ticketForm.type} — ${ticketForm.priority}`); setShowTicketForm(false); notify('Ticket created'); }} color="#ec4899">Submit Ticket</ActionBtn>
+                <ActionBtn onClick={() => setShowTicketForm(false)} color="#6b7280">Cancel</ActionBtn>
+              </div>
+            </div>
+          )}
+          {customer.supportTickets.length === 0 && !showTicketForm && <div style={{ fontSize: 10, color: '#10b981', textAlign: 'center', padding: '20px 0' }}>✓ No active tickets — all SLAs green</div>}
+          {customer.supportTickets.map(t => (
+            <div key={t.id} style={{ padding: '10px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: `1px solid ${PRIORITY_COLORS[t.priority]||'#6b7280'}30`, marginBottom: 7 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 5 }}>
+                <div>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 2 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: '#e5e7eb' }}>{t.id}</span>
+                    <span style={pill(PRIORITY_COLORS[t.priority]||'#6b7280', `${PRIORITY_COLORS[t.priority]}15`)}>{t.priority}</span>
+                    <span style={{ fontSize: 8, color: '#9ca3af' }}>{t.type}</span>
+                  </div>
+                  <div style={{ fontSize: 9, color: '#9ca3af' }}>{t.desc}</div>
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: t.priority==='Urgent'?'#ef4444':'#f59e0b' }}>⏱ {t.slaTimer}</div>
+                  <div style={{ fontSize: 8, color: '#6b7280' }}>SLA Timer</div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 8, color: '#9ca3af' }}>{t.assignedAgent} · {t.status}</span>
+                <div style={{ display: 'flex', gap: 5 }}>
+                  <ActionBtn onClick={() => dispatchAction('TICKET_ESCALATED', `Ticket ${t.id} escalated`)} color="#f97316">Escalate</ActionBtn>
+                  <ActionBtn onClick={() => dispatchAction('TICKET_RESOLVED', `Ticket ${t.id} resolved`)} color="#10b981">Resolve</ActionBtn>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={card()}>
+          <SectionHeader icon={Shield} title="SLA Compliance" color="#10b981" />
+          {[{tier:'OTD SLA',target:'96%',actual:`${customer.kpis.otdRate||0}%`,ok:(customer.kpis.otdRate||0)>=96},{tier:'Resolution SLA',target:'24h',actual:'18.4h avg',ok:true},{tier:'Billing Accuracy',target:'99%',actual:'97.8%',ok:false}].map((s,i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+              <div><div style={{ fontSize: 9, fontWeight: 700, color: '#e5e7eb' }}>{s.tier}</div><div style={{ fontSize: 8, color: '#6b7280' }}>Target: {s.target}</div></div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 10, fontWeight: 800, color: s.ok?'#10b981':'#ef4444' }}>{s.actual}</div>
+                <div style={{ fontSize: 8, color: s.ok?'#10b981':'#ef4444' }}>{s.ok?'✓ Met':'✗ Breached'}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={card()}>
+          <SectionHeader icon={ChevronRight} title="Escalation Matrix" color="#f97316" />
+          {[{tier:'Tier 1',desc:'Support Agent',time:'< 4h',color:'#10b981'},{tier:'Tier 2',desc:'Senior Ops',time:'< 8h',color:'#f59e0b'},{tier:'Tier 3',desc:'Account Manager',time:'< 24h',color:'#f97316'},{tier:'Executive',desc:'C-Suite / VP',time:'Immediate',color:'#ef4444'}].map((e,i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: e.color }} />
+                <div><div style={{ fontSize: 9, fontWeight: 700, color: '#e5e7eb' }}>{e.tier}</div><div style={{ fontSize: 8, color: '#6b7280' }}>{e.desc}</div></div>
+              </div>
+              <span style={{ fontSize: 9, color: e.color, fontWeight: 700 }}>{e.time}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  // ---- TAB 8: AI INTELLIGENCE ----
+  const renderAI = () => (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+      <div style={card()}>
+        <SectionHeader icon={AlertCircle} title="Churn Risk Analysis" color={getChurnColor(customer.predictions.churnRisk)} />
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 12 }}>
+          <div style={{ width: 80, height: 80, borderRadius: '50%', border: `6px solid ${getChurnColor(customer.predictions.churnRisk)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 20, fontWeight: 900, color: getChurnColor(customer.predictions.churnRisk) }}>{customer.predictions.churnRisk}%</div>
+              <div style={{ fontSize: 7, color: '#6b7280' }}>Churn Risk</div>
+            </div>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={lbl()}>Contributing Factors</div>
+            {customer.predictions.churnFactors.map((f, i) => <div key={i} style={{ fontSize: 9, color: '#9ca3af', marginTop: 4, paddingLeft: 8, borderLeft: `2px solid ${getChurnColor(customer.predictions.churnRisk)}50` }}>• {f}</div>)}
+          </div>
+        </div>
+        <div style={{ padding: '8px 10px', background: 'rgba(99,102,241,0.06)', borderRadius: 7, marginBottom: 10 }}>
+          <div style={lbl('#818cf8')}>Recommended Intervention</div>
+          <div style={{ fontSize: 10, color: '#e5e7eb', marginTop: 4, lineHeight: 1.5 }}>{customer.predictions.nextBestAction}</div>
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <ActionBtn onClick={() => dispatchAction('CHURN_INTERVENTION_TRIGGERED', `Churn intervention for ${customer.id}`)} color="#6366f1">Trigger Intervention</ActionBtn>
+          <ActionBtn onClick={() => dispatchAction('CHURN_ANALYSIS_TRIGGERED', `Churn re-analysis for ${customer.id}`)} color="#06b6d4">Re-Analyze</ActionBtn>
+        </div>
+      </div>
+      <div style={card()}>
+        <SectionHeader icon={TrendingUp} title="LTV Forecast & Deal Health" color="#a855f7" />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
+          <div style={{ ...card({padding:'10px'}), textAlign: 'center' }}>
+            <div style={{ fontSize: 9, color: '#9ca3af', marginBottom: 4 }}>Total LTV</div>
+            <div style={{ fontSize: 18, fontWeight: 900, color: '#a855f7' }}>{customer.kpis.ltv}</div>
+          </div>
+          <div style={{ ...card({padding:'10px'}), textAlign: 'center' }}>
+            <div style={{ fontSize: 9, color: '#9ca3af', marginBottom: 4 }}>12-Month Forecast</div>
+            <div style={{ fontSize: 18, fontWeight: 900, color: '#06b6d4' }}>{customer.predictions.ltv12m}</div>
+          </div>
+        </div>
+        <div style={{ marginBottom: 12 }}>
+          <div style={lbl()}>Deal Health Index</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
+            <div style={{ flex: 1, height: 8, background: 'rgba(255,255,255,0.05)', borderRadius: 4, overflow: 'hidden' }}>
+              <div style={{ width: `${customer.predictions.dealHealthIndex}%`, height: '100%', background: getDealHealthColor(customer.predictions.dealHealthIndex), borderRadius: 4, transition: 'width 0.8s ease' }} />
+            </div>
+            <span style={{ fontSize: 14, fontWeight: 900, color: getDealHealthColor(customer.predictions.dealHealthIndex) }}>{customer.predictions.dealHealthIndex}</span>
+          </div>
+        </div>
+        <SectionHeader icon={Bot} title="Multi-Agent Consensus" color="#f59e0b" />
+        {[
+          {agent:'Commercial Agent',view:`Deal health ${customer.predictions.dealHealthIndex>70?'strong — focus on expansion':'weak — prioritize retention'}`,confidence:88},
+          {agent:'Risk Agent',view:`Churn risk ${customer.predictions.churnRisk}% — ${customer.predictions.churnRisk>35?'intervention required':'within acceptable range'}`,confidence:92},
+          {agent:'Revenue Agent',view:`LTV trajectory ${customer.kpis.renewalLikelihood?(customer.kpis.renewalLikelihood>80?'on track':'at risk'):'undetermined'}`,confidence:76},
+        ].map((ag, i) => (
+          <div key={i} style={{ padding: '6px 8px', background: 'rgba(245,158,11,0.04)', borderRadius: 6, marginBottom: 5 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+              <span style={{ fontSize: 9, fontWeight: 700, color: '#fbbf24' }}>🤖 {ag.agent}</span>
+              <span style={{ fontSize: 8, color: '#6b7280' }}>Confidence: {ag.confidence}%</span>
+            </div>
+            <div style={{ fontSize: 9, color: '#9ca3af' }}>{ag.view}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ ...card(), gridColumn: '1 / -1' }}>
+        <SectionHeader icon={Sparkles} title="Customer Intelligence Copilot" color="#818cf8" />
+        <div style={{ height: 180, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
+          {aiMessages.map((msg, i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: msg.sender==='user'?'flex-end':'flex-start' }}>
+              <div style={{ maxWidth: '80%', padding: '7px 10px', borderRadius: 8, fontSize: 10, lineHeight: 1.6, background: msg.sender==='user'?'rgba(99,102,241,0.2)':'rgba(255,255,255,0.04)', color: msg.sender==='user'?'#a5b4fc':'#e5e7eb', border: `1px solid ${msg.sender==='user'?'rgba(99,102,241,0.3)':'rgba(255,255,255,0.06)'}` }}>{msg.text}</div>
+            </div>
+          ))}
+          {aiTyping && <div style={{ fontSize: 9, color: '#6b7280', fontStyle: 'italic' }}>AI thinking...</div>}
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input value={aiInput} onChange={e => setAiInput(e.target.value)} onKeyDown={e => e.key==='Enter' && handleAISubmit(aiInput)}
+            placeholder={`Ask about ${customer.shortName}... (churn, LTV, contracts, health)`}
+            style={{ flex: 1, padding: '8px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, color: '#e5e7eb', fontSize: 10, outline: 'none' }} />
+          <button onClick={() => handleAISubmit(aiInput)} style={{ padding: '8px 14px', background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.3)', borderRadius: 8, color: '#818cf8', cursor: 'pointer' }}><Send size={12} /></button>
+        </div>
+        <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+          {['Churn risk analysis','LTV projection','Contract renewal forecast','Health score breakdown'].map(q => (
+            <button key={q} onClick={() => handleAISubmit(q)} style={{ padding: '3px 8px', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 99, fontSize: 8, color: '#818cf8', cursor: 'pointer' }}>{q}</button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  // ---- TAB 9: DECISION JOURNAL ----
+  const renderJournal = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={card()}>
+        <SectionHeader icon={Clock} title="Decision Timeline & Audit Journal" color="#818cf8">
+          <ActionBtn onClick={() => dispatchAction('DECISION_LOGGED', `Decision logged for ${customer.id}`)} color="#818cf8">+ Log Decision</ActionBtn>
+        </SectionHeader>
+        {customer.decisionJournal.length === 0 && <div style={{ fontSize: 10, color: '#6b7280', textAlign: 'center', padding: '20px 0' }}>No decisions logged for this customer yet</div>}
+        {customer.decisionJournal.map((d, i) => (
+          <div key={i} style={{ padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.05)', marginBottom: 8, borderLeft: `3px solid ${d.divergence?.startsWith('Positive')?'#10b981':d.divergence?.startsWith('Negative')?'#ef4444':'#f59e0b'}` }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#e5e7eb' }}>{d.action}</div>
+                <div style={{ fontSize: 8, color: '#6b7280', marginTop: 2 }}>{d.date} · By: {d.actor}</div>
+              </div>
+              <span style={pill(d.divergence?.startsWith('Positive')?'#10b981':d.divergence?.startsWith('Negative')?'#ef4444':'#f59e0b')}>{d.divergence}</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <div style={{ padding: '6px 8px', background: 'rgba(255,255,255,0.02)', borderRadius: 6 }}>
+                <div style={lbl()}>Expected Outcome</div>
+                <div style={{ fontSize: 9, color: '#9ca3af', marginTop: 3 }}>{d.expected}</div>
+              </div>
+              <div style={{ padding: '6px 8px', background: 'rgba(255,255,255,0.02)', borderRadius: 6 }}>
+                <div style={lbl()}>Actual Outcome</div>
+                <div style={{ fontSize: 9, color: '#e5e7eb', marginTop: 3 }}>{d.actual}</div>
+              </div>
+            </div>
+            <div style={{ marginTop: 8, padding: '6px 8px', background: 'rgba(99,102,241,0.05)', borderRadius: 6 }}>
+              <div style={lbl('#818cf8')}>Learning Lesson</div>
+              <div style={{ fontSize: 9, color: '#a5b4fc', marginTop: 3 }}>{d.lesson}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={card()}>
+        <SectionHeader icon={Database} title="Live Event Audit Log" color="#06b6d4" />
+        <div style={{ maxHeight: 200, overflowY: 'auto' }}>
+          {engineState.events?.slice(0, 12).map((ev, i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '5px 0', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+              <div>
+                <span style={{ fontSize: 8, fontWeight: 700, color: '#818cf8', fontFamily: 'monospace' }}>{ev.type}</span>
+                <div style={{ fontSize: 8, color: '#6b7280' }}>{String(ev.desc||'').substring(0, 80)}{(ev.desc||'').length>80?'...':''}</div>
+              </div>
+              <span style={{ fontSize: 7, color: '#4b5563', flexShrink: 0, marginLeft: 8 }}>{new Date(ev.timestamp).toLocaleTimeString()}</span>
+            </div>
+          ))}
+          {(!engineState.events || engineState.events.length === 0) && <div style={{ fontSize: 9, color: '#6b7280' }}>No events recorded yet</div>}
+        </div>
+      </div>
+    </div>
+  );
+
+  // ---- SHIPPER TABS ----
+  const renderShipperMyShipments = () => (
+    <div style={card({padding:'20px'})}>
+      <SectionHeader icon={Truck} title={`My Shipments — ${customer.shortName}`} color="#06b6d4" />
+      {customer.recentShipments.length === 0 ? <div style={{ textAlign: 'center', padding: '30px', color: '#6b7280', fontSize: 10 }}>No shipments yet. Book your first shipment below.</div> :
+        customer.recentShipments.map((s, i) => {
+          const sc = STATUS_COLORS[s.status]||'#6b7280';
+          return (
+            <div key={i} style={{ padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: `1px solid ${sc}30`, marginBottom: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div><div style={{ fontSize: 13, fontWeight: 800, color: '#e5e7eb' }}>{s.id}</div><div style={{ fontSize: 10, color: '#9ca3af', marginTop: 3 }}>🚛 {s.route}</div></div>
+                <div style={{ textAlign: 'right' }}>
+                  <span style={pill(sc, `${sc}18`)}>{s.status.replace('_',' ')}</span>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#f9fafb', marginTop: 4 }}>{s.value}</div>
+                  <div style={{ fontSize: 9, color: '#9ca3af' }}>ETA: {s.eta}</div>
+                </div>
+              </div>
+            </div>
+          );
+        })
+      }
+    </div>
+  );
+
+  const renderShipperInvoices = () => (
+    <div style={card({padding:'20px'})}>
+      <SectionHeader icon={Receipt} title="My Invoices" color="#10b981" />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
+        {[{l:'Total Billed',v:customer.billing.totalBilled,c:'#06b6d4'},{l:'Amount Paid',v:customer.billing.paid,c:'#10b981'},{l:'Outstanding',v:customer.billing.pending,c:'#f59e0b'}].map((k,i) => <KpiCard key={i} label={k.l} value={k.v} color={k.c} />)}
+      </div>
+      {[{id:'INV-4821',amount:'₹18.4 L',status:'Paid',due:'2026-07-15'},{id:'INV-4822',amount:'₹14.2 L',status:'Pending',due:'2026-08-20'},{id:'INV-4823',amount:'₹9.8 L',status:'Overdue',due:'2026-07-28'}].map((inv,i) => (
+        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, marginBottom: 7 }}>
+          <div><div style={{ fontSize: 11, fontWeight: 700, color: '#e5e7eb' }}>{inv.id}</div><div style={{ fontSize: 8, color: '#6b7280' }}>Due: {inv.due}</div></div>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <span style={{ fontSize: 13, fontWeight: 800, color: '#f9fafb' }}>{inv.amount}</span>
+            <span style={pill(inv.status==='Paid'?'#10b981':inv.status==='Pending'?'#f59e0b':'#ef4444')}>{inv.status}</span>
+            {inv.status !== 'Paid' && <ActionBtn onClick={() => dispatchAction('PAYMENT_INITIATED', `Payment for ${inv.id}`)} color="#10b981">Pay Now</ActionBtn>}
+            <ActionBtn onClick={() => dispatchAction('INVOICE_DOWNLOADED', `Invoice ${inv.id} downloaded`)} color="#6b7280">Download</ActionBtn>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderShipperBook = () => (
+    <div style={card({padding:'24px', maxWidth:560})}>
+      <SectionHeader icon={Plus} title="Book a Shipment" color="#6366f1" />
+      {bookingSubmitted ? (
+        <div style={{ textAlign: 'center', padding: '24px' }}>
+          <CheckCircle size={40} color="#10b981" style={{ margin: '0 auto 12px' }} />
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#10b981', marginBottom: 6 }}>Shipment Request Submitted!</div>
+          <div style={{ fontSize: 10, color: '#9ca3af' }}>Our team will confirm within 2 hours.</div>
+          <div style={{ marginTop: 16 }}><ActionBtn onClick={() => setBookingSubmitted(false)} color="#6366f1">Book Another</ActionBtn></div>
+        </div>
+      ) : (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            {[{label:'Origin City',key:'origin',type:'text'},{label:'Destination City',key:'destination',type:'text'},{label:'Cargo Description',key:'cargo',type:'text'},{label:'Weight (Tons)',key:'tons',type:'number'},{label:'Declared Value',key:'value',type:'text'}].map(f => (
+              <div key={f.key}>
+                <div style={lbl()}>{f.label}</div>
+                <input type={f.type} value={bookingForm[f.key]} onChange={e => setBookingForm(p => ({...p, [f.key]: e.target.value}))}
+                  style={{ width: '100%', marginTop: 5, padding: '8px 10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 7, color: '#e5e7eb', fontSize: 11, outline: 'none', boxSizing: 'border-box' }} />
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: 16 }}>
+            <button onClick={() => { dispatchAction('SHIPMENT_BOOKING_SUBMITTED', `Booking: ${bookingForm.origin}→${bookingForm.destination}, ${bookingForm.tons} tons`); setBookingSubmitted(true); }}
+              style={{ padding: '10px 24px', background: 'linear-gradient(90deg,#6366f1,#06b6d4)', border: 'none', borderRadius: 8, color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Submit Shipment Request
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+
+  const renderShipperSupport = () => (
+    <div style={card({padding:'20px'})}>
+      <SectionHeader icon={MessageSquare} title="My Support Tickets" color="#ec4899">
+        <ActionBtn onClick={() => { dispatchAction('SUPPORT_CASE_CREATED', `Self-service ticket by ${customer.name}`); notify('Ticket submitted — our team will contact you within 2 hours'); }} color="#ec4899">+ Raise Issue</ActionBtn>
+      </SectionHeader>
+      {customer.supportTickets.length === 0 && <div style={{ textAlign: 'center', padding: '20px', color: '#10b981', fontSize: 10 }}>✓ No open issues — all your shipments running smoothly</div>}
+      {customer.supportTickets.map((t, i) => (
+        <div key={i} style={{ padding: '10px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, marginBottom: 7 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#e5e7eb' }}>{t.type}</div>
+          <div style={{ fontSize: 9, color: '#9ca3af', marginTop: 3 }}>{t.desc}</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5 }}>
+            <span style={pill(PRIORITY_COLORS[t.priority]||'#6b7280')}>{t.priority}</span>
+            <span style={{ fontSize: 9, color: '#6b7280' }}>{t.status}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderTabContent = () => {
+    if (viewMode === 'shipper') {
+      if (shipperTab === 'my_shipments') return renderShipperMyShipments();
+      if (shipperTab === 'my_invoices') return renderShipperInvoices();
+      if (shipperTab === 'book') return renderShipperBook();
+      if (shipperTab === 'my_support') return renderShipperSupport();
+    }
+    if (activeTab === 'profile') return renderProfile();
+    if (activeTab === 'twins') return renderTwins();
+    if (activeTab === 'pipeline') return renderPipeline();
+    if (activeTab === 'contracts') return renderContracts();
+    if (activeTab === 'billing') return renderBilling();
+    if (activeTab === 'operations') return renderOperations();
+    if (activeTab === 'support') return renderSupport();
+    if (activeTab === 'ai') return renderAI();
+    if (activeTab === 'journal') return renderJournal();
+    return null;
+  };
+
+  return (
+    <div style={{ display: 'flex', height: 'calc(100vh - var(--topbar-height))', background: '#040711', color: '#f9fafb', fontFamily: 'var(--font-sans)', position: 'relative', overflow: 'hidden' }}>
+      <AnimatePresence>
+        {notification && (
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+            style={{ position: 'absolute', top: 16, right: 16, zIndex: 100, padding: '8px 16px', background: notification.type==='success'?'rgba(16,185,129,0.9)':'rgba(239,68,68,0.9)', borderRadius: 8, fontSize: 10, fontWeight: 700, color: '#fff', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+            {notification.msg}
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {viewMode === 'internal' && renderLeftPanel()}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {renderHeader()}
+        {renderTabBar()}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
+          <AnimatePresence mode="wait">
+            <motion.div key={viewMode==='internal'?activeTab:shipperTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
+              {renderTabContent()}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+        <div style={{ padding: '6px 20px', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(7,10,20,0.8)', display: 'flex', gap: 12, alignItems: 'center', overflowX: 'auto' }}>
+          <span style={lbl('#6366f1')}>Live Events</span>
+          {engineState.events?.slice(0, 4).map((ev, i) => (
+            <span key={i} style={{ fontSize: 8, color: '#4b5563', whiteSpace: 'nowrap' }}>
+              <span style={{ color: '#818cf8' }}>{ev.type}</span> · {String(ev.desc||'').substring(0, 40)}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
