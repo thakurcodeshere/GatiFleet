@@ -19,6 +19,10 @@ import 'leaflet/dist/leaflet.css';
 import { useNavigate } from 'react-router-dom';
 import { generateTrucks, generateDrivers, generateShipments, CITIES } from '../../data/mockData';
 import { useTheme } from '../../context/ThemeContext';
+import GisWeatherDrawer from '../../components/fleet/GisWeatherDrawer';
+import ConsignmentVaultModal from '../../components/fleet/ConsignmentVaultModal';
+import WaypointFilterModal from '../../components/fleet/WaypointFilterModal';
+import PlaybackSettingsModal from '../../components/fleet/PlaybackSettingsModal';
 
 // ---- Static Data Generation ----
 const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -92,6 +96,12 @@ export default function LiveTracking() {
 
   // Control Tower SOS Alert State
   const [sosDismissed, setSosDismissed] = useState(false);
+
+  // Playback Icon Modals State
+  const [showGisDrawer, setShowGisDrawer] = useState(false);
+  const [showConsignmentVault, setShowConsignmentVault] = useState(false);
+  const [showWaypointFilter, setShowWaypointFilter] = useState(false);
+  const [showPlaybackSettings, setShowPlaybackSettings] = useState(false);
 
   // Consignee Link Copy State
   const [copiedLink, setCopiedLink] = useState(false);
@@ -838,14 +848,44 @@ export default function LiveTracking() {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <button style={styles.btnBottomIcon} title="Global Grid">🌐</button>
-              <button style={styles.btnBottomIcon} title="Table View"><FileText size={14} /></button>
-              <button style={styles.btnBottomIcon} title="Filter"><Search size={14} /></button>
-              <button style={styles.btnBottomIcon} title="Settings"><Settings size={14} /></button>
+              <button
+                style={{ ...styles.btnBottomIcon, background: showGisDrawer ? 'rgba(56, 189, 248, 0.2)' : 'rgba(255,255,255,0.04)', borderColor: showGisDrawer ? '#38bdf8' : 'rgba(255,255,255,0.08)' }}
+                title="GIS & Weather Radar Layer"
+                onClick={() => setShowGisDrawer(true)}
+              >
+                🌐
+              </button>
+              <button
+                style={{ ...styles.btnBottomIcon, background: showConsignmentVault ? 'rgba(99, 102, 241, 0.2)' : 'rgba(255,255,255,0.04)', borderColor: showConsignmentVault ? '#6366f1' : 'rgba(255,255,255,0.08)' }}
+                title="Consignment & LR/GR Vault"
+                onClick={() => setShowConsignmentVault(true)}
+              >
+                <FileText size={14} />
+              </button>
+              <button
+                style={{ ...styles.btnBottomIcon, background: showWaypointFilter ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255,255,255,0.04)', borderColor: showWaypointFilter ? '#f59e0b' : 'rgba(255,255,255,0.08)' }}
+                title="Waypoint Anomaly Search"
+                onClick={() => setShowWaypointFilter(true)}
+              >
+                <Search size={14} />
+              </button>
+              <button
+                style={{ ...styles.btnBottomIcon, background: showPlaybackSettings ? 'rgba(168, 85, 247, 0.2)' : 'rgba(255,255,255,0.04)', borderColor: showPlaybackSettings ? '#a855f7' : 'rgba(255,255,255,0.08)' }}
+                title="Playback Engine Settings"
+                onClick={() => setShowPlaybackSettings(true)}
+              >
+                <Settings size={14} />
+              </button>
             </div>
           </div>
         </footer>
       </div>
+
+      {/* Render 4 Interactive Playback Icon Feature Drawers */}
+      {showGisDrawer && <GisWeatherDrawer onClose={() => setShowGisDrawer(false)} />}
+      {showConsignmentVault && <ConsignmentVaultModal vehicle={selectedTruck} onClose={() => setShowConsignmentVault(false)} />}
+      {showWaypointFilter && <WaypointFilterModal onClose={() => setShowWaypointFilter(false)} onSelectWaypoint={(wp) => alert(`Jumping map timeline to Waypoint ${wp.id}: ${wp.location}`)} />}
+      {showPlaybackSettings && <PlaybackSettingsModal onClose={() => setShowPlaybackSettings(false)} />}
 
       <style>{`
         @keyframes pulseRing {
