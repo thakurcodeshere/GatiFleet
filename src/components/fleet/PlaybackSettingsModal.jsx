@@ -22,10 +22,10 @@ export default function PlaybackSettingsModal({ onClose }) {
         width: '100%',
         maxWidth: '750px',
         maxHeight: '90vh',
-        background: 'var(--bg-800)',
-        border: '1px solid rgba(168, 85, 247, 0.3)',
+        background: '#0b0f19',
+        border: '1px solid rgba(168, 85, 247, 0.4)',
         borderRadius: '20px',
-        boxShadow: '0 20px 60px rgba(168, 85, 247, 0.15)',
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.7)',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden'
@@ -33,11 +33,11 @@ export default function PlaybackSettingsModal({ onClose }) {
         {/* Header */}
         <div style={{
           padding: '18px 24px',
-          borderBottom: '1px solid var(--border-subtle)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          background: 'rgba(168, 85, 247, 0.04)'
+          background: 'rgba(168, 85, 247, 0.08)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{
@@ -48,16 +48,16 @@ export default function PlaybackSettingsModal({ onClose }) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'white',
+              color: '#ffffff',
               boxShadow: '0 0 15px rgba(168, 85, 247, 0.4)'
             }}>
               ⚙
             </div>
             <div>
-              <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)' }}>
+              <div style={{ fontSize: '16px', fontWeight: 800, color: '#ffffff' }}>
                 Playback Engine & Telematics Settings
               </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>
                 Auto-Follow Vehicle Camera, Scrubber Precision & Audio Alert Preferences
               </div>
             </div>
@@ -66,9 +66,9 @@ export default function PlaybackSettingsModal({ onClose }) {
           <button
             onClick={onClose}
             style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid var(--border-subtle)',
-              color: 'var(--text-secondary)',
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              color: '#9ca3af',
               borderRadius: '10px',
               width: 34,
               height: 34,
@@ -78,7 +78,7 @@ export default function PlaybackSettingsModal({ onClose }) {
               cursor: 'pointer'
             }}
           >
-            <X size={18} />
+            <X size={18} color="#9ca3af" />
           </button>
         </div>
 
@@ -86,30 +86,31 @@ export default function PlaybackSettingsModal({ onClose }) {
         <div style={{ padding: '24px', flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Auto Follow */}
           <div style={{
-            padding: '16px',
-            background: 'rgba(255,255,255,0.02)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: '12px',
+            padding: '18px',
+            background: 'rgba(255, 255, 255, 0.03)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '14px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between'
           }}>
             <div>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: 'white' }}>Auto-Follow Moving Vehicle</div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>Automatically pan map camera along with playback movement</div>
+              <div style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff' }}>Auto-Follow Moving Vehicle</div>
+              <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '3px' }}>Automatically pan map camera along with playback movement</div>
             </div>
 
             <button
               onClick={() => setAutoFollow(!autoFollow)}
               style={{
-                padding: '6px 14px',
+                padding: '8px 18px',
                 borderRadius: '8px',
-                border: autoFollow ? '1px solid #a855f7' : '1px solid var(--border-subtle)',
-                background: autoFollow ? 'rgba(168, 85, 247, 0.2)' : 'transparent',
-                color: autoFollow ? '#c084fc' : 'var(--text-muted)',
-                fontWeight: 700,
+                border: autoFollow ? '1px solid #a855f7' : '1px solid rgba(255,255,255,0.15)',
+                background: autoFollow ? 'rgba(168, 85, 247, 0.25)' : 'rgba(255,255,255,0.05)',
+                color: autoFollow ? '#e9d5ff' : '#9ca3af',
+                fontWeight: 800,
                 fontSize: '11px',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                letterSpacing: '0.04em'
               }}
             >
               {autoFollow ? 'ENABLED' : 'DISABLED'}
@@ -118,61 +119,65 @@ export default function PlaybackSettingsModal({ onClose }) {
 
           {/* Scrubber Precision */}
           <div style={{
-            padding: '16px',
-            background: 'rgba(255,255,255,0.02)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: '12px'
+            padding: '18px',
+            background: 'rgba(255, 255, 255, 0.03)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '14px'
           }}>
-            <div style={{ fontSize: '13px', fontWeight: 700, color: 'white', marginBottom: '10px' }}>Scrubber Timeline Precision</div>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              {['5s', '30s', '60s'].map(p => (
-                <button
-                  key={p}
-                  onClick={() => setScrubberPrecision(p)}
-                  style={{
-                    flex: 1,
-                    padding: '8px',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    border: scrubberPrecision === p ? '1px solid #a855f7' : '1px solid var(--border-subtle)',
-                    background: scrubberPrecision === p ? 'rgba(168, 85, 247, 0.2)' : 'transparent',
-                    color: scrubberPrecision === p ? '#c084fc' : 'var(--text-muted)',
-                    cursor: 'pointer'
-                  }}
-                >
-                  {p} Micro-Step
-                </button>
-              ))}
+            <div style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff', marginBottom: '12px' }}>Scrubber Timeline Precision</div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {['5s', '30s', '60s'].map(p => {
+                const isActive = scrubberPrecision === p;
+                return (
+                  <button
+                    key={p}
+                    onClick={() => setScrubberPrecision(p)}
+                    style={{
+                      flex: 1,
+                      padding: '10px',
+                      borderRadius: '10px',
+                      fontSize: '12px',
+                      fontWeight: 800,
+                      border: isActive ? '1px solid #a855f7' : '1px solid rgba(255,255,255,0.1)',
+                      background: isActive ? 'rgba(168, 85, 247, 0.25)' : 'rgba(255,255,255,0.03)',
+                      color: isActive ? '#e9d5ff' : '#9ca3af',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {p} Micro-Step
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           {/* Audio Alert Chimes */}
           <div style={{
-            padding: '16px',
-            background: 'rgba(255,255,255,0.02)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: '12px',
+            padding: '18px',
+            background: 'rgba(255, 255, 255, 0.03)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '14px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between'
           }}>
             <div>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: 'white' }}>Audio Alert Chimes</div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>Play sound effect when playback encounters overspeed or panic event</div>
+              <div style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff' }}>Audio Alert Chimes</div>
+              <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '3px' }}>Play sound effect when playback encounters overspeed or panic event</div>
             </div>
 
             <button
               onClick={() => setAudioChimes(!audioChimes)}
               style={{
-                padding: '6px 14px',
+                padding: '8px 18px',
                 borderRadius: '8px',
-                border: audioChimes ? '1px solid #10b981' : '1px solid var(--border-subtle)',
-                background: audioChimes ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
-                color: audioChimes ? '#6ee7b7' : 'var(--text-muted)',
-                fontWeight: 700,
+                border: audioChimes ? '1px solid #10b981' : '1px solid rgba(255,255,255,0.15)',
+                background: audioChimes ? 'rgba(16, 185, 129, 0.25)' : 'rgba(255,255,255,0.05)',
+                color: audioChimes ? '#6ee7b7' : '#9ca3af',
+                fontWeight: 800,
                 fontSize: '11px',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                letterSpacing: '0.04em'
               }}
             >
               {audioChimes ? 'ACTIVE' : 'MUTED'}

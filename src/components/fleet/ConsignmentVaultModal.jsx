@@ -40,10 +40,10 @@ export default function ConsignmentVaultModal({ vehicle, onClose }) {
         width: '100%',
         maxWidth: '850px',
         maxHeight: '90vh',
-        background: 'var(--bg-800)',
-        border: '1px solid rgba(99, 102, 241, 0.3)',
+        background: '#0b0f19',
+        border: '1px solid rgba(99, 102, 241, 0.4)',
         borderRadius: '20px',
-        boxShadow: '0 20px 60px rgba(99, 102, 241, 0.15)',
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.7)',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden'
@@ -51,11 +51,11 @@ export default function ConsignmentVaultModal({ vehicle, onClose }) {
         {/* Header */}
         <div style={{
           padding: '18px 24px',
-          borderBottom: '1px solid var(--border-subtle)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          background: 'rgba(99, 102, 241, 0.04)'
+          background: 'rgba(99, 102, 241, 0.08)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{
@@ -66,16 +66,16 @@ export default function ConsignmentVaultModal({ vehicle, onClose }) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'white',
+              color: '#ffffff',
               boxShadow: '0 0 15px rgba(99, 102, 241, 0.4)'
             }}>
               📄
             </div>
             <div>
-              <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)' }}>
+              <div style={{ fontSize: '16px', fontWeight: 800, color: '#ffffff' }}>
                 Consignment & LR/GR Document Vault
               </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>
                 Digital Lorry Receipt, e-Way Bill Verification Seal & EPOD Delivery Certificate
               </div>
             </div>
@@ -84,9 +84,9 @@ export default function ConsignmentVaultModal({ vehicle, onClose }) {
           <button
             onClick={onClose}
             style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid var(--border-subtle)',
-              color: 'var(--text-secondary)',
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              color: '#9ca3af',
               borderRadius: '10px',
               width: 34,
               height: 34,
@@ -96,7 +96,7 @@ export default function ConsignmentVaultModal({ vehicle, onClose }) {
               cursor: 'pointer'
             }}
           >
-            <X size={18} />
+            <X size={18} color="#9ca3af" />
           </button>
         </div>
 
@@ -104,80 +104,80 @@ export default function ConsignmentVaultModal({ vehicle, onClose }) {
         <div style={{ padding: '24px', flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {/* Top Stamp Bar */}
           <div style={{
-            background: 'rgba(16, 185, 129, 0.1)',
-            border: '1px solid rgba(16, 185, 129, 0.3)',
-            borderRadius: '12px',
-            padding: '14px 18px',
+            background: 'rgba(16, 185, 129, 0.12)',
+            border: '1px solid rgba(16, 185, 129, 0.4)',
+            borderRadius: '14px',
+            padding: '16px 20px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <ShieldCheck size={20} color="#10b981" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <ShieldCheck size={24} color="#10b981" />
               <div>
-                <div style={{ fontSize: '13px', fontWeight: 800, color: '#6ee7b7' }}>GSTIN & GST Tax Invoice Compliant</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>GSTIN: {documentData.gstin} · e-Way Bill: {documentData.ewayBill}</div>
+                <div style={{ fontSize: '14px', fontWeight: 800, color: '#6ee7b7' }}>GSTIN & GST Tax Invoice Compliant</div>
+                <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>GSTIN: {documentData.gstin} · e-Way Bill: {documentData.ewayBill}</div>
               </div>
             </div>
 
             <button
               onClick={handleDownloadLR}
               style={{
-                padding: '8px 16px',
+                padding: '10px 18px',
                 background: 'linear-gradient(135deg, #10b981, #059669)',
-                color: 'white',
+                color: '#ffffff',
                 border: 'none',
-                borderRadius: '8px',
-                fontWeight: 700,
+                borderRadius: '10px',
+                fontWeight: 800,
                 fontSize: '12px',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px'
+                gap: '8px'
               }}
             >
-              <Download size={14} /> {downloaded ? 'Downloaded PDF' : 'Download Official LR'}
+              <Download size={15} /> {downloaded ? 'Downloaded PDF' : 'Download Official LR'}
             </button>
           </div>
 
           {/* Consignment Document Sheet Grid */}
           <div style={{
-            background: '#090d16',
-            border: '1px solid var(--border-subtle)',
+            background: 'rgba(255, 255, 255, 0.03)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
             borderRadius: '14px',
             padding: '20px',
             display: 'grid',
             gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: '16px'
+            gap: '18px'
           }}>
             <div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Lorry Receipt No.</div>
-              <div style={{ fontSize: '15px', fontWeight: 800, color: '#818cf8', marginTop: '2px' }}>{documentData.lrNo}</div>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: '#9ca3af' }}>Lorry Receipt No.</div>
+              <div style={{ fontSize: '16px', fontWeight: 800, color: '#a5b4fc', marginTop: '3px' }}>{documentData.lrNo}</div>
             </div>
 
             <div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Consignment Date</div>
-              <div style={{ fontSize: '15px', fontWeight: 700, color: 'white', marginTop: '2px' }}>{documentData.date}</div>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: '#9ca3af' }}>Consignment Date</div>
+              <div style={{ fontSize: '15px', fontWeight: 800, color: '#ffffff', marginTop: '3px' }}>{documentData.date}</div>
             </div>
 
             <div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Consignor (Origin)</div>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: 'white', marginTop: '2px' }}>{documentData.consignor}</div>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: '#9ca3af' }}>Consignor (Origin)</div>
+              <div style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff', marginTop: '3px' }}>{documentData.consignor}</div>
             </div>
 
             <div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Consignee (Destination)</div>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: 'white', marginTop: '2px' }}>{documentData.consignee}</div>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: '#9ca3af' }}>Consignee (Destination)</div>
+              <div style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff', marginTop: '3px' }}>{documentData.consignee}</div>
             </div>
 
             <div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Cargo Description & Weight</div>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: 'white', marginTop: '2px' }}>{documentData.cargo} ({documentData.weight})</div>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: '#9ca3af' }}>Cargo Description & Weight</div>
+              <div style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff', marginTop: '3px' }}>{documentData.cargo} ({documentData.weight})</div>
             </div>
 
             <div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Freight Commercial Rate</div>
-              <div style={{ fontSize: '15px', fontWeight: 800, color: '#34d399', marginTop: '2px' }}>{documentData.freightAmount}</div>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: '#9ca3af' }}>Freight Commercial Rate</div>
+              <div style={{ fontSize: '16px', fontWeight: 800, color: '#34d399', marginTop: '3px' }}>{documentData.freightAmount}</div>
             </div>
           </div>
         </div>

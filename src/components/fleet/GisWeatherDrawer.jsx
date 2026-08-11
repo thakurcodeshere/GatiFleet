@@ -28,10 +28,10 @@ export default function GisWeatherDrawer({ onClose }) {
         width: '100%',
         maxWidth: '900px',
         maxHeight: '90vh',
-        background: 'var(--bg-800)',
-        border: '1px solid rgba(56, 189, 248, 0.3)',
+        background: '#0b0f19',
+        border: '1px solid rgba(56, 189, 248, 0.4)',
         borderRadius: '20px',
-        boxShadow: '0 20px 60px rgba(56, 189, 248, 0.15)',
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.7)',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden'
@@ -39,11 +39,11 @@ export default function GisWeatherDrawer({ onClose }) {
         {/* Header */}
         <div style={{
           padding: '18px 24px',
-          borderBottom: '1px solid var(--border-subtle)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          background: 'rgba(56, 189, 248, 0.04)'
+          background: 'rgba(56, 189, 248, 0.08)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{
@@ -54,16 +54,16 @@ export default function GisWeatherDrawer({ onClose }) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'white',
+              color: '#ffffff',
               boxShadow: '0 0 15px rgba(56, 189, 248, 0.4)'
             }}>
               🌐
             </div>
             <div>
-              <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)' }}>
+              <div style={{ fontSize: '16px', fontWeight: 800, color: '#ffffff' }}>
                 GIS Weather & Highway Radar Layer
               </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>
                 Live Corridor Weather Hazards, Traffic Congestion Overlays & Satellite Basemaps
               </div>
             </div>
@@ -72,9 +72,9 @@ export default function GisWeatherDrawer({ onClose }) {
           <button
             onClick={onClose}
             style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid var(--border-subtle)',
-              color: 'var(--text-secondary)',
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              color: '#9ca3af',
               borderRadius: '10px',
               width: 34,
               height: 34,
@@ -84,7 +84,7 @@ export default function GisWeatherDrawer({ onClose }) {
               cursor: 'pointer'
             }}
           >
-            <X size={18} />
+            <X size={18} color="#9ca3af" />
           </button>
         </div>
 
@@ -92,29 +92,32 @@ export default function GisWeatherDrawer({ onClose }) {
         <div style={{ padding: '24px', flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {/* Basemap Selection */}
           <div>
-            <div style={{ fontSize: '13px', fontWeight: 700, color: 'white', marginBottom: '10px' }}>Basemap Layer Selector</div>
+            <div style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff', marginBottom: '12px' }}>Basemap Layer Selector</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
               {[
                 { id: 'CYBER_DARK', name: 'Cyber Dark (Default)', desc: 'High contrast telematics mode' },
                 { id: 'SATELLITE', name: 'Satellite Imagery', desc: 'High resolution terrain imagery' },
                 { id: 'HEATMAP', name: 'Fleet Density Heatmap', desc: 'Real-time vehicle cluster density' }
-              ].map(m => (
-                <button
-                  key={m.id}
-                  onClick={() => setActiveLayer(m.id)}
-                  style={{
-                    padding: '14px',
-                    borderRadius: '12px',
-                    border: activeLayer === m.id ? '1px solid #38bdf8' : '1px solid var(--border-subtle)',
-                    background: activeLayer === m.id ? 'rgba(56, 189, 248, 0.15)' : 'rgba(255,255,255,0.02)',
-                    textAlign: 'left',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: activeLayer === m.id ? '#38bdf8' : 'white' }}>{m.name}</div>
-                  <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>{m.desc}</div>
-                </button>
-              ))}
+              ].map(m => {
+                const isActive = activeLayer === m.id;
+                return (
+                  <button
+                    key={m.id}
+                    onClick={() => setActiveLayer(m.id)}
+                    style={{
+                      padding: '16px',
+                      borderRadius: '12px',
+                      border: isActive ? '1px solid #38bdf8' : '1px solid rgba(255,255,255,0.1)',
+                      background: isActive ? 'rgba(56, 189, 248, 0.2)' : 'rgba(255,255,255,0.03)',
+                      textAlign: 'left',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <div style={{ fontSize: '13px', fontWeight: 800, color: isActive ? '#38bdf8' : '#ffffff' }}>{m.name}</div>
+                    <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>{m.desc}</div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -124,12 +127,12 @@ export default function GisWeatherDrawer({ onClose }) {
               onClick={() => setTrafficDensity(!trafficDensity)}
               style={{
                 flex: 1,
-                padding: '12px 16px',
-                borderRadius: '10px',
-                border: trafficDensity ? '1px solid #10b981' : '1px solid var(--border-subtle)',
-                background: trafficDensity ? 'rgba(16, 185, 129, 0.15)' : 'transparent',
-                color: trafficDensity ? '#6ee7b7' : 'var(--text-muted)',
-                fontWeight: 700,
+                padding: '14px 18px',
+                borderRadius: '12px',
+                border: trafficDensity ? '1px solid #10b981' : '1px solid rgba(255,255,255,0.1)',
+                background: trafficDensity ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255,255,255,0.03)',
+                color: trafficDensity ? '#6ee7b7' : '#9ca3af',
+                fontWeight: 800,
                 fontSize: '12px',
                 cursor: 'pointer',
                 display: 'flex',
@@ -145,12 +148,12 @@ export default function GisWeatherDrawer({ onClose }) {
               onClick={() => setWeatherHazards(!weatherHazards)}
               style={{
                 flex: 1,
-                padding: '12px 16px',
-                borderRadius: '10px',
-                border: weatherHazards ? '1px solid #f59e0b' : '1px solid var(--border-subtle)',
-                background: weatherHazards ? 'rgba(245, 158, 11, 0.15)' : 'transparent',
-                color: weatherHazards ? '#fcd34d' : 'var(--text-muted)',
-                fontWeight: 700,
+                padding: '14px 18px',
+                borderRadius: '12px',
+                border: weatherHazards ? '1px solid #f59e0b' : '1px solid rgba(255,255,255,0.1)',
+                background: weatherHazards ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255,255,255,0.03)',
+                color: weatherHazards ? '#fcd34d' : '#9ca3af',
+                fontWeight: 800,
                 fontSize: '12px',
                 cursor: 'pointer',
                 display: 'flex',
@@ -165,26 +168,26 @@ export default function GisWeatherDrawer({ onClose }) {
 
           {/* Active Weather Radar Alerts List */}
           <div>
-            <div style={{ fontSize: '13px', fontWeight: 700, color: 'white', marginBottom: '10px' }}>Active Corridor Weather Hazards</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff', marginBottom: '12px' }}>Active Corridor Weather Hazards</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {weatherAlerts.map((w, idx) => (
                 <div key={idx} style={{
-                  padding: '14px 18px',
-                  background: 'rgba(255,255,255,0.02)',
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '14px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <AlertTriangle size={18} color={w.severity === 'CRITICAL' ? '#ef4444' : '#f59e0b'} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <AlertTriangle size={20} color={w.severity === 'CRITICAL' ? '#ef4444' : '#f59e0b'} />
                     <div>
-                      <div style={{ fontSize: '13px', fontWeight: 700, color: 'white' }}>{w.corridor}</div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{w.hazard}</div>
+                      <div style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff' }}>{w.corridor}</div>
+                      <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '3px' }}>{w.hazard}</div>
                     </div>
                   </div>
-                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#38bdf8', background: 'rgba(56, 189, 248, 0.15)', padding: '4px 10px', borderRadius: '6px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 800, color: '#38bdf8', background: 'rgba(56, 189, 248, 0.2)', padding: '6px 12px', borderRadius: '8px' }}>
                     {w.impact}
                   </span>
                 </div>

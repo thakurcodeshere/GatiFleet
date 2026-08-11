@@ -31,10 +31,10 @@ export default function WaypointFilterModal({ onClose, onSelectWaypoint }) {
         width: '100%',
         maxWidth: '850px',
         maxHeight: '90vh',
-        background: 'var(--bg-800)',
-        border: '1px solid rgba(245, 158, 11, 0.3)',
+        background: '#0b0f19',
+        border: '1px solid rgba(245, 158, 11, 0.4)',
         borderRadius: '20px',
-        boxShadow: '0 20px 60px rgba(245, 158, 11, 0.15)',
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.7)',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden'
@@ -42,11 +42,11 @@ export default function WaypointFilterModal({ onClose, onSelectWaypoint }) {
         {/* Header */}
         <div style={{
           padding: '18px 24px',
-          borderBottom: '1px solid var(--border-subtle)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          background: 'rgba(245, 158, 11, 0.04)'
+          background: 'rgba(245, 158, 11, 0.08)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{
@@ -57,16 +57,16 @@ export default function WaypointFilterModal({ onClose, onSelectWaypoint }) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'white',
+              color: '#ffffff',
               boxShadow: '0 0 15px rgba(245, 158, 11, 0.4)'
             }}>
               🔍
             </div>
             <div>
-              <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)' }}>
+              <div style={{ fontSize: '16px', fontWeight: 800, color: '#ffffff' }}>
                 Waypoint Anomaly Deep Search Filter
               </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>
                 Filter Route Waypoints by Overspeeding, Rest Halts & Fuel Siphoning Anomalies
               </div>
             </div>
@@ -75,9 +75,9 @@ export default function WaypointFilterModal({ onClose, onSelectWaypoint }) {
           <button
             onClick={onClose}
             style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid var(--border-subtle)',
-              color: 'var(--text-secondary)',
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              color: '#9ca3af',
               borderRadius: '10px',
               width: 34,
               height: 34,
@@ -87,34 +87,38 @@ export default function WaypointFilterModal({ onClose, onSelectWaypoint }) {
               cursor: 'pointer'
             }}
           >
-            <X size={18} />
+            <X size={18} color="#9ca3af" />
           </button>
         </div>
 
         {/* Filter Pills */}
-        <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', gap: '10px' }}>
-          {['ALL', 'OVERSPEED', 'HALT', 'FUEL_DROP'].map(cat => (
-            <button
-              key={cat}
-              onClick={() => setFilterCategory(cat)}
-              style={{
-                padding: '6px 14px',
-                borderRadius: '8px',
-                fontSize: '11px',
-                fontWeight: 700,
-                border: filterCategory === cat ? '1px solid #f59e0b' : '1px solid var(--border-subtle)',
-                background: filterCategory === cat ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                color: filterCategory === cat ? '#fcd34d' : 'var(--text-muted)',
-                cursor: 'pointer'
-              }}
-            >
-              {cat.replace('_', ' ')}
-            </button>
-          ))}
+        <div style={{ padding: '16px 24px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', gap: '10px' }}>
+          {['ALL', 'OVERSPEED', 'HALT', 'FUEL_DROP'].map(cat => {
+            const isActive = filterCategory === cat;
+            return (
+              <button
+                key={cat}
+                onClick={() => setFilterCategory(cat)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  border: isActive ? '1px solid #f59e0b' : '1px solid rgba(255,255,255,0.12)',
+                  background: isActive ? 'rgba(245, 158, 11, 0.25)' : 'rgba(255,255,255,0.04)',
+                  color: isActive ? '#fef3c7' : '#9ca3af',
+                  cursor: 'pointer',
+                  letterSpacing: '0.03em'
+                }}
+              >
+                {cat.replace('_', ' ')}
+              </button>
+            );
+          })}
         </div>
 
         {/* Waypoints List */}
-        <div style={{ padding: '24px', flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ padding: '24px', flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
           {filtered.map(wp => (
             <div
               key={wp.id}
@@ -123,27 +127,28 @@ export default function WaypointFilterModal({ onClose, onSelectWaypoint }) {
                 onClose();
               }}
               style={{
-                padding: '16px 20px',
-                background: 'rgba(255,255,255,0.02)',
-                border: wp.type === 'OVERSPEED' || wp.type === 'FUEL_DROP' ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid var(--border-subtle)',
-                borderRadius: '12px',
+                padding: '18px 22px',
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: wp.type === 'OVERSPEED' || wp.type === 'FUEL_DROP' ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: '14px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <MapPin size={18} color={wp.type === 'OVERSPEED' ? '#ef4444' : wp.type === 'HALT' ? '#f59e0b' : '#10b981'} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <MapPin size={20} color={wp.type === 'OVERSPEED' ? '#ef4444' : wp.type === 'HALT' ? '#f59e0b' : '#10b981'} />
                 <div>
-                  <div style={{ fontSize: '13px', fontWeight: 800, color: 'white' }}>{wp.location}</div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{wp.desc}</div>
+                  <div style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff' }}>{wp.location}</div>
+                  <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '3px' }}>{wp.desc}</div>
                 </div>
               </div>
 
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '12px', fontWeight: 700, color: '#f59e0b' }}>{wp.time}</div>
-                <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>Speed: {wp.speed} km/h</div>
+                <div style={{ fontSize: '13px', fontWeight: 800, color: '#f59e0b' }}>{wp.time}</div>
+                <div style={{ fontSize: '11px', color: '#cbd5e1', marginTop: '3px' }}>Speed: {wp.speed} km/h</div>
               </div>
             </div>
           ))}
