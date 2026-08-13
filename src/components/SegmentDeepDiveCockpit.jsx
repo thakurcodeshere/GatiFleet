@@ -8,7 +8,7 @@ import {
   Sparkles, Zap, ShieldCheck, CheckCircle, AlertTriangle,
   ArrowUpRight, ArrowDownRight, Info, Eye, ExternalLink,
   IndianRupee, Gauge, Clock, Truck, Fuel, Users, Cpu, FileText,
-  X, Maximize2, Minimize2, Network, Brain, Scale, Activity
+  X, Network, Brain, Scale, Activity
 } from 'lucide-react';
 
 const segmentConfigs = {
@@ -345,13 +345,13 @@ const SegmentDeepDiveCockpit = ({ segmentKey, initialTab = 'graph', onClose }) =
       setActiveTab(initialTab);
     }
   }, [initialTab, segmentKey]);
+
   const [timeframe, setTimeframe] = useState('30d');
   const [region, setRegion] = useState('all');
   const [category, setCategory] = useState('all');
   const [viewType, setViewType] = useState('line');
   const [scaleMode, setScaleMode] = useState('auto');
   const [notification, setNotification] = useState(null);
-  const [isExpanded, setIsExpanded] = useState(false);
 
   const config = segmentConfigs[segmentKey] || segmentConfigs.revenueToday;
 
@@ -430,43 +430,31 @@ const SegmentDeepDiveCockpit = ({ segmentKey, initialTab = 'graph', onClose }) =
     ]
   };
 
-  // High contrast theme styles
+  // Adjusted Inline Frame Styles (Integrated into Main Page Layout beside Left Sidebar)
   const panelStyles = {
-    backdrop: {
-      position: 'fixed',
-      top: '60px',
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'transparent',
-      pointerEvents: 'none',
-      zIndex: 1200,
-      display: 'flex',
-      justifyContent: 'flex-end',
-    },
-    drawer: {
-      pointerEvents: 'auto',
-      width: isExpanded ? 'calc(100vw - 280px)' : '640px',
-      maxWidth: '100%',
-      height: 'calc(100vh - 60px)',
-      background: isDark ? '#0f172a' : '#ffffff',
-      borderLeft: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid #cbd5e1',
-      boxShadow: isDark ? '-10px 0 35px rgba(0,0,0,0.6)' : '-10px 0 35px rgba(0,0,0,0.18)',
+    frame: {
+      gridColumn: 'span 12',
+      background: isDark ? '#1e293b' : '#ffffff',
+      border: isDark ? '1px solid rgba(99, 102, 241, 0.25)' : '1px solid #cbd5e1',
+      borderRadius: '16px',
+      padding: '20px',
+      marginBottom: '16px',
+      boxShadow: isDark ? '0 8px 24px rgba(0,0,0,0.3)' : '0 4px 16px rgba(0,0,0,0.06)',
       display: 'flex',
       flexDirection: 'column',
+      gap: '16px',
       overflow: 'hidden',
-      transition: 'width 0.3s ease',
     },
     header: {
-      padding: '16px 20px',
-      background: isDark ? 'rgba(30, 41, 59, 0.8)' : '#f8fafc',
+      paddingBottom: '14px',
+      background: 'transparent',
       borderBottom: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
     },
     title: {
-      fontSize: 15,
+      fontSize: 16,
       fontWeight: 700,
       color: isDark ? '#f8fafc' : '#0f172a',
       margin: 0,
@@ -479,17 +467,18 @@ const SegmentDeepDiveCockpit = ({ segmentKey, initialTab = 'graph', onClose }) =
     tabsBar: {
       display: 'flex',
       alignItems: 'center',
-      gap: 6,
-      padding: '8px 20px',
-      background: isDark ? 'rgba(15, 23, 42, 0.6)' : '#ffffff',
-      borderBottom: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0',
+      gap: 8,
+      padding: '8px 12px',
+      background: isDark ? 'rgba(15, 23, 42, 0.6)' : '#f8fafc',
+      borderRadius: 10,
+      border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0',
     },
     tabBtn: (active) => ({
       background: active ? config.gradient : 'transparent',
       color: active ? '#ffffff' : isDark ? '#94a3b8' : '#475569',
       border: 'none',
       borderRadius: 8,
-      padding: '6px 12px',
+      padding: '6px 14px',
       fontSize: 12,
       fontWeight: 600,
       cursor: 'pointer',
@@ -499,9 +488,6 @@ const SegmentDeepDiveCockpit = ({ segmentKey, initialTab = 'graph', onClose }) =
       transition: 'all 0.2s ease',
     }),
     body: {
-      flex: 1,
-      padding: '20px',
-      overflowY: 'auto',
       display: 'flex',
       flexDirection: 'column',
       gap: 16,
@@ -516,9 +502,9 @@ const SegmentDeepDiveCockpit = ({ segmentKey, initialTab = 'graph', onClose }) =
     filterBar: {
       display: 'flex',
       flexWrap: 'wrap',
-      gap: 10,
+      gap: 12,
       alignItems: 'center',
-      padding: '10px 12px',
+      padding: '10px 14px',
       background: isDark ? 'rgba(0,0,0,0.2)' : '#f1f5f9',
       borderRadius: 8,
       border: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid #e2e8f0',
@@ -539,7 +525,6 @@ const SegmentDeepDiveCockpit = ({ segmentKey, initialTab = 'graph', onClose }) =
       border: isDark ? '1px solid rgba(255, 255, 255, 0.07)' : '1px solid #e2e8f0',
       borderRadius: 10,
       padding: 12,
-      marginBottom: 10,
     },
     featName: {
       fontSize: 13,
@@ -570,219 +555,211 @@ const SegmentDeepDiveCockpit = ({ segmentKey, initialTab = 'graph', onClose }) =
 
   return (
     <AnimatePresence>
-      <div style={panelStyles.backdrop} onClick={onClose}>
-        <motion.div
-          initial={{ x: '100%', opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: '100%', opacity: 0 }}
-          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-          style={panelStyles.drawer}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Header Bar anchored beside vertical sidebar */}
-          <div style={panelStyles.header}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{
-                width: 36, height: 36, borderRadius: 10,
-                background: config.gradient, display: 'flex',
-                alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 4px 10px rgba(0,0,0,0.15)'
-              }}>
-                <Sparkles size={18} color="#fff" />
-              </div>
-              <div>
-                {/* Explicit Breadcrumb Path (Dashboard -> KPI Segment Name -> Section Architecture Blueprint) */}
-                <div style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: isDark ? '#a5b4fc' : '#4338ca',
-                  background: isDark ? 'rgba(99, 102, 241, 0.15)' : 'rgba(99, 102, 241, 0.08)',
-                  border: isDark ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid rgba(99, 102, 241, 0.2)',
-                  padding: '3px 10px',
-                  borderRadius: 6,
-                  marginBottom: 6,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  letterSpacing: '0.01em'
-                }}>
-                  <span>Dashboard</span>
-                  <span style={{ opacity: 0.5 }}>➔</span>
-                  <span>{config.segmentName || 'KPI Segment'}</span>
-                  <span style={{ opacity: 0.5 }}>➔</span>
-                  <span style={{ color: config.color, fontWeight: 800 }}>
-                    {activeTab === 'blueprint'
-                      ? 'Section Architecture Blueprint'
-                      : activeTab === 'graph'
-                      ? 'Scalable Telemetry Graph'
-                      : 'Operational Features'}
-                  </span>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <h3 style={panelStyles.title}>{config.title}</h3>
-                  <span style={{
-                    fontSize: 13, fontWeight: 800, color: config.color,
-                    background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
-                    padding: '2px 8px', borderRadius: 6
-                  }}>
-                    {config.metric}
-                  </span>
-                </div>
-                <div style={panelStyles.subTitle}>
-                  {config.systemEngine} • <span style={{ color: '#16a34a', fontWeight: 600 }}>{config.trend}</span>
-                </div>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                style={{
-                  background: 'transparent', border: 'none',
-                  color: isDark ? '#94a3b8' : '#475569', cursor: 'pointer', padding: 6
-                }}
-                title={isExpanded ? 'Collapse Drawer' : 'Expand Drawer'}
-              >
-                {isExpanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-              </button>
-              <button
-                onClick={onClose}
-                style={{
-                  background: 'transparent', border: 'none',
-                  color: isDark ? '#94a3b8' : '#475569', cursor: 'pointer', padding: 6
-                }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-          </div>
-
-          {/* Action Notification Banner */}
-          {notification && (
+      <motion.div
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -12 }}
+        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+        style={panelStyles.frame}
+      >
+        {/* Header Bar */}
+        <div style={panelStyles.header}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <div style={{
-              background: 'rgba(22, 163, 74, 0.12)', borderBottom: '1px solid rgba(22, 163, 74, 0.3)',
-              color: '#15803d', padding: '8px 20px', fontSize: 12, fontWeight: 600,
-              display: 'flex', alignItems: 'center', gap: 8
+              width: 40, height: 40, borderRadius: 10,
+              background: config.gradient, display: 'flex',
+              alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
             }}>
-              <CheckCircle size={14} color="#16a34a" />
-              {notification}
+              <Sparkles size={20} color="#fff" />
             </div>
-          )}
+            <div>
+              {/* Explicit Breadcrumb Path (Dashboard -> KPI Segment Name -> Section Architecture Blueprint) */}
+              <div style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: isDark ? '#a5b4fc' : '#4338ca',
+                background: isDark ? 'rgba(99, 102, 241, 0.15)' : 'rgba(99, 102, 241, 0.08)',
+                border: isDark ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid rgba(99, 102, 241, 0.2)',
+                padding: '3px 10px',
+                borderRadius: 6,
+                marginBottom: 6,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                letterSpacing: '0.01em'
+              }}>
+                <span>Dashboard</span>
+                <span style={{ opacity: 0.5 }}>➔</span>
+                <span>{config.segmentName || 'KPI Segment'}</span>
+                <span style={{ opacity: 0.5 }}>➔</span>
+                <span style={{ color: config.color, fontWeight: 800 }}>
+                  {activeTab === 'blueprint'
+                    ? 'Section Architecture Blueprint'
+                    : activeTab === 'graph'
+                    ? 'Scalable Telemetry Graph'
+                    : 'Operational Features'}
+                </span>
+              </div>
 
-          {/* Tab Navigation */}
-          <div style={panelStyles.tabsBar}>
-            <button
-              style={panelStyles.tabBtn(activeTab === 'graph')}
-              onClick={() => setActiveTab('graph')}
-            >
-              <Zap size={14} />
-              Scalable Graph & Telemetry
-            </button>
-            <button
-              style={panelStyles.tabBtn(activeTab === 'features')}
-              onClick={() => setActiveTab('features')}
-            >
-              <Layers size={14} />
-              Operational Features ({config.features.length})
-            </button>
-            <button
-              style={panelStyles.tabBtn(activeTab === 'blueprint')}
-              onClick={() => setActiveTab('blueprint')}
-            >
-              <Cpu size={14} />
-              Section Architecture Blueprint
-            </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <h3 style={panelStyles.title}>{config.title}</h3>
+                <span style={{
+                  fontSize: 13, fontWeight: 800, color: config.color,
+                  background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+                  padding: '2px 8px', borderRadius: 6
+                }}>
+                  {config.metric}
+                </span>
+              </div>
+              <div style={panelStyles.subTitle}>
+                {config.systemEngine} • <span style={{ color: '#16a34a', fontWeight: 600 }}>{config.trend}</span>
+              </div>
+            </div>
           </div>
 
-          {/* Tab Contents */}
-          <div style={panelStyles.body}>
-            {activeTab === 'graph' && (
-              <>
-                {/* Filter Toolbar */}
-                <div style={panelStyles.filterBar}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: isDark ? '#cbd5e1' : '#334155' }}>
-                      Timeframe:
-                    </span>
-                    <div style={{ display: 'flex', gap: 2, background: isDark ? '#1e293b' : '#e2e8f0', padding: 2, borderRadius: 6 }}>
-                      {['24h', '7d', '30d', '90d', 'YTD'].map((tf) => (
-                        <button
-                          key={tf}
-                          onClick={() => setTimeframe(tf)}
-                          style={{
-                            background: timeframe === tf ? config.color : 'transparent',
-                            color: timeframe === tf ? '#fff' : isDark ? '#94a3b8' : '#475569',
-                            border: 'none', borderRadius: 4, padding: '2px 8px', fontSize: 10, fontWeight: 700, cursor: 'pointer'
-                          }}
-                        >
-                          {tf}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button
+              onClick={onClose}
+              style={{
+                background: isDark ? 'rgba(255,255,255,0.08)' : '#f1f5f9',
+                border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1',
+                color: isDark ? '#cbd5e1' : '#334155',
+                borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6
+              }}
+            >
+              <X size={14} /> Close Frame
+            </button>
+          </div>
+        </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: isDark ? '#cbd5e1' : '#334155' }}>
-                      Region:
-                    </span>
-                    <select
-                      style={panelStyles.selectInput}
-                      value={region}
-                      onChange={(e) => setRegion(e.target.value)}
-                    >
-                      <option value="all">All India (National)</option>
-                      <option value="west">Western Corridor (NH48)</option>
-                      <option value="north">Northern Region (NCR/Punjab)</option>
-                      <option value="south">Southern Corridor (BLR/CHN)</option>
-                      <option value="east">Eastern Hub (Kolkata/OD)</option>
-                    </select>
-                  </div>
+        {/* Action Notification Banner */}
+        {notification && (
+          <div style={{
+            background: 'rgba(22, 163, 74, 0.12)', border: '1px solid rgba(22, 163, 74, 0.3)',
+            color: '#15803d', padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+            display: 'flex', alignItems: 'center', gap: 8
+          }}>
+            <CheckCircle size={14} color="#16a34a" />
+            {notification}
+          </div>
+        )}
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: isDark ? '#cbd5e1' : '#334155' }}>
-                      Fleet:
-                    </span>
-                    <select
-                      style={panelStyles.selectInput}
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                    >
-                      <option value="all">All Fleet Types</option>
-                      <option value="express">Express Commercial 32FT</option>
-                      <option value="reefer">Cold Chain Reefer</option>
-                      <option value="ev">Electric Fleet (EV)</option>
-                    </select>
-                  </div>
+        {/* Tab Navigation */}
+        <div style={panelStyles.tabsBar}>
+          <button
+            style={panelStyles.tabBtn(activeTab === 'graph')}
+            onClick={() => setActiveTab('graph')}
+          >
+            <Zap size={14} />
+            Scalable Graph & Telemetry
+          </button>
+          <button
+            style={panelStyles.tabBtn(activeTab === 'features')}
+            onClick={() => setActiveTab('features')}
+          >
+            <Layers size={14} />
+            Operational Features ({config.features.length})
+          </button>
+          <button
+            style={panelStyles.tabBtn(activeTab === 'blueprint')}
+            onClick={() => setActiveTab('blueprint')}
+          >
+            <Cpu size={14} />
+            Section Architecture Blueprint
+          </button>
+        </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <button
-                      onClick={() => setViewType(viewType === 'line' ? 'bar' : 'line')}
-                      style={{
-                        background: isDark ? '#1e293b' : '#ffffff',
-                        border: isDark ? '1px solid rgba(255,255,255,0.15)' : '1px solid #cbd5e1',
-                        color: isDark ? '#f8fafc' : '#0f172a',
-                        borderRadius: 6, padding: '4px 8px', fontSize: 11, fontWeight: 600, cursor: 'pointer'
-                      }}
-                    >
-                      View: {viewType.toUpperCase()}
-                    </button>
-                    <button
-                      onClick={() => setScaleMode(scaleMode === 'auto' ? 'normalized' : 'auto')}
-                      style={{
-                        background: scaleMode === 'normalized' ? 'rgba(217, 119, 6, 0.15)' : isDark ? '#1e293b' : '#ffffff',
-                        border: scaleMode === 'normalized' ? '1px solid #d97706' : isDark ? '1px solid rgba(255,255,255,0.15)' : '1px solid #cbd5e1',
-                        color: scaleMode === 'normalized' ? '#d97706' : isDark ? '#f8fafc' : '#0f172a',
-                        borderRadius: 6, padding: '4px 8px', fontSize: 11, fontWeight: 600, cursor: 'pointer'
-                      }}
-                    >
-                      {scaleMode === 'auto' ? 'Auto Scale' : 'Normalized %'}
-                    </button>
+        {/* Tab Contents */}
+        <div style={panelStyles.body}>
+          {activeTab === 'graph' && (
+            <>
+              {/* Filter Toolbar */}
+              <div style={panelStyles.filterBar}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: isDark ? '#cbd5e1' : '#334155' }}>
+                    Timeframe:
+                  </span>
+                  <div style={{ display: 'flex', gap: 2, background: isDark ? '#1e293b' : '#e2e8f0', padding: 2, borderRadius: 6 }}>
+                    {['24h', '7d', '30d', '90d', 'YTD'].map((tf) => (
+                      <button
+                        key={tf}
+                        onClick={() => setTimeframe(tf)}
+                        style={{
+                          background: timeframe === tf ? config.color : 'transparent',
+                          color: timeframe === tf ? '#fff' : isDark ? '#94a3b8' : '#475569',
+                          border: 'none', borderRadius: 4, padding: '2px 8px', fontSize: 10, fontWeight: 700, cursor: 'pointer'
+                        }}
+                      >
+                        {tf}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                {/* Main Scalable Chart Canvas */}
-                <div style={panelStyles.card}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: isDark ? '#cbd5e1' : '#334155' }}>
+                    Region:
+                  </span>
+                  <select
+                    style={panelStyles.selectInput}
+                    value={region}
+                    onChange={(e) => setRegion(e.target.value)}
+                  >
+                    <option value="all">All India (National)</option>
+                    <option value="west">Western Corridor (NH48)</option>
+                    <option value="north">Northern Region (NCR/Punjab)</option>
+                    <option value="south">Southern Corridor (BLR/CHN)</option>
+                    <option value="east">Eastern Hub (Kolkata/OD)</option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: isDark ? '#cbd5e1' : '#334155' }}>
+                    Fleet:
+                  </span>
+                  <select
+                    style={panelStyles.selectInput}
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                  >
+                    <option value="all">All Fleet Types</option>
+                    <option value="express">Express Commercial 32FT</option>
+                    <option value="reefer">Cold Chain Reefer</option>
+                    <option value="ev">Electric Fleet (EV)</option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <button
+                    onClick={() => setViewType(viewType === 'line' ? 'bar' : 'line')}
+                    style={{
+                      background: isDark ? '#1e293b' : '#ffffff',
+                      border: isDark ? '1px solid rgba(255,255,255,0.15)' : '1px solid #cbd5e1',
+                      color: isDark ? '#f8fafc' : '#0f172a',
+                      borderRadius: 6, padding: '4px 8px', fontSize: 11, fontWeight: 600, cursor: 'pointer'
+                    }}
+                  >
+                    View: {viewType.toUpperCase()}
+                  </button>
+                  <button
+                    onClick={() => setScaleMode(scaleMode === 'auto' ? 'normalized' : 'auto')}
+                    style={{
+                      background: scaleMode === 'normalized' ? 'rgba(217, 119, 6, 0.15)' : isDark ? '#1e293b' : '#ffffff',
+                      border: scaleMode === 'normalized' ? '1px solid #d97706' : isDark ? '1px solid rgba(255,255,255,0.15)' : '1px solid #cbd5e1',
+                      color: scaleMode === 'normalized' ? '#d97706' : isDark ? '#f8fafc' : '#0f172a',
+                      borderRadius: 6, padding: '4px 8px', fontSize: 11, fontWeight: 600, cursor: 'pointer'
+                    }}
+                  >
+                    {scaleMode === 'auto' ? 'Auto Scale' : 'Normalized %'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Grid 2-Column: Main Scalable Chart (7 cols) + Features Quick Strip (5 cols) */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 16 }}>
+                <div style={{ gridColumn: 'span 7', ...panelStyles.card }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a' }}>
                       Telemetry Scalable Trend
@@ -803,155 +780,146 @@ const SegmentDeepDiveCockpit = ({ segmentKey, initialTab = 'graph', onClose }) =
                   </div>
                 </div>
 
-                {/* Features Quick Strip */}
-                <div style={panelStyles.card}>
+                <div style={{ gridColumn: 'span 5', ...panelStyles.card }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a', marginBottom: 10 }}>
                     {config.featuresTitle}
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 280, overflowY: 'auto' }}>
                     {config.features.map((feat, idx) => (
-                      <div key={idx} style={{
-                        background: isDark ? 'rgba(0,0,0,0.2)' : '#f8fafc',
-                        border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid #e2e8f0',
-                        borderRadius: 8, padding: 10
-                      }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a' }}>{feat.name}</div>
+                      <div key={idx} style={panelStyles.featureBox}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a' }}>{feat.name}</span>
+                          <span style={{ fontSize: 10, fontWeight: 700, color: '#16a34a' }}>{feat.status}</span>
+                        </div>
                         <div style={{ fontSize: 11, color: isDark ? '#cbd5e1' : '#475569', margin: '4px 0 8px' }}>{feat.desc}</div>
                         <button
-                          style={{
-                            background: config.gradient, border: 'none', color: '#fff',
-                            borderRadius: 6, padding: '4px 8px', fontSize: 10, fontWeight: 600, cursor: 'pointer',
-                            display: 'inline-flex', alignItems: 'center', gap: 4
-                          }}
+                          style={panelStyles.featActionBtn}
                           onClick={() => triggerFeatureAction(feat.name)}
                         >
-                          <RefreshCw size={10} /> {feat.actionText}
+                          <RefreshCw size={11} /> {feat.actionText}
                         </button>
                       </div>
                     ))}
                   </div>
                 </div>
-              </>
-            )}
-
-            {activeTab === 'features' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a' }}>
-                  {config.featuresTitle}
-                </div>
-                {config.features.map((feat, idx) => (
-                  <div key={idx} style={panelStyles.featureBox}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={panelStyles.featName}>{feat.name}</span>
-                      <span style={{
-                        fontSize: 10, fontWeight: 700, color: '#16a34a',
-                        background: 'rgba(22, 163, 74, 0.12)', padding: '2px 8px', borderRadius: 6
-                      }}>
-                        {feat.status}
-                      </span>
-                    </div>
-                    <p style={panelStyles.featDesc}>{feat.desc}</p>
-                    <button
-                      style={panelStyles.featActionBtn}
-                      onClick={() => triggerFeatureAction(feat.name)}
-                    >
-                      <RefreshCw size={12} />
-                      {feat.actionText}
-                    </button>
-                  </div>
-                ))}
               </div>
-            )}
+            </>
+          )}
 
-            {activeTab === 'blueprint' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {/* Blueprint Overview */}
+          {activeTab === 'features' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              {config.features.map((feat, idx) => (
+                <div key={idx} style={panelStyles.featureBox}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={panelStyles.featName}>{feat.name}</span>
+                    <span style={{
+                      fontSize: 10, fontWeight: 700, color: '#16a34a',
+                      background: 'rgba(22, 163, 74, 0.12)', padding: '2px 8px', borderRadius: 6
+                    }}>
+                      {feat.status}
+                    </span>
+                  </div>
+                  <p style={panelStyles.featDesc}>{feat.desc}</p>
+                  <button
+                    style={panelStyles.featActionBtn}
+                    onClick={() => triggerFeatureAction(feat.name)}
+                  >
+                    <RefreshCw size={12} />
+                    {feat.actionText}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {activeTab === 'blueprint' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* Blueprint Overview */}
+              <div style={panelStyles.card}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a', marginBottom: 8 }}>
+                  Strategic Business Goal & Intent
+                </div>
+                <div style={{ fontSize: 12, color: isDark ? '#cbd5e1' : '#334155', lineHeight: 1.5, marginBottom: 12 }}>
+                  <strong>Goal:</strong> {config.businessGoal}
+                </div>
+                <div style={{ fontSize: 12, color: isDark ? '#cbd5e1' : '#334155', lineHeight: 1.5 }}>
+                  <strong>User Intent:</strong> {config.userIntent}
+                </div>
+              </div>
+
+              {/* State Formula */}
+              <div style={{
+                background: isDark ? 'rgba(217, 119, 6, 0.1)' : '#fffbe6',
+                border: isDark ? '1px solid rgba(217, 119, 6, 0.3)' : '1px solid #ffe58f',
+                borderRadius: 10, padding: 12
+              }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: isDark ? '#fbbf24' : '#d97706', marginBottom: 6 }}>
+                  State Calculation & Formula
+                </div>
+                <code style={{ fontSize: 11, fontFamily: 'monospace', color: isDark ? '#fbbf24' : '#b45309', display: 'block', wordBreak: 'break-all' }}>
+                  {config.calculationFormula}
+                </code>
+              </div>
+
+              {/* 2x2 Grid for Events & Knowledge Graph */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div style={panelStyles.card}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a', marginBottom: 8 }}>
-                    Strategic Business Goal & Intent
+                  <div style={{ fontSize: 12, fontWeight: 700, color: isDark ? '#818cf8' : '#4f46e5', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Activity size={14} /> L1 Events Emitted
                   </div>
-                  <div style={{ fontSize: 12, color: isDark ? '#cbd5e1' : '#334155', lineHeight: 1.5, marginBottom: 12 }}>
-                    <strong>Goal:</strong> {config.businessGoal}
-                  </div>
-                  <div style={{ fontSize: 12, color: isDark ? '#cbd5e1' : '#334155', lineHeight: 1.5 }}>
-                    <strong>User Intent:</strong> {config.userIntent}
-                  </div>
+                  {config.l1Events.map((evt, idx) => (
+                    <div key={idx} style={{ marginBottom: 8, paddingBottom: 6, borderBottom: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid #f1f5f9' }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: config.color, fontFamily: 'monospace' }}>{evt.name}</div>
+                      <div style={{ fontSize: 11, color: isDark ? '#cbd5e1' : '#475569', marginTop: 2 }}>{evt.desc}</div>
+                    </div>
+                  ))}
                 </div>
 
-                {/* State Formula */}
-                <div style={{
-                  background: isDark ? 'rgba(217, 119, 6, 0.1)' : '#fffbe6',
-                  border: isDark ? '1px solid rgba(217, 119, 6, 0.3)' : '1px solid #ffe58f',
-                  borderRadius: 10, padding: 12
-                }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: isDark ? '#fbbf24' : '#d97706', marginBottom: 6 }}>
-                    State Calculation & Formula
+                <div style={panelStyles.card}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#7c3aed', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Network size={14} /> Knowledge Graph Links
                   </div>
-                  <code style={{ fontSize: 11, fontFamily: 'monospace', color: isDark ? '#fbbf24' : '#b45309', display: 'block', wordBreak: 'break-all' }}>
-                    {config.calculationFormula}
-                  </code>
-                </div>
-
-                {/* 2x2 Grid for Events & Knowledge Graph */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <div style={panelStyles.card}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: isDark ? '#818cf8' : '#4f46e5', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <Activity size={14} /> L1 Events Emitted
+                  {config.knowledgeGraphNodes.map((node, idx) => (
+                    <div key={idx} style={{ fontSize: 11, color: isDark ? '#cbd5e1' : '#334155', marginBottom: 8, padding: '4px 6px', background: isDark ? 'rgba(0,0,0,0.2)' : '#f8fafc', borderRadius: 6 }}>
+                      <strong>{node.from}</strong> <span style={{ color: '#7c3aed' }}>── {node.rel} ──►</span> <strong>{node.to}</strong>
                     </div>
-                    {config.l1Events.map((evt, idx) => (
-                      <div key={idx} style={{ marginBottom: 8, paddingBottom: 6, borderBottom: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid #f1f5f9' }}>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: config.color, fontFamily: 'monospace' }}>{evt.name}</div>
-                        <div style={{ fontSize: 11, color: isDark ? '#cbd5e1' : '#475569', marginTop: 2 }}>{evt.desc}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div style={panelStyles.card}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: '#7c3aed', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <Network size={14} /> Knowledge Graph Links
-                    </div>
-                    {config.knowledgeGraphNodes.map((node, idx) => (
-                      <div key={idx} style={{ fontSize: 11, color: isDark ? '#cbd5e1' : '#334155', marginBottom: 8, padding: '4px 6px', background: isDark ? 'rgba(0,0,0,0.2)' : '#f8fafc', borderRadius: 6 }}>
-                        <strong>{node.from}</strong> <span style={{ color: '#7c3aed' }}>── {node.rel} ──►</span> <strong>{node.to}</strong>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Digital Twins & Policies */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <div style={panelStyles.card}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: '#16a34a', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <Brain size={14} /> 6-Brain Digital Twins
-                    </div>
-                    {config.digitalTwinBrains.map((brain, idx) => (
-                      <div key={idx} style={{ marginBottom: 8 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontSize: 11, fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a' }}>{brain.name}</span>
-                          <span style={{ fontSize: 10, fontWeight: 700, color: '#16a34a' }}>{brain.status}</span>
-                        </div>
-                        <div style={{ fontSize: 11, color: isDark ? '#cbd5e1' : '#475569' }}>{brain.detail}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div style={panelStyles.card}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: '#2563eb', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <ShieldCheck size={14} /> Policy Guardrails
-                    </div>
-                    {config.policyGuardrails.map((policy, idx) => (
-                      <div key={idx} style={{ marginBottom: 8 }}>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a' }}>{policy.rule}</div>
-                        <div style={{ fontSize: 10, color: isDark ? '#cbd5e1' : '#475569' }}>Threshold: {policy.threshold}</div>
-                      </div>
-                    ))}
-                  </div>
+                  ))}
                 </div>
               </div>
-            )}
-          </div>
-        </motion.div>
-      </div>
+
+              {/* Digital Twins & Policies */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div style={panelStyles.card}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#16a34a', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Brain size={14} /> 6-Brain Digital Twins
+                  </div>
+                  {config.digitalTwinBrains.map((brain, idx) => (
+                    <div key={idx} style={{ marginBottom: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a' }}>{brain.name}</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: '#16a34a' }}>{brain.status}</span>
+                      </div>
+                      <div style={{ fontSize: 11, color: isDark ? '#cbd5e1' : '#475569' }}>{brain.detail}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={panelStyles.card}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#2563eb', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <ShieldCheck size={14} /> Policy Guardrails
+                  </div>
+                  {config.policyGuardrails.map((policy, idx) => (
+                    <div key={idx} style={{ marginBottom: 8 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a' }}>{policy.rule}</div>
+                      <div style={{ fontSize: 10, color: isDark ? '#cbd5e1' : '#475569' }}>Threshold: {policy.threshold}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </motion.div>
     </AnimatePresence>
   );
 };
