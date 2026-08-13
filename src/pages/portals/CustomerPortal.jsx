@@ -54,12 +54,34 @@ const SLA_RISK_COLORS = { None: '#10b981', Low: '#06b6d4', Medium: '#f59e0b', Hi
 
 // ---- STYLE HELPERS ----
 const card = (extra = {}) => ({
-  background: 'rgba(17,24,39,0.7)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '14px 16px', ...extra,
+  background: 'var(--surface-solid)',
+  border: '1px solid var(--border-default)',
+  borderRadius: 10,
+  padding: '14px 16px',
+  color: 'var(--text-primary)',
+  boxShadow: 'var(--shadow-sm)',
+  ...extra,
 });
-const lbl = (color = '#6b7280') => ({ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color });
-const pill = (color = '#6366f1', bg = 'rgba(99,102,241,0.1)') => ({
-  display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 99, fontSize: 9, fontWeight: 700,
-  textTransform: 'uppercase', letterSpacing: '0.06em', color, background: bg, border: `1px solid ${color}30`,
+const lbl = (color) => ({
+  fontSize: 9,
+  fontWeight: 800,
+  textTransform: 'uppercase',
+  letterSpacing: '0.08em',
+  color: !color || color === '#6b7280' ? 'var(--text-muted)' : color,
+});
+const pill = (color = '#6366f1', bg) => ({
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 4,
+  padding: '2px 8px',
+  borderRadius: 99,
+  fontSize: 9,
+  fontWeight: 700,
+  textTransform: 'uppercase',
+  letterSpacing: '0.06em',
+  color,
+  background: bg || `${color}18`,
+  border: `1px solid ${color}30`,
 });
 
 const emitEvent = (type, desc, source = 'CRM/OPERATOR') => {
@@ -200,21 +222,21 @@ export default function CustomerPortal() {
 
   // ---- LEFT PANEL ----
   const renderLeftPanel = () => (
-    <div style={{ width: 264, minWidth: 264, background: 'rgba(10,14,25,0.9)', borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ padding: '14px 14px 10px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+    <div style={{ width: 264, minWidth: 264, background: 'var(--bg-800)', borderRight: '1px solid var(--border-default)', display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div style={{ padding: '14px 14px 10px', borderBottom: '1px solid var(--border-default)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
           <Building2 size={16} color="#6366f1" />
-          <span style={{ fontSize: 12, fontWeight: 800, color: '#e5e7eb' }}>Customers</span>
+          <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)' }}>Customers</span>
           <span style={{ ...pill('#6366f1'), marginLeft: 'auto' }}>{filteredCustomers.length}</span>
         </div>
         <div style={{ position: 'relative' }}>
-          <Search size={11} color="#6b7280" style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)' }} />
+          <Search size={11} color="var(--text-muted)" style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)' }} />
           <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search customers..."
-            style={{ width: '100%', padding: '6px 8px 6px 26px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, color: '#e5e7eb', fontSize: 10, outline: 'none', boxSizing: 'border-box' }} />
+            style={{ width: '100%', padding: '6px 8px 6px 26px', background: 'var(--surface-solid)', border: '1px solid var(--border-default)', borderRadius: 6, color: 'var(--text-primary)', fontSize: 10, outline: 'none', boxSizing: 'border-box' }} />
         </div>
         <div style={{ display: 'flex', gap: 4, marginTop: 8, flexWrap: 'wrap' }}>
           {['All', 'Strategic', 'Active', 'At Risk', 'Prospect'].map(s => (
-            <button key={s} onClick={() => setStateFilter(s)} style={{ padding: '2px 7px', borderRadius: 99, fontSize: 8, fontWeight: 700, border: 'none', cursor: 'pointer', background: stateFilter === s ? '#6366f1' : 'rgba(255,255,255,0.05)', color: stateFilter === s ? '#fff' : '#9ca3af' }}>{s}</button>
+            <button key={s} onClick={() => setStateFilter(s)} style={{ padding: '2px 7px', borderRadius: 99, fontSize: 8, fontWeight: 700, border: 'none', cursor: 'pointer', background: stateFilter === s ? '#6366f1' : 'var(--bg-600)', color: stateFilter === s ? '#fff' : 'var(--text-secondary)' }}>{s}</button>
           ))}
         </div>
       </div>
@@ -226,11 +248,11 @@ export default function CustomerPortal() {
           const urgentTickets = c.supportTickets?.filter(t => t.priority === 'Urgent').length || 0;
           return (
             <motion.div key={c.id} whileHover={{ scale: 1.01 }} onClick={() => { setSelectedId(c.id); setActiveTab('profile'); }}
-              style={{ padding: '9px 10px', borderRadius: 8, marginBottom: 4, cursor: 'pointer', background: isActive ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.02)', border: `1px solid ${isActive ? 'rgba(99,102,241,0.4)' : 'rgba(255,255,255,0.04)'}`, transition: 'all 0.15s' }}>
+              style={{ padding: '9px 10px', borderRadius: 8, marginBottom: 4, cursor: 'pointer', background: isActive ? 'rgba(99,102,241,0.12)' : 'var(--surface-solid)', border: `1px solid ${isActive ? 'rgba(99,102,241,0.4)' : 'var(--border-default)'}`, transition: 'all 0.15s' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: isActive ? '#a5b4fc' : '#e5e7eb', lineHeight: 1.2, maxWidth: 160 }}>{c.name}</div>
-                  <div style={{ fontSize: 8, color: '#6b7280', marginTop: 1 }}>{c.id} · {c.industry}</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: isActive ? '#4f46e5' : 'var(--text-primary)', lineHeight: 1.2, maxWidth: 160 }}>{c.name}</div>
+                  <div style={{ fontSize: 8, color: 'var(--text-muted)', marginTop: 1 }}>{c.id} · {c.industry}</div>
                 </div>
                 <div style={{ width: 28, height: 28, borderRadius: '50%', background: `${hc}20`, border: `2px solid ${hc}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <span style={{ fontSize: 8, fontWeight: 800, color: hc }}>{c.health.overall}</span>
@@ -240,16 +262,16 @@ export default function CustomerPortal() {
                 <span style={{ ...pill(lc, `${lc}15`) }}>{c.lifecycleState}</span>
                 <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                   {urgentTickets > 0 && <span style={{ ...pill('#ef4444', 'rgba(239,68,68,0.1)') }}>🔴 {urgentTickets}</span>}
-                  <span style={{ fontSize: 8, color: '#6b7280' }}>{c.accountManager?.split(' ')[0]}</span>
+                  <span style={{ fontSize: 8, color: 'var(--text-muted)' }}>{c.accountManager?.split(' ')[0]}</span>
                 </div>
               </div>
             </motion.div>
           );
         })}
       </div>
-      <div style={{ padding: '10px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+      <div style={{ padding: '10px', borderTop: '1px solid var(--border-default)' }}>
         <button onClick={() => dispatchAction('CUSTOMER_CREATE_REQUESTED', 'New customer creation initiated from Customer Workspace.')}
-          style={{ width: '100%', padding: '8px', background: 'rgba(99,102,241,0.1)', border: '1px dashed rgba(99,102,241,0.4)', borderRadius: 8, color: '#818cf8', fontSize: 10, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+          style={{ width: '100%', padding: '8px', background: 'rgba(99,102,241,0.1)', border: '1px dashed rgba(99,102,241,0.4)', borderRadius: 8, color: '#4f46e5', fontSize: 10, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
           <Plus size={12} /> New Customer
         </button>
       </div>
@@ -262,7 +284,7 @@ export default function CustomerPortal() {
     const lc = getLifecycleColor(customer.lifecycleState);
     const cc = getChurnColor(customer.predictions.churnRisk);
     return (
-      <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(10,14,25,0.5)' }}>
+      <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-default)', background: 'var(--bg-800)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
           <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
             <div style={{ width: 48, height: 48, borderRadius: 10, background: 'linear-gradient(135deg, #6366f1, #06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900, color: '#fff', flexShrink: 0 }}>
@@ -270,35 +292,35 @@ export default function CustomerPortal() {
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                <h1 style={{ fontSize: 18, fontWeight: 900, color: '#f9fafb', margin: 0 }}>{customer.name}</h1>
+                <h1 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>{customer.name}</h1>
                 <span style={pill(lc, `${lc}18`)}>{customer.lifecycleState}</span>
                 {customer.predictions.churnRisk >= 50 && <span style={pill('#ef4444', 'rgba(239,68,68,0.12)')}>⚠ High Churn Risk</span>}
               </div>
               <div style={{ display: 'flex', gap: 12, marginTop: 4, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 9, color: '#6b7280' }}>{customer.id} · {customer.gstin}</span>
-                <span style={{ fontSize: 9, color: '#6b7280' }}>{customer.industry} · {customer.legalForm}</span>
-                <span style={{ fontSize: 9, color: '#6b7280' }}>📍 {customer.hq}</span>
-                <span style={{ fontSize: 9, color: '#6b7280' }}>🕐 {customer.accountAge} tenure</span>
+                <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>{customer.id} · {customer.gstin}</span>
+                <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>{customer.industry} · {customer.legalForm}</span>
+                <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>📍 {customer.hq}</span>
+                <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>🕐 {customer.accountAge} tenure</span>
               </div>
-              <div style={{ fontSize: 9, color: '#9ca3af', marginTop: 3 }}>
-                <span style={{ color: '#818cf8' }}>AM:</span> {customer.accountManager} · <span style={{ color: '#818cf8' }}>Sponsor:</span> {customer.executiveSponsor}
+              <div style={{ fontSize: 9, color: 'var(--text-secondary)', marginTop: 3 }}>
+                <span style={{ color: '#4f46e5', fontWeight: 700 }}>AM:</span> {customer.accountManager} · <span style={{ color: '#4f46e5', fontWeight: 700 }}>Sponsor:</span> {customer.executiveSponsor}
               </div>
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
-            <div style={{ display: 'flex', gap: 2, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', padding: 2, borderRadius: 6 }}>
+            <div style={{ display: 'flex', gap: 2, background: 'var(--surface-solid)', border: '1px solid var(--border-default)', padding: 2, borderRadius: 6 }}>
               {['internal', 'shipper'].map(m => (
                 <button key={m} onClick={() => { setViewMode(m); setShipperTab('my_shipments'); setActiveTab('profile'); }}
-                  style={{ padding: '4px 10px', borderRadius: 4, border: 'none', cursor: 'pointer', fontSize: 9, fontWeight: 800, textTransform: 'uppercase', background: viewMode === m ? 'rgba(99,102,241,0.25)' : 'transparent', color: viewMode === m ? '#818cf8' : '#6b7280' }}>
+                  style={{ padding: '4px 10px', borderRadius: 4, border: 'none', cursor: 'pointer', fontSize: 9, fontWeight: 800, textTransform: 'uppercase', background: viewMode === m ? 'rgba(99,102,241,0.2)' : 'transparent', color: viewMode === m ? '#4f46e5' : 'var(--text-muted)' }}>
                   {m === 'internal' ? '🏢 Internal CRM' : '📦 Shipper View'}
                 </button>
               ))}
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
-              {[{ l: 'Health', v: customer.health.overall, c: hc }, { l: 'Churn Risk', v: `${customer.predictions.churnRisk}%`, c: cc }, { l: 'ACV', v: customer.kpis.acrRevenue, c: '#06b6d4' }, { l: 'LTV', v: customer.kpis.ltv, c: '#a855f7' }, { l: 'NPS', v: customer.kpis.nps ?? 'N/A', c: '#f59e0b' }].map((k, i) => (
+              {[{ l: 'Health', v: customer.health.overall, c: hc }, { l: 'Churn Risk', v: `${customer.predictions.churnRisk}%`, c: cc }, { l: 'ACV', v: customer.kpis.acrRevenue, c: '#0284c7' }, { l: 'LTV', v: customer.kpis.ltv, c: '#9333ea' }, { l: 'NPS', v: customer.kpis.nps ?? 'N/A', c: '#d97706' }].map((k, i) => (
                 <div key={i} style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: 11, fontWeight: 800, color: k.c }}>{k.v}</div>
-                  <div style={{ fontSize: 7, color: '#6b7280', textTransform: 'uppercase' }}>{k.l}</div>
+                  <div style={{ fontSize: 7, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{k.l}</div>
                 </div>
               ))}
             </div>
@@ -311,9 +333,9 @@ export default function CustomerPortal() {
         </div>
         {customer.predictions.nextBestAction && (
           <div style={{ marginTop: 10, padding: '6px 12px', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Sparkles size={11} color="#818cf8" />
-            <span style={{ fontSize: 9, color: '#a5b4fc', fontWeight: 600 }}>AI Next-Best-Action:</span>
-            <span style={{ fontSize: 9, color: '#e5e7eb' }}>{customer.predictions.nextBestAction}</span>
+            <Sparkles size={11} color="#6366f1" />
+            <span style={{ fontSize: 9, color: '#4f46e5', fontWeight: 700 }}>AI Next-Best-Action:</span>
+            <span style={{ fontSize: 9, color: 'var(--text-primary)', fontWeight: 600 }}>{customer.predictions.nextBestAction}</span>
             <button onClick={() => dispatchAction('AI_RECOMMENDATION_ACCEPTED', `Accepted: ${customer.predictions.nextBestAction}`)} style={{ marginLeft: 'auto', ...pill('#10b981', 'rgba(16,185,129,0.1)'), cursor: 'pointer', border: '1px solid rgba(16,185,129,0.3)' }}>✓ Accept</button>
             <button onClick={() => dispatchAction('AI_RECOMMENDATION_OVERRIDDEN', `Overridden: ${customer.predictions.nextBestAction}`)} style={{ ...pill('#6b7280', 'rgba(107,114,128,0.1)'), cursor: 'pointer', border: '1px solid rgba(107,114,128,0.3)' }}>Override</button>
           </div>
@@ -328,13 +350,13 @@ export default function CustomerPortal() {
     const active = viewMode === 'internal' ? activeTab : shipperTab;
     const setActive = viewMode === 'internal' ? setActiveTab : setShipperTab;
     return (
-      <div style={{ display: 'flex', gap: 2, padding: '8px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', overflowX: 'auto', background: 'rgba(7,10,20,0.4)' }}>
+      <div style={{ display: 'flex', gap: 2, padding: '8px 20px', borderBottom: '1px solid var(--border-default)', overflowX: 'auto', background: 'var(--bg-800)' }}>
         {tabs.map(t => {
           const isActive = active === t.id;
           const Icon = t.icon;
           const badge = t.id === 'support' ? customer.supportTickets?.filter(x => x.priority === 'Urgent').length : null;
           return (
-            <button key={t.id} onClick={() => setActive(t.id)} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 6, border: 'none', cursor: 'pointer', background: isActive ? 'rgba(99,102,241,0.2)' : 'transparent', color: isActive ? '#a5b4fc' : '#6b7280', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap', transition: 'all 0.15s' }}>
+            <button key={t.id} onClick={() => setActive(t.id)} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 6, border: 'none', cursor: 'pointer', background: isActive ? 'rgba(99,102,241,0.15)' : 'transparent', color: isActive ? '#4f46e5' : 'var(--text-muted)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap', transition: 'all 0.15s' }}>
               <Icon size={11} />{t.label}
               {badge > 0 && <span style={{ ...pill('#ef4444', 'rgba(239,68,68,0.2)'), marginLeft: 4 }}>{badge}</span>}
             </button>
@@ -1006,11 +1028,11 @@ export default function CustomerPortal() {
   };
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - var(--topbar-height))', background: '#040711', color: '#f9fafb', fontFamily: 'var(--font-sans)', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: 'calc(100vh - var(--topbar-height))', background: 'var(--bg-900)', color: 'var(--text-primary)', fontFamily: 'var(--font-sans)', position: 'relative', overflow: 'hidden' }}>
       <AnimatePresence>
         {notification && (
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-            style={{ position: 'absolute', top: 16, right: 16, zIndex: 100, padding: '8px 16px', background: notification.type==='success'?'rgba(16,185,129,0.9)':'rgba(239,68,68,0.9)', borderRadius: 8, fontSize: 10, fontWeight: 700, color: '#fff', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+            style={{ position: 'absolute', top: 16, right: 16, zIndex: 100, padding: '8px 16px', background: notification.type==='success'?'rgba(16,185,129,0.95)':'rgba(239,68,68,0.95)', borderRadius: 8, fontSize: 10, fontWeight: 700, color: '#fff', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
             {notification.msg}
           </motion.div>
         )}
@@ -1026,11 +1048,11 @@ export default function CustomerPortal() {
             </motion.div>
           </AnimatePresence>
         </div>
-        <div style={{ padding: '6px 20px', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(7,10,20,0.8)', display: 'flex', gap: 12, alignItems: 'center', overflowX: 'auto' }}>
-          <span style={lbl('#6366f1')}>Live Events</span>
+        <div style={{ padding: '6px 20px', borderTop: '1px solid var(--border-default)', background: 'var(--bg-800)', display: 'flex', gap: 12, alignItems: 'center', overflowX: 'auto' }}>
+          <span style={lbl('#4f46e5')}>Live Events</span>
           {engineState.events?.slice(0, 4).map((ev, i) => (
-            <span key={i} style={{ fontSize: 8, color: '#4b5563', whiteSpace: 'nowrap' }}>
-              <span style={{ color: '#818cf8' }}>{ev.type}</span> · {String(ev.desc||'').substring(0, 40)}
+            <span key={i} style={{ fontSize: 8, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+              <span style={{ color: '#4f46e5', fontWeight: 700 }}>{ev.type}</span> · {String(ev.desc||'').substring(0, 40)}
             </span>
           ))}
         </div>

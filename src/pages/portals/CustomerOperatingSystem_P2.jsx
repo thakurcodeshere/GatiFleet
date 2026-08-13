@@ -25,10 +25,47 @@ import {
 
 // ---- SHARED STYLE HELPERS ----
 const s = {
-  card: (extra={}) => ({ background: 'rgba(17,24,39,0.7)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '14px 16px', ...extra }),
-  lbl: (c='#6b7280') => ({ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: c }),
-  pill: (c='#6366f1', bg) => ({ display:'inline-flex', alignItems:'center', gap:4, padding:'2px 8px', borderRadius:99, fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em', color:c, background: bg||`${c}18`, border:`1px solid ${c}30` }),
-  hd: (c='#818cf8') => ({ fontSize:10, fontWeight:800, color:c, textTransform:'uppercase', letterSpacing:'0.1em', display:'flex', alignItems:'center', gap:6, margin:0 }),
+  card: (extra={}) => ({
+    background: 'var(--surface-solid)',
+    border: '1px solid var(--border-default)',
+    borderRadius: 10,
+    padding: '14px 16px',
+    color: 'var(--text-primary)',
+    boxShadow: 'var(--shadow-sm)',
+    ...extra
+  }),
+  lbl: (c) => ({
+    fontSize: 9,
+    fontWeight: 800,
+    textTransform: 'uppercase',
+    letterSpacing: '0.08em',
+    color: !c || c === '#6b7280' ? 'var(--text-muted)' : c
+  }),
+  pill: (c='#6366f1', bg) => ({
+    display:'inline-flex',
+    alignItems:'center',
+    gap:4,
+    padding:'2px 8px',
+    borderRadius:99,
+    fontSize:9,
+    fontWeight:700,
+    textTransform:'uppercase',
+    letterSpacing:'0.06em',
+    color:c,
+    background: bg||`${c}15`,
+    border:`1px solid ${c}30`
+  }),
+  hd: (c='#4f46e5') => ({
+    fontSize:10,
+    fontWeight:800,
+    color: c==='#818cf8'?'#4f46e5':c,
+    textTransform:'uppercase',
+    letterSpacing:'0.1em',
+    display:'flex',
+    alignItems:'center',
+    gap:6,
+    margin:0
+  }),
   row: (extra={}) => ({ display:'flex', alignItems:'center', gap:8, ...extra }),
   grid2: { display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 },
   grid3: { display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12 },
