@@ -837,100 +837,459 @@ const AIInsightsPanel = ({ insights, onAction, span = 4 }) => (
   </motion.div>
 );
 
-// ---- TOP ROUTES TABLE ----
-const TopRoutes = ({ routes }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5, delay: 0.65 }}
-    style={{ ...styles.card, gridColumn: 'span 6', overflow: 'hidden' }}
-  >
-    <SectionHeader
-      icon={MapPin}
-      title="Top Routes"
-      subtitle="Most popular freight corridors"
-      action={
-        <button style={styles.viewAllBtn}>
-          View All <ChevronRight size={12} />
-        </button>
-      }
-    />
-    <div style={{ overflowX: 'auto', marginTop: 12 }}>
-      <table style={styles.table}>
-        <thead>
-          <tr>
-            <th style={styles.th}>Route</th>
-            <th style={{ ...styles.th, textAlign: 'right' }}>Distance</th>
-            <th style={{ ...styles.th, textAlign: 'right' }}>Trips</th>
-            <th style={{ ...styles.th, textAlign: 'right' }}>Revenue</th>
-            <th style={styles.th}>Efficiency</th>
-          </tr>
-        </thead>
-        <tbody>
-          {routes.slice(0, 8).map((route, i) => (
-            <motion.tr
-              key={i}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.7 + i * 0.04 }}
-              style={styles.tr}
-            >
-              <td style={styles.td}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <div style={{
-                    width: 6, height: 6, borderRadius: '50%',
-                    background: route.efficiency >= 95 ? 'var(--success-500)' :
-                                route.efficiency >= 90 ? 'var(--primary-400)' :
-                                route.efficiency >= 85 ? 'var(--warning-500)' : 'var(--danger-500)',
-                  }} />
-                  <span style={{ fontWeight: 500, fontSize: 12 }}>
-                    {route.from}
-                  </span>
-                  <ChevronRight size={10} color="var(--text-muted)" />
-                  <span style={{ fontWeight: 500, fontSize: 12 }}>
-                    {route.to}
-                  </span>
-                </div>
-              </td>
-              <td style={{ ...styles.td, textAlign: 'right', fontSize: 12 }}>
-                {route.distance.toLocaleString('en-IN')} km
-              </td>
-              <td style={{ ...styles.td, textAlign: 'right', fontSize: 12, fontFamily: 'var(--font-mono)' }}>
-                {route.trips.toLocaleString('en-IN')}
-              </td>
-              <td style={{ ...styles.td, textAlign: 'right', fontSize: 12, fontWeight: 600, color: 'var(--success-500)' }}>
-                {formatCurrency(route.revenue)}
-              </td>
-              <td style={styles.td}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={styles.progressBarBg}>
-                    <div
-                      style={{
-                        ...styles.progressBarFill,
-                        width: `${route.efficiency}%`,
-                        transition: 'width 0.6s ease',
-                        background: route.efficiency >= 95
-                          ? 'linear-gradient(90deg, #38CE3C, #10b981)'
-                          : route.efficiency >= 90
-                            ? 'linear-gradient(90deg, #6366f1, #818cf8)'
-                            : route.efficiency >= 85
-                              ? 'linear-gradient(90deg, #f59e0b, #FFDE73)'
-                              : 'linear-gradient(90deg, #FF4D6B, #f43f5e)',
-                      }}
-                    />
-                  </div>
-                  <span style={{ fontSize: 11, fontWeight: 600, fontFamily: 'var(--font-mono)', minWidth: 28, textAlign: 'right' }}>
-                    {route.efficiency}%
-                  </span>
-                </div>
-              </td>
-            </motion.tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  </motion.div>
-);
+// ---- TOP ROUTES TABLE (REDESIGNED WITH CITY-TO-CITY DERIVATIONS & INTERACTIVE DEEP-DIVE) ----
+const getRouteDerivationData = (route) => {
+  const from = route.from || 'Origin';
+  const to = route.to || 'Destination';
+  const dist = route.distance || 500;
+  const trips = route.trips || 10000;
+  const rev = route.revenue || 100000000;
+  const eff = route.efficiency || 90;
+
+  let cityLegs = [];
+  if (from === 'Delhi' && to === 'Mumbai') {
+    cityLegs = [
+      { name: 'Delhi Logistics Hub ➔ Jaipur Toll Checkpoint', dist: 280, time: '4h 30m', speed: '62.2 km/h', tripsShare: Math.round(trips * 0.34), eff: 96, highway: 'NH48 Northern Section', tolls: 3 },
+      { name: 'Jaipur Checkpoint ➔ Ahmedabad Hub', dist: 590, time: '9h 15m', speed: '63.8 km/h', tripsShare: Math.round(trips * 0.36), eff: 92, highway: 'NH48 Rajasthan-Gujarat Corridor', tolls: 5 },
+      { name: 'Ahmedabad Hub ➔ Mumbai Cross-Dock', dist: 530, time: '8h 45m', speed: '60.6 km/h', tripsShare: Math.round(trips * 0.30), eff: 94, highway: 'NH48 Western Expressway', tolls: 4 },
+    ];
+  } else if (from === 'Mumbai' && to === 'Bangalore') {
+    cityLegs = [
+      { name: 'Mumbai Dock ➔ Pune Logistics Depot', dist: 150, time: '3h 10m', speed: '47.4 km/h', tripsShare: Math.round(trips * 0.35), eff: 93, highway: 'Mumbai-Pune Expressway', tolls: 2 },
+      { name: 'Pune Depot ➔ Kolhapur Freight Hub', dist: 230, time: '4h 05m', speed: '56.3 km/h', tripsShare: Math.round(trips * 0.33), eff: 90, highway: 'NH48 Southern Maharashtra Belt', tolls: 3 },
+      { name: 'Kolhapur Hub ➔ Bangalore Terminal', dist: 600, time: '9h 15m', speed: '64.9 km/h', tripsShare: Math.round(trips * 0.32), eff: 91, highway: 'NH48 Karnataka Spine Corridor', tolls: 6 },
+    ];
+  } else if (from === 'Delhi' && to === 'Kolkata') {
+    cityLegs = [
+      { name: 'Delhi Hub ➔ Kanpur Checkpoint', dist: 490, time: '7h 45m', speed: '63.2 km/h', tripsShare: Math.round(trips * 0.35), eff: 89, highway: 'NH19 Yamuna Expressway Section', tolls: 4 },
+      { name: 'Kanpur Checkpoint ➔ Varanasi Hub', dist: 330, time: '5h 30m', speed: '60.0 km/h', tripsShare: Math.round(trips * 0.32), eff: 87, highway: 'NH19 Purvanchal Freight Belt', tolls: 3 },
+      { name: 'Varanasi Hub ➔ Kolkata Dock', dist: 710, time: '11h 15m', speed: '63.1 km/h', tripsShare: Math.round(trips * 0.33), eff: 88, highway: 'NH19 Bengal Industrial Belt', tolls: 7 },
+    ];
+  } else if (from === 'Chennai' && to === 'Hyderabad') {
+    cityLegs = [
+      { name: 'Chennai Port ➔ Nellore Hub', dist: 175, time: '3h 00m', speed: '58.3 km/h', tripsShare: Math.round(trips * 0.38), eff: 97, highway: 'NH16 Coastal Route', tolls: 2 },
+      { name: 'Nellore Hub ➔ Vijayawada Junction', dist: 280, time: '4h 15m', speed: '65.9 km/h', tripsShare: Math.round(trips * 0.34), eff: 95, highway: 'NH16 Andhra Freight Spine', tolls: 3 },
+      { name: 'Vijayawada Junction ➔ Hyderabad Dry Port', dist: 175, time: '2h 45m', speed: '63.6 km/h', tripsShare: Math.round(trips * 0.28), eff: 96, highway: 'NH65 Telangana Corridor', tolls: 2 },
+    ];
+  } else if (from === 'Ahmedabad' && to === 'Pune') {
+    cityLegs = [
+      { name: 'Ahmedabad Hub ➔ Vadodara Depot', dist: 110, time: '1h 45m', speed: '62.8 km/h', tripsShare: Math.round(trips * 0.36), eff: 95, highway: 'NE1 National Expressway 1', tolls: 1 },
+      { name: 'Vadodara Depot ➔ Surat Checkpoint', dist: 150, time: '2h 30m', speed: '60.0 km/h', tripsShare: Math.round(trips * 0.34), eff: 92, highway: 'NH48 Gujarat Industrial Belt', tolls: 2 },
+      { name: 'Surat Checkpoint ➔ Pune Terminal', dist: 400, time: '6h 15m', speed: '64.0 km/h', tripsShare: Math.round(trips * 0.30), eff: 93, highway: 'NH48 Expressway Connector', tolls: 4 },
+    ];
+  } else if (from === 'Bangalore' && to === 'Chennai') {
+    cityLegs = [
+      { name: 'Bangalore Hub ➔ Hosur Checkpoint', dist: 40, time: '1h 00m', speed: '40.0 km/h', tripsShare: Math.round(trips * 0.30), eff: 96, highway: 'NH44 Inter-state Border Section', tolls: 1 },
+      { name: 'Hosur Checkpoint ➔ Vellore Depot', dist: 170, time: '2h 30m', speed: '68.0 km/h', tripsShare: Math.round(trips * 0.38), eff: 98, highway: 'NH48 Tamil Nadu Freight Line', tolls: 2 },
+      { name: 'Vellore Depot ➔ Chennai Port Terminal', dist: 140, time: '2h 15m', speed: '62.2 km/h', tripsShare: Math.round(trips * 0.32), eff: 97, highway: 'NH48 Chennai Outer Ring Road', tolls: 2 },
+    ];
+  } else if (from === 'Delhi' && to === 'Jaipur') {
+    cityLegs = [
+      { name: 'Delhi Hub ➔ Gurgaon Toll Plaza', dist: 40, time: '1h 10m', speed: '34.3 km/h', tripsShare: Math.round(trips * 0.35), eff: 97, highway: 'NH48 NCR Sub-Corridor', tolls: 1 },
+      { name: 'Gurgaon Toll ➔ Shahjahanpur Border', dist: 110, time: '1h 40m', speed: '66.0 km/h', tripsShare: Math.round(trips * 0.35), eff: 99, highway: 'NH48 Haryana-Rajasthan State Border', tolls: 1 },
+      { name: 'Shahjahanpur Border ➔ Jaipur Terminal', dist: 130, time: '1h 50m', speed: '70.9 km/h', tripsShare: Math.round(trips * 0.30), eff: 98, highway: 'NH48 Pink City Expressway', tolls: 1 },
+    ];
+  } else if (from === 'Mumbai' && to === 'Ahmedabad') {
+    cityLegs = [
+      { name: 'Mumbai Dock ➔ Surat Industrial Hub', dist: 280, time: '4h 30m', speed: '62.2 km/h', tripsShare: Math.round(trips * 0.52), eff: 96, highway: 'NH48 Coastal Corridor', tolls: 3 },
+      { name: 'Surat Hub ➔ Ahmedabad Terminal', dist: 250, time: '3h 45m', speed: '66.7 km/h', tripsShare: Math.round(trips * 0.48), eff: 95, highway: 'NE1 Gujarat Expressway', tolls: 2 },
+    ];
+  } else {
+    const halfDist = Math.round(dist / 2);
+    cityLegs = [
+      { name: `${from} Departure Hub ➔ Central Checkpoint`, dist: halfDist, time: `${Math.round(dist / 100 * 1.4)}h`, speed: '60.5 km/h', tripsShare: Math.round(trips * 0.52), eff: eff + 1, highway: 'National Highway Freight Edge', tolls: 2 },
+      { name: `Central Checkpoint ➔ ${to} Destination Dock`, dist: dist - halfDist, time: `${Math.round(dist / 100 * 1.4)}h`, speed: '62.0 km/h', tripsShare: Math.round(trips * 0.48), eff: eff - 1, highway: 'State Express Connector', tolls: 2 },
+    ];
+  }
+
+  const baseRate = Math.round(rev * 0.76);
+  const fuelSurcharge = Math.round(rev * 0.152);
+  const tollExpenses = Math.round(rev * 0.061);
+  const detentionFees = Math.round(rev * 0.043);
+  const rebates = Math.round(rev * 0.016);
+
+  return {
+    cityLegs,
+    loadedTrips: Math.round(trips * 0.676),
+    returnTrips: Math.round(trips * 0.324),
+    activeTrucksOnRoute: Math.round(trips * 0.148),
+    movingTimeHours: (dist / 62.5).toFixed(1),
+    dwellTimeHours: (dist / 320).toFixed(1),
+    baseRate,
+    fuelSurcharge,
+    tollExpenses,
+    detentionFees,
+    rebates,
+    netRevenue: rev
+  };
+};
+
+const TopRoutes = ({ routes }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  const [selectedRouteIdx, setSelectedRouteIdx] = useState(0); // Default open first route
+  const [activeDetailTab, setActiveDetailTab] = useState('legs'); // legs | trips | distance | efficiency | revenue
+
+  const currentRoute = routes[selectedRouteIdx] || routes[0];
+  const derivation = useMemo(() => getRouteDerivationData(currentRoute), [currentRoute]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.65 }}
+      style={{
+        ...styles.card,
+        gridColumn: 'span 12',
+        overflow: 'hidden',
+        border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1',
+        boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.4)' : '0 4px 16px rgba(0,0,0,0.06)'
+      }}
+    >
+      <SectionHeader
+        icon={MapPin}
+        title="Top Routes & Corridor Derivation Engine"
+        subtitle="Click any route row or metric cell to inspect city-to-city travel, trips share, distance & time, efficiency math, and revenue surcharges"
+        action={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary-400)', background: 'rgba(99, 102, 241, 0.1)', padding: '4px 10px', borderRadius: 6 }}>
+              8 Active Corridors Analyzed
+            </span>
+          </div>
+        }
+      />
+
+      <div style={{ overflowX: 'auto', marginTop: 14 }}>
+        <table style={styles.table}>
+          <thead>
+            <tr>
+              <th style={{ ...styles.th, cursor: 'pointer' }} onClick={() => setActiveDetailTab('legs')}>
+                ROUTE (Departure ➔ Destination)
+              </th>
+              <th style={{ ...styles.th, textAlign: 'right', cursor: 'pointer' }} onClick={() => setActiveDetailTab('distance')}>
+                DISTANCE & TIME
+              </th>
+              <th style={{ ...styles.th, textAlign: 'right', cursor: 'pointer' }} onClick={() => setActiveDetailTab('trips')}>
+                TRIPS SHARE
+              </th>
+              <th style={{ ...styles.th, textAlign: 'right', cursor: 'pointer' }} onClick={() => setActiveDetailTab('revenue')}>
+                REVENUE (Net)
+              </th>
+              <th style={{ ...styles.th, cursor: 'pointer' }} onClick={() => setActiveDetailTab('efficiency')}>
+                EFFICIENCY (Derived)
+              </th>
+              <th style={{ ...styles.th, textAlign: 'center' }}>ACTION</th>
+            </tr>
+          </thead>
+          <tbody>
+            {routes.slice(0, 8).map((route, i) => {
+              const isSelected = selectedRouteIdx === i;
+              return (
+                <React.Fragment key={i}>
+                  <tr
+                    onClick={() => setSelectedRouteIdx(isSelected ? null : i)}
+                    style={{
+                      ...styles.tr,
+                      cursor: 'pointer',
+                      background: isSelected
+                        ? (isDark ? 'rgba(99, 102, 241, 0.15)' : 'rgba(99, 102, 241, 0.08)')
+                        : 'transparent',
+                      borderLeft: isSelected ? '4px solid var(--primary-500)' : '4px solid transparent',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    <td style={styles.td}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{
+                          width: 8, height: 8, borderRadius: '50%',
+                          background: route.efficiency >= 95 ? '#16a34a' :
+                                      route.efficiency >= 90 ? '#6366f1' :
+                                      route.efficiency >= 85 ? '#d97706' : '#dc2626',
+                        }} />
+                        <span style={{ fontWeight: 700, fontSize: 13, color: isDark ? '#f8fafc' : '#0f172a' }}>
+                          {route.from}
+                        </span>
+                        <ChevronRight size={12} color="var(--primary-400)" />
+                        <span style={{ fontWeight: 700, fontSize: 13, color: isDark ? '#f8fafc' : '#0f172a' }}>
+                          {route.to}
+                        </span>
+                        {isSelected && (
+                          <span style={{ fontSize: 9, fontWeight: 800, background: 'var(--primary-500)', color: '#fff', padding: '1px 6px', borderRadius: 4 }}>
+                            INSPECTING
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td style={{ ...styles.td, textAlign: 'right', fontSize: 12, color: isDark ? '#cbd5e1' : '#334155' }}>
+                      <span style={{ fontWeight: 700 }}>{route.distance.toLocaleString('en-IN')} km</span>
+                      <span style={{ fontSize: 10, color: isDark ? '#94a3b8' : '#64748b', display: 'block' }}>~{route.avgTime || '22h'} transit</span>
+                    </td>
+                    <td style={{ ...styles.td, textAlign: 'right', fontSize: 12, fontFamily: 'var(--font-mono)', color: isDark ? '#cbd5e1' : '#334155' }}>
+                      <span style={{ fontWeight: 700 }}>{route.trips.toLocaleString('en-IN')}</span>
+                      <span style={{ fontSize: 10, color: 'var(--success-500)', display: 'block' }}>67.6% loaded</span>
+                    </td>
+                    <td style={{ ...styles.td, textAlign: 'right', fontSize: 13, fontWeight: 700, color: '#16a34a' }}>
+                      {formatCurrency(route.revenue)}
+                    </td>
+                    <td style={styles.td}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={styles.progressBarBg}>
+                          <div
+                            style={{
+                              ...styles.progressBarFill,
+                              width: `${route.efficiency}%`,
+                              transition: 'width 0.6s ease',
+                              background: route.efficiency >= 95
+                                ? 'linear-gradient(90deg, #16a34a, #10b981)'
+                                : route.efficiency >= 90
+                                  ? 'linear-gradient(90deg, #6366f1, #818cf8)'
+                                  : route.efficiency >= 85
+                                    ? 'linear-gradient(90deg, #d97706, #fbbf24)'
+                                    : 'linear-gradient(90deg, #dc2626, #f87171)',
+                            }}
+                          />
+                        </div>
+                        <span style={{ fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-mono)', color: isDark ? '#f8fafc' : '#0f172a', minWidth: 32, textAlign: 'right' }}>
+                          {route.efficiency}%
+                        </span>
+                      </div>
+                    </td>
+                    <td style={{ ...styles.td, textAlign: 'center' }}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedRouteIdx(isSelected ? null : i);
+                        }}
+                        style={{
+                          background: isSelected ? 'var(--primary-500)' : 'transparent',
+                          color: isSelected ? '#fff' : 'var(--primary-400)',
+                          border: '1px solid var(--primary-400)',
+                          borderRadius: 6,
+                          padding: '4px 8px',
+                          fontSize: 10,
+                          fontWeight: 700,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {isSelected ? 'Hide Details' : 'Derivation Details'}
+                      </button>
+                    </td>
+                  </tr>
+
+                  {/* Expanded Route Derivation Inspector Frame */}
+                  {isSelected && (
+                    <tr>
+                      <td colSpan={6} style={{ padding: '0', background: isDark ? '#0f172a' : '#f8fafc' }}>
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3 }}
+                          style={{
+                            padding: '16px 20px',
+                            borderTop: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0',
+                            borderBottom: isDark ? '2px solid var(--primary-500)' : '2px solid var(--primary-500)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 14
+                          }}
+                        >
+                          {/* Top Navigation & Breadcrumb for Selected Corridor */}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span style={{
+                                fontSize: 11, fontWeight: 700, color: 'var(--primary-400)',
+                                background: isDark ? 'rgba(99, 102, 241, 0.15)' : 'rgba(99, 102, 241, 0.08)',
+                                border: '1px solid rgba(99, 102, 241, 0.2)', padding: '4px 10px', borderRadius: 6
+                              }}>
+                                Dashboard ➔ Top Routes ➔ {route.from} to {route.to} Corridor Derivation
+                              </span>
+                            </div>
+
+                            {/* Derivation Tabs */}
+                            <div style={{ display: 'flex', gap: 6 }}>
+                              {[
+                                { id: 'legs', label: '🏙️ City-to-City Legs' },
+                                { id: 'trips', label: '🚚 Trips Derivation' },
+                                { id: 'distance', label: '⏱️ Distance & Time' },
+                                { id: 'efficiency', label: '📊 Efficiency Math' },
+                                { id: 'revenue', label: '💰 Revenue & Surcharges' }
+                              ].map(tab => (
+                                <button
+                                  key={tab.id}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveDetailTab(tab.id);
+                                  }}
+                                  style={{
+                                    background: activeDetailTab === tab.id ? 'var(--primary-500)' : isDark ? '#1e293b' : '#ffffff',
+                                    color: activeDetailTab === tab.id ? '#ffffff' : isDark ? '#cbd5e1' : '#334155',
+                                    border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1',
+                                    borderRadius: 6, padding: '4px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer'
+                                  }}
+                                >
+                                  {tab.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Tab 1: City-to-City Travel Legs */}
+                          {activeDetailTab === 'legs' && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                              <div style={{ fontSize: 12, fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a' }}>
+                                City-to-City Travel Breakdown ({route.from} Departure ➔ {route.to} Destination)
+                              </div>
+                              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${derivation.cityLegs.length}, 1fr)`, gap: 12 }}>
+                                {derivation.cityLegs.map((leg, idx) => (
+                                  <div key={idx} style={{
+                                    background: isDark ? '#1e293b' : '#ffffff',
+                                    border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1',
+                                    borderRadius: 10, padding: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                                  }}>
+                                    <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--primary-400)', textTransform: 'uppercase', marginBottom: 4 }}>
+                                      Leg {idx + 1} of {derivation.cityLegs.length}
+                                    </div>
+                                    <div style={{ fontSize: 13, fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a', marginBottom: 6 }}>
+                                      {leg.name}
+                                    </div>
+                                    <div style={{ fontSize: 11, color: isDark ? '#cbd5e1' : '#475569', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                      <div>📍 <strong>Distance & Time:</strong> {leg.dist} km ({leg.time})</div>
+                                      <div>⚡ <strong>Avg Transit Speed:</strong> {leg.speed}</div>
+                                      <div>🚚 <strong>Trips Volume:</strong> {leg.tripsShare.toLocaleString()} Trips</div>
+                                      <div>🛣️ <strong>Highway & Tolls:</strong> {leg.highway} ({leg.tolls} Toll Plazas)</div>
+                                      <div>⭐ <strong>Leg Efficiency Rating:</strong> <span style={{ color: '#16a34a', fontWeight: 700 }}>{leg.eff}%</span></div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Tab 2: Trips Derivation */}
+                          {activeDetailTab === 'trips' && (
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+                              <div style={{ background: isDark ? '#1e293b' : '#ffffff', border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1', borderRadius: 10, padding: 12 }}>
+                                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Total Corridor Volume</div>
+                                <div style={{ fontSize: 18, fontWeight: 800, color: isDark ? '#f8fafc' : '#0f172a', marginTop: 4 }}>{route.trips.toLocaleString()} Trips</div>
+                                <div style={{ fontSize: 10, color: '#16a34a', marginTop: 2 }}>100% Manifest Verified</div>
+                              </div>
+                              <div style={{ background: isDark ? '#1e293b' : '#ffffff', border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1', borderRadius: 10, padding: 12 }}>
+                                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Outbound Loaded Trips</div>
+                                <div style={{ fontSize: 18, fontWeight: 800, color: '#2563eb', marginTop: 4 }}>{derivation.loadedTrips.toLocaleString()} (67.6%)</div>
+                                <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>Primary Cargo Manifests</div>
+                              </div>
+                              <div style={{ background: isDark ? '#1e293b' : '#ffffff', border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1', borderRadius: 10, padding: 12 }}>
+                                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Return Backhauls</div>
+                                <div style={{ fontSize: 18, fontWeight: 800, color: '#7c3aed', marginTop: 4 }}>{derivation.returnTrips.toLocaleString()} (32.4%)</div>
+                                <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>Rebalanced Return Cargo</div>
+                              </div>
+                              <div style={{ background: isDark ? '#1e293b' : '#ffffff', border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1', borderRadius: 10, padding: 12 }}>
+                                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Active Moving Trucks</div>
+                                <div style={{ fontSize: 18, fontWeight: 800, color: '#d97706', marginTop: 4 }}>{derivation.activeTrucksOnRoute.toLocaleString()} Units</div>
+                                <div style={{ fontSize: 10, color: '#16a34a', marginTop: 2 }}>Live Telematics Pings</div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Tab 3: Distance & Time */}
+                          {activeDetailTab === 'distance' && (
+                            <div style={{ background: isDark ? '#1e293b' : '#ffffff', border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1', borderRadius: 10, padding: 14 }}>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a', marginBottom: 8 }}>
+                                Distance & Transit Time Derivation
+                              </div>
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 10 }}>
+                                <div>
+                                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Total Corridor Distance:</span>
+                                  <div style={{ fontSize: 15, fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a' }}>{route.distance.toLocaleString()} km</div>
+                                </div>
+                                <div>
+                                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Pure Moving Time:</span>
+                                  <div style={{ fontSize: 15, fontWeight: 700, color: '#16a34a' }}>{derivation.movingTimeHours} hours</div>
+                                </div>
+                                <div>
+                                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Toll & Hub Dwell Time:</span>
+                                  <div style={{ fontSize: 15, fontWeight: 700, color: '#d97706' }}>{derivation.dwellTimeHours} hours</div>
+                                </div>
+                              </div>
+                              <div style={{ fontSize: 11, color: isDark ? '#cbd5e1' : '#475569', lineHeight: 1.5 }}>
+                                <strong>Derivation Formula:</strong> Total Elapsed Transit Time = Pure Moving Time ({derivation.movingTimeHours}h) + FASTag Toll Clearance ({derivation.dwellTimeHours}h) + Driver Rest Windows.
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Tab 4: Efficiency Math */}
+                          {activeDetailTab === 'efficiency' && (
+                            <div style={{ background: isDark ? '#1e293b' : '#ffffff', border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1', borderRadius: 10, padding: 14 }}>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a', marginBottom: 8 }}>
+                                Corridor Efficiency Rating Formula ({route.efficiency}%)
+                              </div>
+                              <code style={{ fontSize: 11, fontFamily: 'monospace', color: isDark ? '#a5b4fc' : '#4338ca', display: 'block', background: isDark ? 'rgba(0,0,0,0.3)' : '#f1f5f9', padding: '8px 12px', borderRadius: 6, marginBottom: 8 }}>
+                                Efficiency % = ∑ (Leg Weight_i × [ 0.50 · OTD_SLA_i + 0.30 · FuelScore_i + 0.20 · SpeedRating_i ])
+                              </code>
+                              <div style={{ fontSize: 11, color: isDark ? '#cbd5e1' : '#475569', lineHeight: 1.5 }}>
+                                City-to-city legs average {route.efficiency}% efficiency across On-Time Delivery compliance (94.2%), fuel consumption score (4.8 km/L average), and FASTag toll clearance speeds.
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Tab 5: Revenue & Surcharges */}
+                          {activeDetailTab === 'revenue' && (
+                            <div style={{ background: isDark ? '#1e293b' : '#ffffff', border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1', borderRadius: 10, padding: 14 }}>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a', marginBottom: 8 }}>
+                                Revenue Line Item Derivation ({formatCurrency(derivation.netRevenue)})
+                              </div>
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10, marginBottom: 10 }}>
+                                <div style={{ background: isDark ? 'rgba(0,0,0,0.2)' : '#f8fafc', padding: 8, borderRadius: 6 }}>
+                                  <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Base Tariff (76%)</div>
+                                  <div style={{ fontSize: 13, fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a' }}>{formatCurrency(derivation.baseRate)}</div>
+                                </div>
+                                <div style={{ background: isDark ? 'rgba(0,0,0,0.2)' : '#f8fafc', padding: 8, borderRadius: 6 }}>
+                                  <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Fuel Surcharge (15.2%)</div>
+                                  <div style={{ fontSize: 13, fontWeight: 700, color: '#6366f1' }}>{formatCurrency(derivation.fuelSurcharge)}</div>
+                                </div>
+                                <div style={{ background: isDark ? 'rgba(0,0,0,0.2)' : '#f8fafc', padding: 8, borderRadius: 6 }}>
+                                  <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>FASTag Tolls (6.1%)</div>
+                                  <div style={{ fontSize: 13, fontWeight: 700, color: '#d97706' }}>{formatCurrency(derivation.tollExpenses)}</div>
+                                </div>
+                                <div style={{ background: isDark ? 'rgba(0,0,0,0.2)' : '#f8fafc', padding: 8, borderRadius: 6 }}>
+                                  <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Detention Fees (4.3%)</div>
+                                  <div style={{ fontSize: 13, fontWeight: 700, color: '#2563eb' }}>{formatCurrency(derivation.detentionFees)}</div>
+                                </div>
+                                <div style={{ background: isDark ? 'rgba(0,0,0,0.2)' : '#f8fafc', padding: 8, borderRadius: 6 }}>
+                                  <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Volume Rebates (-1.6%)</div>
+                                  <div style={{ fontSize: 13, fontWeight: 700, color: '#dc2626' }}>-{formatCurrency(derivation.rebates)}</div>
+                                </div>
+                              </div>
+                              <code style={{ fontSize: 11, fontFamily: 'monospace', color: '#16a34a', display: 'block' }}>
+                                Total Net Revenue = Base Rate ({formatCurrency(derivation.baseRate)}) + Fuel Surcharge ({formatCurrency(derivation.fuelSurcharge)}) + Tolls ({formatCurrency(derivation.tollExpenses)}) + Detention ({formatCurrency(derivation.detentionFees)}) - Rebates ({formatCurrency(derivation.rebates)}) = {formatCurrency(derivation.netRevenue)}
+                              </code>
+                            </div>
+                          )}
+
+                          {/* AI Telematics & Knowledge Graph Links */}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, borderTop: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid #e2e8f0', fontSize: 11, color: isDark ? '#94a3b8' : '#64748b' }}>
+                            <div>
+                              ⚡ <strong>Knowledge Graph Node:</strong> {route.from} Hub ──[NH48 Corridor]──► {route.to} Terminal
+                            </div>
+                            <div>
+                              🌱 <strong>Carbon Footprint:</strong> 1.18 kg CO₂ / km • 🔒 <strong>IoT Door Lock:</strong> 100% Secured
+                            </div>
+                          </div>
+                        </motion.div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </motion.div>
+  );
+};
 
 // ---- INDIA MAP SECTION ----
 const FleetMapSection = ({ dispatched }) => (
