@@ -613,127 +613,359 @@ const SectionHeader = ({ icon: Icon, title, subtitle, action }) => (
   </div>
 );
 
-// ---- REVENUE CHART ----
+// ---- REVENUE OVERVIEW & INDUSTRY DERIVATION ENGINE ----
 const RevenueChart = () => {
-  const [period, setPeriod] = useState('daily');
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  const [period, setPeriod] = useState('daily'); // daily | weekly | monthly
+  const [viewMode, setViewMode] = useState('stacked'); // stacked | net_target | corridor | fleet
+  const [selectedStream, setSelectedStream] = useState('all'); // all | base | fuel | toll | detention
+  const [selectedCorridor, setSelectedCorridor] = useState('all'); // all | west | north | south | east
+  const [showFormula, setShowFormula] = useState(true);
+
   const chartRef = useRef(null);
 
+  // Generate multi-layer dataset based on period, viewMode, selectedStream & selectedCorridor
   const chartData = useMemo(() => {
-    const data = revenueChartData[period];
-    return {
-      labels: data.labels,
-      datasets: [
-        {
-          label: period === 'daily' ? 'Revenue (₹M)' : period === 'weekly' ? 'Revenue (₹Cr)' : 'Revenue (₹Cr)',
-          data: data.values,
+    const raw = revenueChartData[period];
+    const labels = raw.labels;
+    const values = raw.values;
+
+    const corridorMult = selectedCorridor === 'west' ? 0.38 : selectedCorridor === 'north' ? 0.28 : selectedCorridor === 'south' ? 0.22 : selectedCorridor === 'east' ? 0.12 : 1.0;
+
+    if (viewMode === 'stacked') {
+      // 5 Revenue Streams Stacked Breakdown
+      const baseFreight = values.map(v => Number((v * 0.760 * corridorMult).toFixed(1)));
+      const fuelSurcharge = values.map(v => Number((v * 0.152 * corridorMult).toFixed(1)));
+      const tollExpenses = values.map(v => Number((v * 0.061 * corridorMult).toFixed(1)));
+      const detentionFees = values.map(v => Number((v * 0.043 * corridorMult).toFixed(1)));
+
+      let datasets = [];
+
+      if (selectedStream === 'all' || selectedStream === 'base') {
+        datasets.push({
+          label: 'Linehaul Base Freight (76.0%)',
+          data: baseFreight,
           borderColor: '#6366f1',
-          backgroundColor: (ctx) => {
-            if (!ctx.chart.chartArea) return 'rgba(99, 102, 241, 0.1)';
-            const gradient = ctx.chart.ctx.createLinearGradient(
-              0, ctx.chart.chartArea.top, 0, ctx.chart.chartArea.bottom
-            );
-            gradient.addColorStop(0, 'rgba(99, 102, 241, 0.25)');
-            gradient.addColorStop(0.5, 'rgba(99, 102, 241, 0.08)');
-            gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
-            return gradient;
-          },
+          backgroundColor: isDark ? 'rgba(99, 102, 241, 0.4)' : 'rgba(99, 102, 241, 0.25)',
           fill: true,
-          tension: 0.4,
+          tension: 0.35,
           borderWidth: 2,
-          pointRadius: 0,
-          pointHoverRadius: 5,
-          pointHoverBackgroundColor: '#6366f1',
-          pointHoverBorderColor: '#fff',
-          pointHoverBorderWidth: 2,
-        },
-      ],
-    };
-  }, [period]);
+        });
+      }
+
+      if (selectedStream === 'all' || selectedStream === 'fuel') {
+        datasets.push({
+          label: 'Dynamic Fuel Surcharge (15.2%)',
+          data: fuelSurcharge,
+          borderColor: '#10b981',
+          backgroundColor: isDark ? 'rgba(16, 185, 129, 0.4)' : 'rgba(16, 185, 129, 0.25)',
+          fill: true,
+          tension: 0.35,
+          borderWidth: 2,
+        });
+      }
+
+      if (selectedStream === 'all' || selectedStream === 'toll') {
+        datasets.push({
+          label: 'FASTag Toll Reconciled (6.1%)',
+          data: tollExpenses,
+          borderColor: '#f59e0b',
+          backgroundColor: isDark ? 'rgba(245, 158, 11, 0.4)' : 'rgba(245, 158, 11, 0.25)',
+          fill: true,
+          tension: 0.35,
+          borderWidth: 2,
+        });
+      }
+
+      if (selectedStream === 'all' || selectedStream === 'detention') {
+        datasets.push({
+          label: 'Accessorial & Detention (4.3%)',
+          data: detentionFees,
+          borderColor: '#ec4899',
+          backgroundColor: isDark ? 'rgba(236, 72, 153, 0.4)' : 'rgba(236, 72, 153, 0.25)',
+          fill: true,
+          tension: 0.35,
+          borderWidth: 2,
+        });
+      }
+
+      return { labels, datasets };
+    } else if (viewMode === 'net_target') {
+      // Net Revenue vs Benchmark Target
+      const netRev = values.map(v => Number((v * corridorMult).toFixed(1)));
+      const targetRev = values.map(v => Number((v * 1.08 * corridorMult).toFixed(1)));
+
+      return {
+        labels,
+        datasets: [
+          {
+            label: 'Actual Net Revenue',
+            data: netRev,
+            borderColor: '#6366f1',
+            backgroundColor: isDark ? 'rgba(99, 102, 241, 0.2)' : 'rgba(99, 102, 241, 0.1)',
+            fill: true,
+            tension: 0.35,
+            borderWidth: 2.5,
+          },
+          {
+            label: 'Benchmark Target Goal',
+            data: targetRev,
+            borderColor: '#d97706',
+            borderDash: [5, 5],
+            fill: false,
+            tension: 0.35,
+            borderWidth: 1.8,
+            pointRadius: 0,
+          }
+        ]
+      };
+    } else if (viewMode === 'corridor') {
+      // Regional Corridor Performance Breakdown
+      return {
+        labels,
+        datasets: [
+          { label: 'Western Corridor (NH48)', data: values.map(v => Number((v * 0.38).toFixed(1))), borderColor: '#6366f1', fill: false, tension: 0.35 },
+          { label: 'Northern Corridor (NCR)', data: values.map(v => Number((v * 0.28).toFixed(1))), borderColor: '#10b981', fill: false, tension: 0.35 },
+          { label: 'Southern Spine', data: values.map(v => Number((v * 0.22).toFixed(1))), borderColor: '#f59e0b', fill: false, tension: 0.35 },
+          { label: 'Eastern Freight Belt', data: values.map(v => Number((v * 0.12).toFixed(1))), borderColor: '#ec4899', fill: false, tension: 0.35 },
+        ]
+      };
+    } else {
+      // Fleet Category Breakdown (Express 32FT, Cold Chain Reefer, Electric EV)
+      return {
+        labels,
+        datasets: [
+          { label: '32FT Heavy Commercial', data: values.map(v => Number((v * 0.58).toFixed(1))), borderColor: '#6366f1', fill: false, tension: 0.35 },
+          { label: 'Cold-Chain Reefer', data: values.map(v => Number((v * 0.28).toFixed(1))), borderColor: '#06b6d4', fill: false, tension: 0.35 },
+          { label: 'Electric Fleet (EV)', data: values.map(v => Number((v * 0.14).toFixed(1))), borderColor: '#16a34a', fill: false, tension: 0.35 },
+        ]
+      };
+    }
+  }, [period, viewMode, selectedStream, selectedCorridor, isDark]);
 
   const chartOptions = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     interaction: { mode: 'index', intersect: false },
     plugins: {
-      legend: { display: false },
+      legend: {
+        display: true,
+        position: 'top',
+        labels: {
+          color: isDark ? '#cbd5e1' : '#334155',
+          font: { size: 11, family: 'Inter, sans-serif' },
+          usePointStyle: true,
+          boxWidth: 8
+        }
+      },
       tooltip: {
-        backgroundColor: 'rgba(10, 14, 26, 0.92)',
-        titleColor: '#e0e0e0',
-        bodyColor: '#b0b0b0',
-        borderColor: 'rgba(99, 102, 241, 0.2)',
+        backgroundColor: isDark ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+        titleColor: isDark ? '#f8fafc' : '#0f172a',
+        bodyColor: isDark ? '#cbd5e1' : '#334155',
+        borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#cbd5e1',
         borderWidth: 1,
         cornerRadius: 8,
         padding: 12,
-        titleFont: { size: 12, weight: '600', family: 'Inter' },
-        bodyFont: { size: 11, family: 'Inter' },
+        titleFont: { size: 12, weight: '700' },
+        bodyFont: { size: 11 },
         callbacks: {
-          label: (ctx) => {
-            const prefix = period === 'daily' ? '₹' : '₹';
-            const suffix = period === 'daily' ? 'M' : 'Cr';
-            return ` Revenue: ${prefix}${ctx.raw}${suffix}`;
-          },
-        },
-      },
+          label: (ctx) => ` ${ctx.dataset.label}: ₹${ctx.raw}${period === 'daily' ? 'M' : 'Cr'}`
+        }
+      }
     },
     scales: {
       x: {
-        grid: { color: 'rgba(99, 102, 241, 0.06)', drawBorder: false },
-        ticks: {
-          color: 'var(--text-muted)',
-          font: { size: 10, family: 'Inter' },
-          maxTicksLimit: period === 'daily' ? 10 : undefined,
-        },
-        border: { display: false },
+        stacked: viewMode === 'stacked',
+        grid: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', drawBorder: false },
+        ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { size: 10 } }
       },
       y: {
-        grid: { color: 'rgba(99, 102, 241, 0.06)', drawBorder: false },
+        stacked: viewMode === 'stacked',
+        grid: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', drawBorder: false },
         ticks: {
-          color: 'var(--text-muted)',
-          font: { size: 10, family: 'Inter' },
-          callback: (v) => period === 'daily' ? `₹${v}M` : `₹${v}Cr`,
-        },
-        border: { display: false },
-      },
-    },
-  }), [period]);
-
-  const periods = [
-    { key: 'daily', label: 'Daily' },
-    { key: 'weekly', label: 'Weekly' },
-    { key: 'monthly', label: 'Monthly' },
-  ];
+          color: isDark ? '#94a3b8' : '#64748b',
+          font: { size: 10 },
+          callback: (v) => period === 'daily' ? `₹${v}M` : `₹${v}Cr`
+        }
+      }
+    }
+  }), [period, viewMode, isDark]);
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.45 }}
-      style={{ ...styles.card, gridColumn: 'span 8' }}
+      style={{
+        ...styles.card,
+        gridColumn: 'span 12',
+        border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1',
+        boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.4)' : '0 4px 16px rgba(0,0,0,0.06)'
+      }}
     >
+      {/* Header & Main Controls */}
       <SectionHeader
-        icon={BarChart3}
-        title="Revenue Overview"
-        subtitle="Platform-wide revenue performance"
+        icon={TrendingUp}
+        title="Revenue Intelligence & Derivation Engine"
+        subtitle="Multi-layered breakdown of Linehaul Base Tariffs, Dynamic Fuel Surcharges (FSC), FASTag Tolls, and Accessorial Detention"
         action={
-          <div style={styles.toggleGroup}>
-            {periods.map((p) => (
-              <button
-                key={p.key}
-                onClick={() => setPeriod(p.key)}
-                style={{
-                  ...styles.toggleBtn,
-                  ...(period === p.key ? styles.toggleBtnActive : {}),
-                }}
-              >
-                {p.label}
-              </button>
-            ))}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', background: isDark ? '#1e293b' : '#e2e8f0', padding: 2, borderRadius: 6 }}>
+              {[
+                { key: 'daily', label: 'Daily (30D)' },
+                { key: 'weekly', label: 'Weekly (12W)' },
+                { key: 'monthly', label: 'Monthly (12M)' }
+              ].map(p => (
+                <button
+                  key={p.key}
+                  onClick={() => setPeriod(p.key)}
+                  style={{
+                    background: period === p.key ? 'var(--primary-500)' : 'transparent',
+                    color: period === p.key ? '#fff' : isDark ? '#94a3b8' : '#475569',
+                    border: 'none', borderRadius: 4, padding: '4px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer'
+                  }}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
           </div>
         }
       />
-      <div style={{ height: 280, marginTop: 16 }}>
+
+      {/* Multi-Dimensional Filter Toolbar */}
+      <div style={{
+        display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between',
+        marginTop: 14, padding: '10px 14px', background: isDark ? 'rgba(0,0,0,0.25)' : '#f8fafc',
+        borderRadius: 10, border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0'
+      }}>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+          {/* View Mode Selector */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: isDark ? '#cbd5e1' : '#334155' }}>View Mode:</span>
+            <select
+              value={viewMode}
+              onChange={(e) => setViewMode(e.target.value)}
+              style={{
+                background: isDark ? '#1e293b' : '#ffffff', border: isDark ? '1px solid rgba(255,255,255,0.15)' : '1px solid #cbd5e1',
+                color: isDark ? '#f8fafc' : '#0f172a', padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700, outline: 'none', cursor: 'pointer'
+              }}
+            >
+              <option value="stacked">📊 Stacked Stream Breakdown</option>
+              <option value="net_target">📈 Net vs Target Benchmark</option>
+              <option value="corridor">🛣️ Corridor Performance</option>
+              <option value="fleet">🚚 Fleet Class Performance</option>
+            </select>
+          </div>
+
+          {/* Revenue Stream Filter */}
+          {viewMode === 'stacked' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: isDark ? '#cbd5e1' : '#334155' }}>Stream Filter:</span>
+              <select
+                value={selectedStream}
+                onChange={(e) => setSelectedStream(e.target.value)}
+                style={{
+                  background: isDark ? '#1e293b' : '#ffffff', border: isDark ? '1px solid rgba(255,255,255,0.15)' : '1px solid #cbd5e1',
+                  color: isDark ? '#f8fafc' : '#0f172a', padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700, outline: 'none', cursor: 'pointer'
+                }}
+              >
+                <option value="all">All Revenue Streams (100%)</option>
+                <option value="base">Linehaul Base Freight (76.0%)</option>
+                <option value="fuel">Dynamic Fuel Surcharges (15.2%)</option>
+                <option value="toll">FASTag Toll Reconciliations (6.1%)</option>
+                <option value="detention">Accessorial & Detention (4.3%)</option>
+              </select>
+            </div>
+          )}
+
+          {/* Regional Corridor Filter */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: isDark ? '#cbd5e1' : '#334155' }}>Region:</span>
+            <select
+              value={selectedCorridor}
+              onChange={(e) => setSelectedCorridor(e.target.value)}
+              style={{
+                background: isDark ? '#1e293b' : '#ffffff', border: isDark ? '1px solid rgba(255,255,255,0.15)' : '1px solid #cbd5e1',
+                color: isDark ? '#f8fafc' : '#0f172a', padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700, outline: 'none', cursor: 'pointer'
+              }}
+            >
+              <option value="all">All India Corridors</option>
+              <option value="west">Western Corridor (NH48)</option>
+              <option value="north">Northern Region (NCR/Punjab)</option>
+              <option value="south">Southern Spine (BLR/CHN)</option>
+              <option value="east">Eastern Freight Belt (KOL/OD)</option>
+            </select>
+          </div>
+        </div>
+
+        <button
+          onClick={() => setShowFormula(!showFormula)}
+          style={{
+            background: showFormula ? 'rgba(99, 102, 241, 0.15)' : isDark ? '#1e293b' : '#ffffff',
+            border: showFormula ? '1px solid #6366f1' : isDark ? '1px solid rgba(255,255,255,0.15)' : '1px solid #cbd5e1',
+            color: showFormula ? 'var(--primary-400)' : isDark ? '#cbd5e1' : '#334155',
+            borderRadius: 6, padding: '4px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer'
+          }}
+        >
+          {showFormula ? '✓ Derivation Math Shown' : 'Show Derivation Math'}
+        </button>
+      </div>
+
+      {/* Revenue Derivation KPI Summary Strip */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10, marginTop: 12 }}>
+        <div style={{ background: isDark ? '#1e293b' : '#ffffff', border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #cbd5e1', padding: '10px 12px', borderRadius: 8 }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)' }}>Linehaul Base Freight</span>
+          <div style={{ fontSize: 15, fontWeight: 800, color: '#6366f1', marginTop: 2 }}>₹32.56M <span style={{ fontSize: 10, fontWeight: 600 }}>(76.0%)</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>Fixed contract tariffs</span>
+        </div>
+
+        <div style={{ background: isDark ? '#1e293b' : '#ffffff', border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #cbd5e1', padding: '10px 12px', borderRadius: 8 }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)' }}>Dynamic Fuel Surcharge</span>
+          <div style={{ fontSize: 15, fontWeight: 800, color: '#10b981', marginTop: 2 }}>₹6.51M <span style={{ fontSize: 10, fontWeight: 600 }}>(15.2%)</span></div>
+          <span style={{ fontSize: 9, color: '#16a34a' }}>WTI/diesel index linked</span>
+        </div>
+
+        <div style={{ background: isDark ? '#1e293b' : '#ffffff', border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #cbd5e1', padding: '10px 12px', borderRadius: 8 }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)' }}>FASTag Toll Reconciled</span>
+          <div style={{ fontSize: 15, fontWeight: 800, color: '#f59e0b', marginTop: 2 }}>₹2.61M <span style={{ fontSize: 10, fontWeight: 600 }}>(6.1%)</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>Highway toll pass-through</span>
+        </div>
+
+        <div style={{ background: isDark ? '#1e293b' : '#ffffff', border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #cbd5e1', padding: '10px 12px', borderRadius: 8 }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)' }}>Accessorial & Detention</span>
+          <div style={{ fontSize: 15, fontWeight: 800, color: '#ec4899', marginTop: 2 }}>₹1.84M <span style={{ fontSize: 10, fontWeight: 600 }}>(4.3%)</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>Dock waiting dwell fees</span>
+        </div>
+
+        <div style={{ background: isDark ? '#1e293b' : '#ffffff', border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #cbd5e1', padding: '10px 12px', borderRadius: 8 }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)' }}>Volume Rebates & Adjust</span>
+          <div style={{ fontSize: 15, fontWeight: 800, color: '#dc2626', marginTop: 2 }}>-₹0.68M <span style={{ fontSize: 10, fontWeight: 600 }}>(-1.6%)</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>Enterprise discount refund</span>
+        </div>
+      </div>
+
+      {/* Main Chart */}
+      <div style={{ height: 320, marginTop: 14 }}>
         <Line ref={chartRef} data={chartData} options={chartOptions} />
       </div>
+
+      {/* Collapsible Revenue Derivation Formula Box */}
+      {showFormula && (
+        <div style={{
+          marginTop: 14, padding: '12px 14px', background: isDark ? 'rgba(99, 102, 241, 0.1)' : '#f1f5f9',
+          border: isDark ? '1px solid rgba(99, 102, 241, 0.25)' : '1px solid #cbd5e1', borderRadius: 8
+        }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: isDark ? '#a5b4fc' : '#4338ca', marginBottom: 4 }}>
+            Enterprise Fleet Revenue Derivation Model (GatiFleet Standard)
+          </div>
+          <code style={{ fontSize: 11, fontFamily: 'monospace', color: isDark ? '#f8fafc' : '#0f172a', display: 'block', wordBreak: 'break-all' }}>
+            Daily Net Revenue (₹42.85M) = Base Freight (₹32.56M) + Fuel Surcharge (₹6.51M) + Toll Reimbursements (₹2.61M) + Detention Fees (₹1.84M) - Volume Rebates (₹0.68M)
+          </code>
+        </div>
+      )}
     </motion.div>
   );
 };
