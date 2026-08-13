@@ -155,13 +155,54 @@ const getBezierPoints = (fromLatLng, toLatLng, steps = 20) => {
   return points;
 };
 
+// ---- INDIA MAP SECTION (REDESIGNED WITH GOOGLE MAPS LIGHT STREET VIEW, TILE SELECTOR & INTERACTIVE HUD) ----
+const MAP_STYLES = {
+  street: {
+    name: '🗺️ Google/OSM Street View',
+    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; CartoDB &copy; OpenStreetMap'
+  },
+  positron: {
+    name: '🏙️ Light Minimal',
+    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; CartoDB'
+  },
+  satellite: {
+    name: '🛰️ Satellite Hybrid',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attribution: '&copy; Esri World Imagery'
+  },
+  dark: {
+    name: '🌙 Dark Navigation',
+    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; CartoDB'
+  }
+};
+
 const IndiaMap = ({ dispatched }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   const mapRef = useRef(null);
   const leafletMap = useRef(null);
+  const tileLayerRef = useRef(null);
   const markersRef = useRef({});
   const polylinesRef = useRef([]);
+
   const [mapReady, setMapReady] = useState(false);
   const [activeViewMode, setActiveViewMode] = useState('all'); // all | hubs | lanes
+  const [selectedMapStyleKey, setSelectedMapStyleKey] = useState(isDark ? 'dark' : 'street');
+  const [selectedCorridorFilter, setSelectedCorridorFilter] = useState('all');
+  const [selectedCityHub, setSelectedCityHub] = useState(null);
+
+  // Default to Street View when in Light Mode
+  useEffect(() => {
+    if (!isDark && selectedMapStyleKey === 'dark') {
+      setSelectedMapStyleKey('street');
+    } else if (isDark && selectedMapStyleKey === 'street') {
+      setSelectedMapStyleKey('dark');
+    }
+  }, [theme]);
 
   const getCityTrucksCount = (city) => {
     const base = city === 'Delhi' ? 68420 :
@@ -185,18 +226,19 @@ const IndiaMap = ({ dispatched }) => {
     if (mapRef.current && !leafletMap.current) {
       leafletMap.current = L.map(mapRef.current, {
         center: [21.8, 79.5],
-        zoom: 4,
+        zoom: 4.5,
         zoomControl: false,
         attributionControl: false
       });
 
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 20
+      const initialStyle = MAP_STYLES[selectedMapStyleKey] || MAP_STYLES.street;
+      tileLayerRef.current = L.tileLayer(initialStyle.url, {
+        maxZoom: 20,
+        attribution: initialStyle.attribution
       }).addTo(leafletMap.current);
 
       setMapReady(true);
 
-      // Force a layout recalculation for Leaflet size bounds
       setTimeout(() => {
         if (leafletMap.current) {
           leafletMap.current.invalidateSize();
@@ -213,30 +255,47 @@ const IndiaMap = ({ dispatched }) => {
     };
   }, []);
 
+  // Sync Basemap Tile Swaps Dynamically
+  useEffect(() => {
+    if (leafletMap.current && mapReady) {
+      if (tileLayerRef.current) {
+        tileLayerRef.current.remove();
+      }
+      const style = MAP_STYLES[selectedMapStyleKey] || MAP_STYLES.street;
+      tileLayerRef.current = L.tileLayer(style.url, {
+        maxZoom: 20
+      }).addTo(leafletMap.current);
+    }
+  }, [selectedMapStyleKey, mapReady]);
+
+  // Update Markers & Polylines when filters change
   useEffect(() => {
     if (!leafletMap.current || !mapReady) return;
 
-    // 1. Clear existing polylines
     polylinesRef.current.forEach(p => p.remove());
     polylinesRef.current = [];
 
-    // 2. Clear existing markers
     Object.keys(markersRef.current).forEach(key => {
       markersRef.current[key].remove();
     });
     markersRef.current = {};
 
-    // 3. Draw Lanes (Routes) if view mode supports them
+    // 1. Render Corridors (Lanes)
     if (activeViewMode === 'all' || activeViewMode === 'lanes') {
       popularRoutes.forEach((route, idx) => {
+        if (selectedCorridorFilter !== 'all') {
+          if (selectedCorridorFilter === 'west' && !(route.from.includes('Delhi') || route.from.includes('Mumbai') || route.to.includes('Mumbai'))) return;
+          if (selectedCorridorFilter === 'south' && !(route.from.includes('Bangalore') || route.from.includes('Chennai') || route.to.includes('Bangalore'))) return;
+        }
+
         const coordsFrom = getCityCoordinates(route.from);
         const coordsTo = getCityCoordinates(route.to);
         
         if (coordsFrom && coordsTo) {
           const curvedPath = getBezierPoints(coordsFrom, coordsTo);
           const p = L.polyline(curvedPath, {
-            color: idx % 2 === 0 ? 'rgba(99, 102, 241, 0.45)' : 'rgba(56, 206, 60, 0.45)', // alternate indigo and green
-            weight: 2,
+            color: idx % 2 === 0 ? '#6366f1' : '#16a34a',
+            weight: 2.5,
             className: 'route-path-flow'
           }).addTo(leafletMap.current);
           
@@ -245,54 +304,70 @@ const IndiaMap = ({ dispatched }) => {
       });
     }
 
-    // 4. Draw Hubs if view mode supports them
+    // 2. Render Hubs (Markers)
     if (activeViewMode === 'all' || activeViewMode === 'hubs') {
       const citiesToMap = ['Delhi', 'Mumbai', 'Bangalore', 'Chennai', 'Kolkata', 'Hyderabad', 'Ahmedabad', 'Pune', 'Jaipur', 'Lucknow'];
       
       citiesToMap.forEach(cityName => {
         const trucks = getCityTrucksCount(cityName);
         const coords = getCityCoordinates(cityName);
-        const size = Math.max(8, Math.min(18, trucks / 5000));
+        const size = Math.max(10, Math.min(20, trucks / 4500));
         
         const markerIcon = L.divIcon({
           html: `
-            <div style="position: relative; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">
-              <div style="position: absolute; width: ${size + 12}px; height: ${size + 12}px; border-radius: 50%; background: #6366f1; opacity: 0.25; animation: mapPulse 2s infinite;"></div>
-              <div style="width: ${size}px; height: ${size}px; border-radius: 50%; background: #818cf8; border: 1.5px solid #fff; box-shadow: 0 0 10px #6366f1;"></div>
+            <div style="position: relative; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+              <div style="position: absolute; width: ${size + 14}px; height: ${size + 14}px; border-radius: 50%; background: #6366f1; opacity: 0.3; animation: mapPulse 2s infinite;"></div>
+              <div style="width: ${size}px; height: ${size}px; border-radius: 50%; background: #4f46e5; border: 2px solid #ffffff; box-shadow: 0 2px 10px rgba(0,0,0,0.3);"></div>
             </div>
           `,
           className: 'custom-fleet-marker',
-          iconSize: [30, 30],
-          iconAnchor: [15, 15]
+          iconSize: [34, 34],
+          iconAnchor: [17, 17]
         });
 
         const m = L.marker(coords, { icon: markerIcon })
           .addTo(leafletMap.current)
           .bindTooltip(`
-            <div style="background: rgba(15, 23, 42, 0.95); border: 1px solid var(--surface-border); border-radius: var(--radius-sm); padding: 8px 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); backdrop-filter: blur(12px); color: var(--text-primary); min-width: 120px;">
-              <div style="font-size: 12px; font-weight: 700; margin-bottom: 2px;">${cityName}</div>
-              <div style="font-size: 10px; color: var(--primary-400); font-weight: 600;">
-                🚚 ${trucks.toLocaleString('en-IN')} trucks
+            <div style="background: ${isDark ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)'}; border: ${isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1'}; border-radius: 8px; padding: 8px 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); color: ${isDark ? '#f8fafc' : '#0f172a'}; min-width: 130px;">
+              <div style="font-size: 12px; font-weight: 700; margin-bottom: 2px;">${cityName} Freight Hub</div>
+              <div style="font-size: 11px; color: #6366f1; font-weight: 700;">
+                🚚 ${trucks.toLocaleString('en-IN')} Active Trucks
+              </div>
+              <div style="font-size: 9px; color: ${isDark ? '#94a3b8' : '#64748b'}; margin-top: 2px;">
+                Click to inspect Hub Telemetry
               </div>
             </div>
           `, {
             permanent: false,
             direction: 'top',
             className: 'custom-map-tooltip',
-            opacity: 0.95
+            opacity: 0.98
           });
+
+        m.on('click', () => {
+          setSelectedCityHub({
+            name: cityName,
+            trucks: trucks,
+            inbound: Math.round(trucks * 0.54),
+            outbound: Math.round(trucks * 0.46),
+            fastagSpeed: '98.2% Clearance',
+            reeferTemp: '-18.4°C Optimal',
+            otdSla: '96.8% Compliance'
+          });
+        });
+
         markersRef.current[cityName] = m;
       });
     }
 
-  }, [mapReady, activeViewMode, dispatched]);
+  }, [mapReady, activeViewMode, selectedCorridorFilter, dispatched, isDark]);
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 360 }}>
+    <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 400 }}>
       <style>{`
         @keyframes mapPulse {
-          0% { transform: scale(0.5); opacity: 0.5; }
-          100% { transform: scale(2.2); opacity: 0; }
+          0% { transform: scale(0.5); opacity: 0.6; }
+          100% { transform: scale(2.4); opacity: 0; }
         }
         .custom-map-tooltip {
           background: transparent !important;
@@ -302,182 +377,213 @@ const IndiaMap = ({ dispatched }) => {
         .custom-map-tooltip::before {
           display: none !important;
         }
-        @keyframes dashOffset {
-          to { stroke-dashoffset: -20; }
-        }
         .route-path-flow {
           stroke-dasharray: 6, 6;
           animation: dashOffset 1.5s linear infinite;
         }
-        .map-float-btn {
-          width: 28px;
-          height: 28px;
-          border-radius: var(--radius-xs);
-          background: rgba(15, 23, 42, 0.8) !important;
-          border: 1px solid rgba(255,255,255,0.08) !important;
-          color: var(--text-primary) !important;
-          font-size: 14px;
-          font-weight: 700;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          backdrop-filter: blur(8px);
-          transition: all 0.2s ease;
-          outline: none;
-        }
-        .map-float-btn:hover {
-          background: var(--surface-hover) !important;
-          border-color: var(--primary-500) !important;
-          color: #fff !important;
-          transform: translateY(-1px);
-        }
-        .map-float-btn:active {
-          background: var(--surface-active) !important;
-          transform: translateY(0);
+        @keyframes dashOffset {
+          to { stroke-dashoffset: -20; }
         }
       `}</style>
 
-      {/* 1. HUD Telemetry Bar */}
+      {/* 1. HUD Telemetry & Filter Bar */}
       <div style={{
         position: 'absolute',
         top: 12,
         left: 12,
         right: 12,
-        height: 38,
-        background: 'rgba(15, 23, 42, 0.8)',
-        backdropFilter: 'blur(8px)',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
-        borderRadius: 'var(--radius-sm)',
+        background: isDark ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.92)',
+        backdropFilter: 'blur(10px)',
+        border: isDark ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid #cbd5e1',
+        borderRadius: 8,
+        padding: '8px 12px',
+        zIndex: 10,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 12px',
-        zIndex: 10,
-        pointerEvents: 'none'
+        flexWrap: 'wrap',
+        gap: 8,
+        boxShadow: isDark ? '0 4px 12px rgba(0,0,0,0.3)' : '0 4px 12px rgba(0,0,0,0.06)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Activity size={12} style={{ color: 'var(--success-500)' }} />
-          <span style={{ fontSize: 10, color: 'var(--text-secondary)', fontWeight: 500 }}>Live Telemetry HUD</span>
+          <Activity size={14} color="#16a34a" />
+          <span style={{ fontSize: 11, color: isDark ? '#f8fafc' : '#0f172a', fontWeight: 700 }}>Live Telemetry HUD</span>
         </div>
-        <div style={{ display: 'flex', gap: 16 }}>
+
+        {/* Filters */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          {/* Map Basemap Style Selector */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>Hubs:</span>
-            <span style={{ fontSize: 10, color: '#818cf8', fontWeight: 600 }}>10 Active</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: isDark ? '#cbd5e1' : '#334155' }}>Basemap:</span>
+            <select
+              value={selectedMapStyleKey}
+              onChange={(e) => setSelectedMapStyleKey(e.target.value)}
+              style={{
+                background: isDark ? '#1e293b' : '#ffffff',
+                border: isDark ? '1px solid rgba(255,255,255,0.15)' : '1px solid #cbd5e1',
+                color: isDark ? '#f8fafc' : '#0f172a',
+                padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700, outline: 'none', cursor: 'pointer'
+              }}
+            >
+              {Object.keys(MAP_STYLES).map(k => (
+                <option key={k} value={k}>{MAP_STYLES[k].name}</option>
+              ))}
+            </select>
           </div>
+
+          {/* Regional Corridor Filter */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>Flow:</span>
-            <span style={{ fontSize: 10, color: 'var(--success-500)', fontWeight: 600 }}>Optimal</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: isDark ? '#cbd5e1' : '#334155' }}>Corridor:</span>
+            <select
+              value={selectedCorridorFilter}
+              onChange={(e) => setSelectedCorridorFilter(e.target.value)}
+              style={{
+                background: isDark ? '#1e293b' : '#ffffff',
+                border: isDark ? '1px solid rgba(255,255,255,0.15)' : '1px solid #cbd5e1',
+                color: isDark ? '#f8fafc' : '#0f172a',
+                padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700, outline: 'none', cursor: 'pointer'
+              }}
+            >
+              <option value="all">All Corridors</option>
+              <option value="west">NH48 Western Freight</option>
+              <option value="south">NH44 Southern Spine</option>
+            </select>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>Lanes:</span>
-            <span style={{ fontSize: 10, color: 'var(--primary-300)', fontWeight: 600 }}>10 Corridors</span>
+
+          {/* Layer View Mode */}
+          <div style={{ display: 'flex', gap: 4 }}>
+            {['all', 'hubs', 'lanes'].map((mode) => (
+              <button
+                key={mode}
+                onClick={() => setActiveViewMode(mode)}
+                style={{
+                  padding: '3px 8px',
+                  borderRadius: 6,
+                  background: activeViewMode === mode ? 'var(--primary-500)' : isDark ? '#1e293b' : '#e2e8f0',
+                  color: activeViewMode === mode ? '#ffffff' : isDark ? '#cbd5e1' : '#334155',
+                  border: 'none',
+                  fontSize: 10,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  textTransform: 'uppercase'
+                }}
+              >
+                {mode === 'all' ? 'Hybrid' : mode === 'hubs' ? 'Hubs' : 'Lanes'}
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* 2. Interactive View Mode Control */}
+      {/* 2. Floating Zoom & Recenter Controls */}
       <div style={{
         position: 'absolute',
-        top: 62,
-        left: 12,
-        display: 'flex',
-        gap: 6,
-        zIndex: 10,
-      }}>
-        {['all', 'hubs', 'lanes'].map((mode) => (
-          <button
-            key={mode}
-            onClick={() => setActiveViewMode(mode)}
-            style={{
-              padding: '4px 8px',
-              borderRadius: 'var(--radius-xs)',
-              background: activeViewMode === mode ? 'var(--primary-600)' : 'rgba(15, 23, 42, 0.8)',
-              border: `1px solid ${activeViewMode === mode ? 'var(--primary-500)' : 'rgba(255,255,255,0.08)'}`,
-              color: activeViewMode === mode ? '#fff' : 'var(--text-secondary)',
-              fontSize: 9,
-              fontWeight: 600,
-              cursor: 'pointer',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-              transition: 'all 0.2s ease',
-              backdropFilter: 'blur(8px)'
-            }}
-          >
-            {mode === 'all' ? 'Hybrid View' : mode === 'hubs' ? 'Hubs Only' : 'Lanes Only'}
-          </button>
-        ))}
-      </div>
-
-      {/* 3. Floating Zoom & Recenter Controls */}
-      <div style={{
-        position: 'absolute',
-        top: 62,
-        right: 12,
+        top: 68,
+        right: 18,
         display: 'flex',
         flexDirection: 'column',
         gap: 6,
         zIndex: 10,
       }}>
         <button
-          onClick={() => {
-            if (leafletMap.current) leafletMap.current.zoomIn();
+          onClick={() => leafletMap.current && leafletMap.current.zoomIn()}
+          style={{
+            width: 28, height: 28, borderRadius: 6,
+            background: isDark ? '#1e293b' : '#ffffff',
+            border: isDark ? '1px solid rgba(255,255,255,0.15)' : '1px solid #cbd5e1',
+            color: isDark ? '#f8fafc' : '#0f172a',
+            fontSize: 14, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
           }}
-          className="map-float-btn"
           title="Zoom In"
         >
           +
         </button>
         <button
-          onClick={() => {
-            if (leafletMap.current) leafletMap.current.zoomOut();
+          onClick={() => leafletMap.current && leafletMap.current.zoomOut()}
+          style={{
+            width: 28, height: 28, borderRadius: 6,
+            background: isDark ? '#1e293b' : '#ffffff',
+            border: isDark ? '1px solid rgba(255,255,255,0.15)' : '1px solid #cbd5e1',
+            color: isDark ? '#f8fafc' : '#0f172a',
+            fontSize: 14, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
           }}
-          className="map-float-btn"
           title="Zoom Out"
         >
           -
         </button>
         <button
-          onClick={() => {
-            if (leafletMap.current) {
-              leafletMap.current.setView([21.8, 79.5], 4);
-            }
+          onClick={() => leafletMap.current && leafletMap.current.setView([21.8, 79.5], 4.5)}
+          style={{
+            width: 28, height: 28, borderRadius: 6,
+            background: isDark ? '#1e293b' : '#ffffff',
+            border: isDark ? '1px solid rgba(255,255,255,0.15)' : '1px solid #cbd5e1',
+            color: isDark ? '#f8fafc' : '#0f172a',
+            fontSize: 12, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
           }}
-          className="map-float-btn"
           title="Recenter Map"
         >
           ⛶
         </button>
       </div>
 
-      {/* 4. Map Legend */}
-      <div style={{
-        position: 'absolute',
-        bottom: 12,
-        left: 12,
-        background: 'rgba(15, 23, 42, 0.8)',
-        backdropFilter: 'blur(8px)',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
-        borderRadius: 'var(--radius-sm)',
-        padding: '8px 10px',
-        zIndex: 10,
-        pointerEvents: 'none',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 4
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#818cf8', border: '1px solid #fff' }} />
-          <span style={{ fontSize: 9, color: 'var(--text-secondary)' }}>Logistics Hub (Size = Volume)</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <div style={{ width: 14, height: 2, background: 'rgba(99, 102, 241, 0.7)', borderTop: '2px dashed rgba(255, 255, 255, 0.3)' }} />
-          <span style={{ fontSize: 9, color: 'var(--text-secondary)' }}>Active Transit Lane (Flowing)</span>
-        </div>
-      </div>
+      {/* 3. Interactive Hub Derivation Modal Overlay (When Hub Clicked) */}
+      {selectedCityHub && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          style={{
+            position: 'absolute',
+            bottom: 20,
+            left: 20,
+            right: 20,
+            background: isDark ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.96)',
+            backdropFilter: 'blur(12px)',
+            border: '2px solid #6366f1',
+            borderRadius: 10,
+            padding: '12px 16px',
+            zIndex: 20,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.2)'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: isDark ? '#f8fafc' : '#0f172a' }}>
+              🏬 {selectedCityHub.name} Central Logistics Hub — Live Telemetry
+            </div>
+            <button
+              onClick={() => setSelectedCityHub(null)}
+              style={{ background: 'transparent', border: 'none', color: isDark ? '#cbd5e1' : '#64748b', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+            >
+              ✕
+            </button>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10 }}>
+            <div style={{ background: isDark ? '#1e293b' : '#f8fafc', padding: 8, borderRadius: 6 }}>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Active Moving Trucks</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#6366f1' }}>{selectedCityHub.trucks.toLocaleString()} Units</div>
+            </div>
+            <div style={{ background: isDark ? '#1e293b' : '#f8fafc', padding: 8, borderRadius: 6 }}>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Inbound Cargo</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#16a34a' }}>{selectedCityHub.inbound.toLocaleString()} Manifests</div>
+            </div>
+            <div style={{ background: isDark ? '#1e293b' : '#f8fafc', padding: 8, borderRadius: 6 }}>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Outbound Departures</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#2563eb' }}>{selectedCityHub.outbound.toLocaleString()} Trucks</div>
+            </div>
+            <div style={{ background: isDark ? '#1e293b' : '#f8fafc', padding: 8, borderRadius: 6 }}>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>FASTag Toll Speed</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#f59e0b' }}>{selectedCityHub.fastagSpeed}</div>
+            </div>
+            <div style={{ background: isDark ? '#1e293b' : '#f8fafc', padding: 8, borderRadius: 6 }}>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Reefer Temp Range</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#06b6d4' }}>{selectedCityHub.reeferTemp}</div>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Map Container */}
-      <div ref={mapRef} style={{ width: '100%', height: '360px', borderRadius: 'var(--radius-md)', border: '1px solid var(--surface-border)', overflow: 'hidden', zIndex: 1 }} />
+      <div ref={mapRef} style={{ width: '100%', height: '400px', borderRadius: 10, border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #cbd5e1', overflow: 'hidden', zIndex: 1 }} />
     </div>
   );
 };
