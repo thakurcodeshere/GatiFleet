@@ -13,6 +13,7 @@ import {
 
 const segmentConfigs = {
   revenueToday: {
+    segmentName: 'Revenue Today',
     title: 'Revenue Today Analytics & Dynamic Tariff Intelligence',
     metric: '₹42.9M',
     unit: '₹ Millions',
@@ -56,6 +57,7 @@ const segmentConfigs = {
   },
 
   fleetUtilization: {
+    segmentName: 'Fleet Utilization',
     title: 'Fleet Utilization & Capacity Rebalancing Engine',
     metric: '87.4%',
     unit: 'Utilization %',
@@ -99,6 +101,7 @@ const segmentConfigs = {
   },
 
   onTimeDelivery: {
+    segmentName: 'On-Time Delivery',
     title: 'On-Time Delivery (OTD) & Predictive Delay Mitigation',
     metric: '94.2%',
     unit: 'SLA Pass %',
@@ -142,6 +145,7 @@ const segmentConfigs = {
   },
 
   activeTrucks: {
+    segmentName: 'Active Trucks',
     title: 'Active Trucks Uptime & IoT Telemetry Grid',
     metric: '488K',
     unit: 'Active Vehicles',
@@ -185,6 +189,7 @@ const segmentConfigs = {
   },
 
   fuelEfficiency: {
+    segmentName: 'Fuel Efficiency',
     title: 'Fuel Efficiency & Carbon Footprint Optimization',
     metric: '4.8 km/L',
     unit: 'km / Litre Average',
@@ -228,6 +233,7 @@ const segmentConfigs = {
   },
 
   customerGrowth: {
+    segmentName: 'Customer Growth',
     title: 'Customer Growth & ACMS Onboarding Intelligence',
     metric: '+12.6%',
     unit: 'Shipper Growth %',
@@ -585,6 +591,34 @@ const SegmentDeepDiveCockpit = ({ segmentKey, initialTab = 'graph', onClose }) =
                 <Sparkles size={18} color="#fff" />
               </div>
               <div>
+                {/* Explicit Breadcrumb Path (Dashboard -> KPI Segment Name -> Section Architecture Blueprint) */}
+                <div style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: isDark ? '#a5b4fc' : '#4338ca',
+                  background: isDark ? 'rgba(99, 102, 241, 0.15)' : 'rgba(99, 102, 241, 0.08)',
+                  border: isDark ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid rgba(99, 102, 241, 0.2)',
+                  padding: '3px 10px',
+                  borderRadius: 6,
+                  marginBottom: 6,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  letterSpacing: '0.01em'
+                }}>
+                  <span>Dashboard</span>
+                  <span style={{ opacity: 0.5 }}>➔</span>
+                  <span>{config.segmentName || 'KPI Segment'}</span>
+                  <span style={{ opacity: 0.5 }}>➔</span>
+                  <span style={{ color: config.color, fontWeight: 800 }}>
+                    {activeTab === 'blueprint'
+                      ? 'Section Architecture Blueprint'
+                      : activeTab === 'graph'
+                      ? 'Scalable Telemetry Graph'
+                      : 'Operational Features'}
+                  </span>
+                </div>
+
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <h3 style={panelStyles.title}>{config.title}</h3>
                   <span style={{
