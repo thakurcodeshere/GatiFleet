@@ -2747,6 +2747,23 @@ const Dashboard = () => {
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {/* 12-Plane OS 100% Complete Badge */}
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(99, 102, 241, 0.15))',
+            border: '1px solid #10b981',
+            borderRadius: 'var(--radius-sm)',
+            color: '#34d399',
+            padding: '6px 14px',
+            fontSize: 11,
+            fontWeight: 800,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            boxShadow: '0 0 15px rgba(16, 185, 129, 0.25)'
+          }}>
+            <ShieldCheck size={16} color="#10b981" />
+            <span>GatiFleet OS — 12/12 Planes 100% Active</span>
+          </div>
           {/* Quick-Jump to Strategic Cockpit */}
           <motion.button
             whileHover={{ scale: 1.03 }}

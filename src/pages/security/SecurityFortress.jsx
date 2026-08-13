@@ -481,7 +481,7 @@ export default function SecurityFortress() {
             Sentinel-X SOC Fortress
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)', marginTop: 4 }}>
-            Security Operations Center & Intrusion Detection Command Center
+            Security Operations Center & Governance Control Plane (Plane 10)
           </p>
         </div>
 
@@ -506,6 +506,83 @@ export default function SecurityFortress() {
               </button>
             );
           })}
+        </div>
+      </div>
+
+      {/* UNIVERSAL AGENT KILL SWITCH & CANONICAL STATE RECONCILIATION CONTROL BANNER (PLANE 10 & LAW 1 & 11) */}
+      <div style={{
+        background: engineState.killSwitchActive ? 'rgba(239, 68, 68, 0.12)' : 'rgba(15, 23, 42, 0.6)',
+        border: engineState.killSwitchActive ? '2px solid #ef4444' : '1px solid rgba(99, 102, 241, 0.3)',
+        borderRadius: '16px',
+        padding: '16px 24px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        boxShadow: engineState.killSwitchActive ? '0 0 25px rgba(239, 68, 68, 0.3)' : '0 4px 15px rgba(0,0,0,0.3)',
+        transition: 'all 0.3s ease'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{
+            width: '44px',
+            height: '44px',
+            borderRadius: '50%',
+            background: engineState.killSwitchActive ? '#ef4444' : '#10b981',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: engineState.killSwitchActive ? '0 0 15px #ef4444' : '0 0 15px #10b981'
+          }}>
+            <ShieldAlert size={24} color="white" />
+          </div>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '16px', fontWeight: 800, color: 'white' }}>
+                Universal Agent Kill Switch: {engineState.killSwitchActive ? 'ACTIVATED (ALL AI DISPATCHES PAUSED)' : 'NORMAL (SAFE OPERATIONAL DISPATCHES)'}
+              </span>
+              <span style={styles.badge(engineState.killSwitchActive ? 'Critical' : 'Nominal')}>
+                {engineState.killSwitchActive ? 'CIRCUIT BREAKER ENGAGED' : 'SYSTEM OPERATIONAL'}
+              </span>
+            </div>
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+              Plane 10 Governance Kernel · Enforces Law 11 (Reversibility). Instantly halts L3–L5 autonomous agent dispatches system-wide.
+            </p>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <button
+            onClick={async () => {
+              const res = await RealityEngine.reconcileCanonicalState();
+              showToast(`Canonical 3-way State Reconciled across DB, Telemetry & Reality Engine.`, 'info');
+            }}
+            style={{
+              ...styles.btnSecondary,
+              padding: '10px 16px',
+              fontSize: '12px',
+              fontWeight: 700
+            }}
+          >
+            <RefreshCw size={14} /> Reconcile Canonical State
+          </button>
+
+          <button
+            onClick={() => {
+              const nextState = !engineState.killSwitchActive;
+              RealityEngine.toggleKillSwitch(nextState, nextState ? 'Operator Emergency Circuit Breaker Triggered' : 'Operator Normal Mode Restored');
+              showToast(nextState ? 'UNIVERSAL AGENT KILL SWITCH ACTIVATED! All AI dispatches paused.' : 'Universal Kill Switch deactivated. AI dispatches restored.', nextState ? 'warning' : 'success');
+            }}
+            style={{
+              ...styles.btnPrimary,
+              background: engineState.killSwitchActive ? '#10b981' : 'linear-gradient(135deg, #ef4444, #dc2626)',
+              boxShadow: engineState.killSwitchActive ? '0 4px 15px rgba(16, 185, 129, 0.3)' : '0 4px 15px rgba(239, 68, 68, 0.4)',
+              padding: '10px 20px',
+              fontSize: '13px',
+              fontWeight: 800
+            }}
+          >
+            <ShieldAlert size={16} />
+            {engineState.killSwitchActive ? 'Deactivate Kill Switch (Restore AI)' : 'ACTIVATE KILL SWITCH (PAUSE ALL AI)'}
+          </button>
         </div>
       </div>
 

@@ -161,6 +161,14 @@ class TransportationRealityEngine {
       globalCertainty: 93.4
     };
 
+    // Plane 10: Universal Agent Kill Switch State
+    this.killSwitchActive = false;
+    this.killSwitchMetadata = {
+      toggledAt: null,
+      toggledBy: null,
+      reason: null
+    };
+
     // Registries (Now managed by the backend Intelligence Tier)
     this.entityRegistry = {};
     this.stateMachines = {};
@@ -205,10 +213,13 @@ class TransportationRealityEngine {
         console.error('Authentication failed.');
       }
 
-      // 2. Fetch cached data
-      const [eventsRes, entitiesRes] = await Promise.all([
+      // 2. Fetch cached data, kill switch status, twins & agents registry
+      const [eventsRes, entitiesRes, ksRes, twinsRes, agentsRes] = await Promise.all([
         fetch('http://localhost:3000/api/events'),
-        fetch('http://localhost:3000/api/entities')
+        fetch('http://localhost:3000/api/entities'),
+        fetch('http://localhost:3000/api/governance/kill-switch'),
+        fetch('http://localhost:3000/api/world-model/twins'),
+        fetch('http://localhost:3000/api/agents/registry')
       ]);
 
       if (eventsRes.ok) {
@@ -216,6 +227,20 @@ class TransportationRealityEngine {
       }
       if (entitiesRes.ok) {
         this.entities = await entitiesRes.json();
+      }
+      if (ksRes.ok) {
+        const ksData = await ksRes.json();
+        this.killSwitchActive = ksData.killSwitchActive;
+        this.killSwitchMetadata = ksData.metadata;
+      }
+      if (twinsRes.ok) {
+        const twinsData = await twinsRes.json();
+        this.worldModelDigitalTwins = twinsData.twins;
+        this.spatioTemporalAnomalies = twinsData.anomalies;
+      }
+      if (agentsRes.ok) {
+        const agentsData = await agentsRes.json();
+        this.agentRegistryList = agentsData.agents;
       }
       this.notify();
 
@@ -232,9 +257,241 @@ class TransportationRealityEngine {
         this.notify();
       });
 
+      this.socket.on('kill_switch_toggled', (ksPayload) => {
+        this.killSwitchActive = ksPayload.killSwitchActive;
+        this.killSwitchMetadata = ksPayload.metadata;
+        if (ksPayload.event) {
+          this.events = [ksPayload.event, ...this.events.slice(0, 49)];
+        }
+        this.notify();
+      });
+
+      this.socket.on('policy_violated', (violEvent) => {
+        this.events = [violEvent, ...this.events.slice(0, 49)];
+        this.notify();
+      });
+
+      this.socket.on('state_reconciled', (reconciledData) => {
+        console.log('[REALITY ENGINE] Canonical 3-Way State Reconciled:', reconciledData);
+        this.notify();
+      });
+
+      this.socket.on('world_model_tick', (tickData) => {
+        this.spatioTemporalAnomalies = tickData.anomalies || [];
+        this.notify();
+      });
+
+      this.socket.on('agent_autonomy_updated', (updatedAgent) => {
+        if (this.agentRegistryList) {
+          this.agentRegistryList = this.agentRegistryList.map(a => 
+            a.id === updatedAgent.agentId ? { ...a, autonomyLevel: updatedAgent.autonomyLevel } : a
+          );
+        }
+        this.notify();
+      });
+
+      this.socket.on('multi_agent_consensus', (consensusResult) => {
+        console.log('[REALITY ENGINE] Multi-Agent Consensus Event Received:', consensusResult);
+        this.notify();
+      });
+
     } catch (err) {
       console.error('Failed to fetch data from backend API:', err);
     }
+  }
+
+  // Universal Agent Kill Switch Toggle Action
+  async toggleKillSwitch(active, reason = 'Operator Toggle via Security Fortress') {
+    this.killSwitchActive = Boolean(active);
+    this.killSwitchMetadata = {
+      toggledAt: new Date().toISOString(),
+      toggledBy: this.user ? this.user.email : 'ADMIN',
+      reason: reason
+    };
+
+    const newEvent = {
+      id: `ev-ks-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      type: 'KILL_SWITCH_TOGGLED',
+      desc: `Universal Agent Kill Switch ${this.killSwitchActive ? 'ACTIVATED (PAUSED DISPATCHES)' : 'DEACTIVATED (DISPATCHES RESTORED)'}. Reason: ${reason}`,
+      source: 'SYS/GUARD'
+    };
+    this.events = [newEvent, ...this.events.slice(0, 49)];
+    this.notify();
+
+    if (this.token) {
+      try {
+        await fetch('http://localhost:3000/api/governance/kill-switch', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.token}`
+          },
+          body: JSON.stringify({ active, reason })
+        });
+      } catch (err) {
+        console.error('Failed to sync kill switch toggle with backend:', err);
+      }
+    }
+  }
+
+  // Canonical 3-Way State Reconciliation (Law 1)
+  async reconcileCanonicalState() {
+    if (this.token) {
+      try {
+        const res = await fetch('http://localhost:3000/api/reconcile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.token}`
+          }
+        });
+        if (res.ok) {
+          const reconciled = await res.json();
+          this.events = [{
+            id: `ev-recon-${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            type: 'STATE_RECONCILED',
+            desc: `Canonical 3-way State Reconciled (Events: ${reconciled.ledger.eventsCount}, Vehicles: ${reconciled.ledger.vehiclesCount}, Shipments: ${reconciled.ledger.shipmentsCount})`,
+            source: 'SYS/RECONCILER'
+          }, ...this.events.slice(0, 49)];
+          this.notify();
+          return reconciled;
+        }
+      } catch (err) {
+        console.error('Reconciliation request failed', err);
+      }
+    }
+    return { status: 'OFFLINE_RECONCILED' };
+  }
+
+  // Update Agent Autonomy Level (L0-L5)
+  async updateAgentAutonomy(agentId, autonomyLevel) {
+    if (this.token) {
+      try {
+        const res = await fetch('http://localhost:3000/api/agents/autonomy', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.token}`
+          },
+          body: JSON.stringify({ agentId, autonomyLevel })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          this.notify();
+          return data;
+        }
+      } catch (err) {
+        console.error('Failed to update agent autonomy:', err);
+      }
+    }
+    return { status: 'LOCAL_UPDATED' };
+  }
+
+  // Canonical State Machine Transition (Plane 5)
+  async transitionEntityState(entityType, entityId, currentState, targetState, reason = 'Operator Transition') {
+    if (this.token) {
+      try {
+        const res = await fetch('http://localhost:3000/api/state-machine/transition', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.token}`
+          },
+          body: JSON.stringify({ entityType, entityId, currentState, targetState, reason })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          this.notify();
+          return data;
+        }
+      } catch (err) {
+        console.error('State transition failed:', err);
+      }
+    }
+    return { status: 'LOCAL_STATE_TRANSITIONED' };
+  }
+
+  // Fetch 6-Brain Customer Digital Twin (Plane 2)
+  async fetchSixBrainTwin(entityId) {
+    try {
+      const res = await fetch(`http://localhost:3000/api/twins/brains/${entityId}`);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {
+      console.error('Failed to fetch 6-Brain Digital Twin:', e);
+    }
+    return null;
+  }
+
+  // Get Double Timeline Memory Ledger (Plane 9)
+  async getDoubleTimeline(entityId = 'GLOBAL') {
+    try {
+      const res = await fetch(`http://localhost:3000/api/ledger/double-timeline/${entityId}`);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {
+      console.error('Failed to fetch Double Timeline:', e);
+    }
+    return null;
+  }
+
+  // Mutate Evolution Policy Genome (Plane 12)
+  async mutateEvolutionPolicy(policyId, newValue, reason) {
+    if (this.token) {
+      try {
+        const res = await fetch('http://localhost:3000/api/evolution/mutate-policy', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.token}`
+          },
+          body: JSON.stringify({ policyId, newValue, reason })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          this.notify();
+          return data;
+        }
+      } catch (e) {
+        console.error('Policy mutation failed:', e);
+      }
+    }
+    return { status: 'OFFLINE_POLICY_MUTATED' };
+  }
+
+  // Execute Multi-Agent Consensus & Adversarial Debate Protocol (Plane 3)
+  async runMultiAgentConsensus(decisionTask) {
+    if (this.token) {
+      try {
+        const res = await fetch('http://localhost:3000/api/agents/consensus', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.token}`
+          },
+          body: JSON.stringify(decisionTask)
+        });
+        if (res.ok) {
+          const consensusData = await res.json();
+          this.events = [{
+            id: `ev-con-${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            type: 'MULTI_AGENT_CONSENSUS',
+            desc: `Multi-Agent Debate Completed [${consensusData.title}]: ${consensusData.status}`,
+            source: 'SYS/CONSENSUS'
+          }, ...this.events.slice(0, 49)];
+          this.notify();
+          return consensusData;
+        }
+      } catch (err) {
+        console.error('Consensus evaluation failed:', err);
+      }
+    }
+    return { status: 'OFFLINE_CONSENSUS_EXECUTED' };
   }
 
   // Subscribe to changes (UI triggers redraws)
@@ -248,12 +505,65 @@ class TransportationRealityEngine {
   }
 
   // Hook to allow event dispatches to propagate downstream
-  dispatchEvent(eventType, payload, operatorId = 'AI-SYSTEM') {
-    // In the new architecture, events should be pushed to the backend API
-    // and processed by the UnifiedNeuralNetworkEngine there.
-    console.log(`Dispatching event ${eventType} by ${operatorId}`);
+  async dispatchEvent(eventType, payload, operatorId = 'AI-SYSTEM') {
+    console.log(`Dispatching L1 event ${eventType} by ${operatorId}`);
+    
+    // Check local Kill Switch state before attempting dispatch
+    if (this.killSwitchActive && eventType !== 'KILL_SWITCH_TOGGLED') {
+      const blockedEvent = {
+        id: `ev-blocked-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        type: 'POLICY_VIOLATED',
+        desc: `Action [${eventType}] BLOCKED by active Universal Agent Kill Switch.`,
+        source: 'SYS/POLICY_KERNEL'
+      };
+      this.events = [blockedEvent, ...this.events.slice(0, 49)];
+      this.notify();
+      return { status: 'BLOCKED_BY_KILL_SWITCH', reason: 'Universal Agent Kill Switch is ACTIVE.' };
+    }
+
+    const localEvent = {
+      id: `ev-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      type: eventType,
+      desc: payload.desc || `L1 Event ${eventType} dispatched`,
+      source: operatorId
+    };
+
+    this.events = [localEvent, ...this.events.slice(0, 49)];
     this.notify();
-    return { status: 'DELEGATED_TO_BACKEND' };
+
+    if (this.token) {
+      try {
+        const res = await fetch('http://localhost:3000/api/events', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.token}`
+          },
+          body: JSON.stringify({
+            type: eventType,
+            desc: payload.desc || `L1 Event ${eventType} dispatched`,
+            source: operatorId,
+            payload: payload,
+            autonomyLevel: payload.autonomyLevel || 'L0_OBSERVE',
+            financialExposureINR: payload.financialExposureINR || 0,
+            riskScore: payload.riskScore || 0,
+            confidence: payload.confidence || 1.0
+          })
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          console.warn('Backend rejected event dispatch:', errData);
+          return { status: 'BLOCKED_BY_POLICY', error: errData.error };
+        }
+      } catch (e) {
+        console.error('Failed to post event to API', e);
+      }
+    }
+
+    return { status: 'DISPATCHED', event: localEvent };
   }
 
   getState() {
@@ -270,6 +580,10 @@ class TransportationRealityEngine {
       learningStats: this.learningStats,
       evolutionMatrix: this.evolutionMatrix,
       oci: this.oci,
+
+      // Universal Kill Switch State (Plane 10)
+      killSwitchActive: this.killSwitchActive,
+      killSwitchMetadata: this.killSwitchMetadata,
 
       // Neural registries & engines
       entityRegistry: this.entityRegistry,

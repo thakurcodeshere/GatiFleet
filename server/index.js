@@ -16,6 +16,18 @@ require('dotenv').config();
 
 const { UnifiedNeuralNetworkEngine } = require('./neuralNetwork');
 const { dispatchJob, getJobStatus } = require('./worker');
+const { EventTaxonomyEngine, EVENT_TYPES, AUTONOMY_LEVELS } = require('./eventTaxonomy');
+const { PolicyKernelEngine } = require('./policyKernel');
+const { WorldModelEngine } = require('./worldModelEngine');
+const { AgentConsensusEngine } = require('./agentConsensusEngine');
+const { IntelligenceLoopEngine } = require('./intelligenceLoopEngine');
+const { KnowledgeGraphEngine } = require('./knowledgeGraphEngine');
+const { CalculationEngine } = require('./calculationEngine');
+const { DigitalTwinBrainEngine } = require('./digitalTwinBrainEngine');
+const { StateMachineEngine } = require('./stateMachineEngine');
+const { DoubleTimelineLedger } = require('./doubleTimelineLedger');
+const { IntegrationEcosystemEngine } = require('./integrationEcosystemEngine');
+const { EvolutionMatrixEngine } = require('./evolutionMatrixEngine');
 
 const prisma = new PrismaClient();
 const app = express();
@@ -149,24 +161,353 @@ app.get('/api/entities', async (req, res) => {
 });
 
 // Create a new event (Protected Route)
+// Create a new L1 Taxonomy-Validated Event (Protected Route)
 app.post('/api/events', authenticateToken, async (req, res) => {
-  const { id, type, desc, source } = req.body;
+  const { type, desc, source, payload, autonomyLevel, financialExposureINR, riskScore, confidence } = req.body;
+  
+  // 1. Validate event against L1 Event Taxonomy
+  const validation = EventTaxonomyEngine.validateEvent({
+    id: req.body.id,
+    type,
+    desc,
+    source,
+    payload,
+    autonomyLevel
+  });
+
+  if (!validation.valid) {
+    return res.status(400).json({ error: validation.error });
+  }
+
+  const validEvent = validation.event;
+
+  // 2. Evaluate Policy Kernel Permissions
+  const policyCheck = PolicyKernelEngine.evaluateActionPermission({
+    agentId: source,
+    actionType: type,
+    autonomyLevel: validEvent.autonomyLevel,
+    financialExposureINR: financialExposureINR || 0,
+    riskScore: riskScore || 0,
+    confidence: confidence || 1.0
+  });
+
+  if (!policyCheck.authorized) {
+    // Log policy violation event
+    const violationEvent = {
+      id: `ev-viol-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      type: EVENT_TYPES.POLICY_VIOLATED,
+      desc: `Blocked action [${type}]: ${policyCheck.reason}`,
+      source: 'SYS/POLICY_KERNEL'
+    };
+    io.emit('policy_violated', violationEvent);
+    return res.status(403).json({ error: policyCheck.reason, code: policyCheck.errorCode, violationEvent });
+  }
+
   try {
     const newEvent = await prisma.event.create({
       data: {
-        id: id || `ev-${Date.now()}`,
-        timestamp: new Date(),
-        type,
-        desc,
-        source
+        id: validEvent.id,
+        timestamp: new Date(validEvent.timestamp),
+        type: validEvent.type,
+        desc: validEvent.desc,
+        source: validEvent.source
       }
     });
     
     myCache.del('all_events');
-    io.emit('new_event', newEvent);
+    io.emit('new_event', { ...newEvent, fullPayload: validEvent });
     res.status(201).json(newEvent);
   } catch (error) {
+    logger.error('Failed to create event: ' + error.message);
     res.status(500).json({ error: 'Failed to create event' });
+  }
+});
+
+// --- GOVERNANCE & SECURITY KERNEL ROUTES ---
+app.get('/api/governance/kill-switch', (req, res) => {
+  res.json(PolicyKernelEngine.getKillSwitchStatus());
+});
+
+app.post('/api/governance/kill-switch', authenticateToken, async (req, res) => {
+  const { active, reason } = req.body;
+  const operatorId = req.user ? req.user.email : 'ADMIN';
+  
+  const status = PolicyKernelEngine.toggleKillSwitch(active, operatorId, reason);
+  
+  // Record L1 Event
+  const killSwitchEvent = {
+    id: `ev-ks-${Date.now()}`,
+    timestamp: new Date(),
+    type: EVENT_TYPES.KILL_SWITCH_TOGGLED,
+    desc: `Universal Agent Kill Switch ${status.killSwitchActive ? 'ACTIVATED (PAUSED DISPATCHES)' : 'DEACTIVATED (DISPATCHES RESTORED)'}. Operator: ${operatorId}. Reason: ${reason || 'N/A'}`,
+    source: 'SYS/GUARD'
+  };
+
+  try {
+    await prisma.event.create({ data: killSwitchEvent });
+    myCache.del('all_events');
+  } catch (e) {
+    console.error('Failed to write kill switch log', e);
+  }
+
+  io.emit('kill_switch_toggled', { ...status, event: killSwitchEvent });
+  res.json({ message: 'Kill switch updated', ...status });
+});
+
+app.post('/api/governance/evaluate', authenticateToken, (req, res) => {
+  const evaluation = PolicyKernelEngine.evaluateActionPermission(req.body);
+  res.json(evaluation);
+});
+
+// --- LAW 1: CANONICAL 3-WAY STATE RECONCILIATION ROUTE ---
+app.post('/api/reconcile', authenticateToken, async (req, res) => {
+  try {
+    const [eventsCount, vehiclesCount, driversCount, shipmentsCount] = await Promise.all([
+      prisma.event.count(),
+      prisma.fleetVehicle.count(),
+      prisma.driver.count(),
+      prisma.shipmentOrder.count()
+    ]);
+
+    const killSwitch = PolicyKernelEngine.getKillSwitchStatus();
+
+    const reconciledState = {
+      timestamp: new Date().toISOString(),
+      status: 'CANONICAL_RECONCILED',
+      killSwitchActive: killSwitch.killSwitchActive,
+      ledger: {
+        eventsCount,
+        vehiclesCount,
+        driversCount,
+        shipmentsCount
+      },
+      truthHierarchy: {
+        location: 'GPS_IOT_EDGE',
+        financials: 'EXECUTABLE_CALCULATION_ENGINE',
+        identity: 'RBAC_SECURITY_KERNEL',
+        governance: 'POLICY_AS_CODE'
+      }
+    };
+
+    io.emit('state_reconciled', reconciledState);
+    res.json(reconciledState);
+  } catch (error) {
+    res.status(500).json({ error: 'Reconciliation failed' });
+  }
+});
+
+// --- PLANE 6: SPATIO-TEMPORAL WORLD MODEL API ROUTES ---
+app.get('/api/world-model/twins', async (req, res) => {
+  try {
+    const [vehicles, drivers] = await Promise.all([
+      prisma.fleetVehicle.findMany(),
+      prisma.driver.findMany()
+    ]);
+
+    const vehicleTwins = vehicles.map(v => WorldModelEngine.synthesizeDigitalTwin('VEHICLE', v));
+    const driverTwins = drivers.map(d => WorldModelEngine.synthesizeDigitalTwin('DRIVER', d));
+    const anomalies = WorldModelEngine.detectSpatioTemporalAnomalies(vehicles);
+
+    res.json({
+      timestamp: new Date().toISOString(),
+      counts: {
+        vehicles: vehicleTwins.length,
+        drivers: driverTwins.length,
+        anomalies: anomalies.length
+      },
+      twins: {
+        vehicles: vehicleTwins,
+        drivers: driverTwins
+      },
+      anomalies
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to synthesize World Model Digital Twins' });
+  }
+});
+
+app.post('/api/world-model/query', async (req, res) => {
+  try {
+    const vehicles = await prisma.fleetVehicle.findMany();
+    const queryResults = WorldModelEngine.querySpatioTemporalResources(vehicles, req.body);
+    res.json(queryResults);
+  } catch (err) {
+    res.status(500).json({ error: 'Spatio-Temporal Query failed' });
+  }
+});
+
+// --- PLANE 3: AGENT PLANE & MULTI-AGENT CONSENSUS API ROUTES ---
+app.get('/api/agents/registry', (req, res) => {
+  res.json({
+    timestamp: new Date().toISOString(),
+    agents: AgentConsensusEngine.getAgentsRegistry()
+  });
+});
+
+app.post('/api/agents/autonomy', authenticateToken, (req, res) => {
+  const { agentId, autonomyLevel } = req.body;
+  try {
+    const updated = AgentConsensusEngine.setAgentAutonomyLevel(agentId, autonomyLevel);
+    
+    // Notify Socket.io
+    io.emit('agent_autonomy_updated', updated);
+
+    // Write audit event
+    prisma.event.create({
+      data: {
+        id: `ev-autonomy-${Date.now()}`,
+        timestamp: new Date(),
+        type: EVENT_TYPES.AUTONOMY_MODIFIED,
+        desc: `Agent [${agentId}] autonomy level set to [${autonomyLevel}] by ${req.user ? req.user.email : 'ADMIN'}`,
+        source: 'SYS/GOVERNANCE'
+      }
+    }).catch(e => console.error('Failed to log autonomy event', e));
+
+    res.json({ message: 'Autonomy updated successfully', ...updated });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.post('/api/agents/consensus', authenticateToken, async (req, res) => {
+  try {
+    const consensusResult = AgentConsensusEngine.executeMultiAgentConsensus(req.body);
+    
+    // Broadcast consensus event via Socket.io
+    io.emit('multi_agent_consensus', consensusResult);
+
+    // Record consensus event in DB
+    const event = await prisma.event.create({
+      data: {
+        id: `ev-consensus-${Date.now()}`,
+        timestamp: new Date(),
+        type: 'MULTI_AGENT_CONSENSUS',
+        desc: `Consensus protocol executed for task [${consensusResult.title}]: ${consensusResult.status} (Confidence: ${consensusResult.consensusConfidence})`,
+        source: 'SYS/CONSENSUS_ENGINE'
+      }
+    });
+
+    myCache.del('all_events');
+    res.json({ ...consensusResult, event });
+  } catch (err) {
+    res.status(500).json({ error: 'Multi-Agent Consensus evaluation failed' });
+  }
+});
+
+// --- PLANE 1: INTELLIGENCE & LEARNING LOOP API ROUTES ---
+app.get('/api/intelligence/learning-stats', (req, res) => {
+  res.json(IntelligenceLoopEngine.getLearningStats());
+});
+
+app.post('/api/intelligence/evaluate-outcome', authenticateToken, (req, res) => {
+  const operatorId = req.user ? req.user.email : 'AI-SYSTEM';
+  const evaluation = IntelligenceLoopEngine.evaluateOutcome({ ...req.body, operatorId });
+  
+  io.emit('outcome_evaluated', evaluation);
+  res.json(evaluation);
+});
+
+// --- PLANE 4: KNOWLEDGE GRAPH API ROUTES ---
+app.get('/api/kg/graph', (req, res) => {
+  res.json(KnowledgeGraphEngine.getGraph());
+});
+
+app.post('/api/kg/impact', (req, res) => {
+  const { entityId } = req.body;
+  if (!entityId) return res.status(400).json({ error: 'entityId is required' });
+
+  const impactAnalysis = KnowledgeGraphEngine.findCascadeImpact(entityId);
+  res.json(impactAnalysis);
+});
+
+// --- PLANE 7: EXECUTABLE CALCULATION ENGINE API ROUTES ---
+app.post('/api/calculations/evaluate', (req, res) => {
+  const { formulaType, inputs } = req.body;
+  if (!formulaType) return res.status(400).json({ error: 'formulaType is required' });
+
+  const result = CalculationEngine.evaluate(formulaType, inputs);
+  res.json(result);
+});
+
+// --- PLANE 2: DIGITAL TWIN 6-BRAIN COGNITIVE API ROUTES ---
+app.get('/api/twins/brains/:id', async (req, res) => {
+  try {
+    const entityId = req.params.id;
+    const customer = await prisma.entity.findUnique({ where: { id: entityId } }).catch(() => null);
+    const schema = DigitalTwinBrainEngine.getSixBrainSchema(entityId, customer || {});
+    res.json(schema);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to synthesize 6-Brain Digital Twin' });
+  }
+});
+
+// --- PLANE 5: CANONICAL STATE MACHINE API ROUTES ---
+app.get('/api/state-machine/schema', (req, res) => {
+  res.json(StateMachineEngine.getSchema());
+});
+
+app.post('/api/state-machine/transition', authenticateToken, async (req, res) => {
+  try {
+    const operatorId = req.user ? req.user.email : 'AI-SYSTEM';
+    const transition = StateMachineEngine.transitionState({ ...req.body, operatorId });
+
+    // Emit L1 Event
+    const stateEvent = await prisma.event.create({
+      data: {
+        id: `ev-state-${Date.now()}`,
+        timestamp: new Date(),
+        type: transition.l1EventEmitted,
+        desc: `Entity [${transition.entityId}] transitioned state from [${transition.previousState}] to [${transition.newState}]. Reason: ${transition.reason}`,
+        source: 'SYS/STATE_MACHINE'
+      }
+    });
+
+    myCache.del('all_events');
+    io.emit('state_transitioned', { ...transition, event: stateEvent });
+    res.json({ message: 'State transitioned successfully', ...transition, event: stateEvent });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// --- PLANE 9: DOUBLE TIMELINE MEMORY LEDGER API ROUTES ---
+app.get('/api/ledger/double-timeline/:id', (req, res) => {
+  res.json(DoubleTimelineLedger.getDoubleTimeline(req.params.id));
+});
+
+app.post('/api/ledger/decision-journal', authenticateToken, (req, res) => {
+  const operatorId = req.user ? req.user.email : 'AI-SYSTEM';
+  const journal = DoubleTimelineLedger.logDecisionJournal({ ...req.body, operatorId });
+  
+  io.emit('decision_journal_logged', journal);
+  res.json(journal);
+});
+
+// --- PLANE 11: INTEGRATION & ECOSYSTEM INTEROPERABILITY API ROUTES ---
+app.get('/api/integration/adapters', (req, res) => {
+  res.json(IntegrationEcosystemEngine.getAdapters());
+});
+
+app.post('/api/integration/webhook/dispatch', authenticateToken, (req, res) => {
+  const dispatched = IntegrationEcosystemEngine.dispatchWebhook(req.body);
+  res.json(dispatched);
+});
+
+// --- PLANE 12: SELF-EVOLUTION MATRIX & GENETIC POLICY MUTATION API ROUTES ---
+app.get('/api/evolution/matrix', (req, res) => {
+  res.json(EvolutionMatrixEngine.getEvolutionMatrix());
+});
+
+app.post('/api/evolution/mutate-policy', authenticateToken, (req, res) => {
+  try {
+    const mutation = EvolutionMatrixEngine.mutatePolicy(req.body);
+    
+    // Broadcast evolution mutation event
+    io.emit('policy_mutated', mutation);
+    res.json(mutation);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
 });
 

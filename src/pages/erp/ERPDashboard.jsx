@@ -608,6 +608,14 @@ const ERPDashboard = () => {
   const [showNewInvoice, setShowNewInvoice] = useState(false);
   const [newInvoiceData, setNewInvoiceData] = useState({ customer: '', amount: '', cargo: '', route: '' });
 
+  // PLANE 7 EXECUTABLE CALCULATION ENGINE STATE
+  const [calcFormulaType, setCalcFormulaType] = useState('NET_MARGIN');
+  const [calcTariff, setCalcTariff] = useState(50000);
+  const [calcFuel, setCalcFuel] = useState(18500);
+  const [calcToll, setCalcToll] = useState(3200);
+  const [calcResult, setCalcResult] = useState(null);
+  const [isEvaluatingCalc, setIsEvaluatingCalc] = useState(false);
+
   // Sync state with RealityEngine singleton
   useEffect(() => {
     const unsubscribe = RealityEngine.subscribe((state) => {
@@ -898,6 +906,145 @@ const ERPDashboard = () => {
             );
           })}
         </div>
+
+        {/* PLANE 7: EXECUTABLE CALCULATION ENGINE WORKSPACE */}
+        <motion.div
+          variants={itemVariants}
+          style={{
+            background: 'var(--surface)',
+            border: '1px solid rgba(99, 102, 241, 0.25)',
+            borderRadius: '16px',
+            padding: '24px',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.25)'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Scale size={24} color="#6366f1" />
+              <div>
+                <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white' }}>
+                  Executable Calculation Engine (Plane 7 — Law 4)
+                </h3>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                  Enforces calculation integrity with explicit step-by-step formula breakdowns for freight margins, fuel surcharges, and SLA penalties.
+                </p>
+              </div>
+            </div>
+
+            <select
+              value={calcFormulaType}
+              onChange={(e) => { setCalcFormulaType(e.target.value); setCalcResult(null); }}
+              style={{
+                background: 'rgba(0,0,0,0.4)',
+                border: '1px solid var(--surface-border)',
+                borderRadius: '6px',
+                color: '#818cf8',
+                fontSize: '12px',
+                fontWeight: 700,
+                padding: '6px 12px',
+                outline: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="NET_MARGIN">Formula: Net Profit Margin</option>
+              <option value="FUEL_SURCHARGE">Formula: Dynamic Fuel Surcharge (FSC)</option>
+              <option value="SLA_PENALTY">Formula: SLA Delay Penalty</option>
+            </select>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '16px', marginBottom: '16px', background: 'rgba(0,0,0,0.2)', padding: '12px 16px', borderRadius: '10px' }}>
+            <div>
+              <label style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 700, display: 'block', marginBottom: '4px' }}>
+                {calcFormulaType === 'SLA_PENALTY' ? 'DELAY HOURS' : 'FREIGHT TARIFF (₹)'}
+              </label>
+              <input
+                type="number"
+                value={calcTariff}
+                onChange={(e) => setCalcTariff(e.target.value)}
+                style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--surface-border)', padding: '6px 10px', borderRadius: '6px', color: 'white', fontSize: '12px' }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 700, display: 'block', marginBottom: '4px' }}>
+                {calcFormulaType === 'FUEL_SURCHARGE' ? 'CURRENT FUEL PRICE (₹/L)' : calcFormulaType === 'SLA_PENALTY' ? 'HOURLY PENALTY (₹)' : 'FUEL EXPENSE (₹)'}
+              </label>
+              <input
+                type="number"
+                value={calcFuel}
+                onChange={(e) => setCalcFuel(e.target.value)}
+                style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--surface-border)', padding: '6px 10px', borderRadius: '6px', color: 'white', fontSize: '12px' }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 700, display: 'block', marginBottom: '4px' }}>
+                {calcFormulaType === 'SLA_PENALTY' ? 'GRACE PERIOD (HRS)' : 'TOLLS & CHARGES (₹)'}
+              </label>
+              <input
+                type="number"
+                value={calcToll}
+                onChange={(e) => setCalcToll(e.target.value)}
+                style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--surface-border)', padding: '6px 10px', borderRadius: '6px', color: 'white', fontSize: '12px' }}
+              />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+              <button
+                onClick={async () => {
+                  setIsEvaluatingCalc(true);
+                  try {
+                    const inputs = calcFormulaType === 'NET_MARGIN'
+                      ? { freightTariffINR: calcTariff, fuelCostINR: calcFuel, tollCostINR: calcToll, driverAllowanceINR: 2500 }
+                      : calcFormulaType === 'FUEL_SURCHARGE'
+                      ? { baseTariffINR: calcTariff, currentFuelPriceINR: calcFuel, baseFuelPriceINR: 90 }
+                      : { delayHours: calcTariff, hourlyPenaltyINR: calcFuel, gracePeriodHours: calcToll };
+
+                    const res = await fetch('http://localhost:3000/api/calculations/evaluate', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ formulaType: calcFormulaType, inputs })
+                    });
+                    if (res.ok) {
+                      const data = await res.json();
+                      setCalcResult(data);
+                    }
+                  } catch (e) {
+                    console.error('Calculation evaluation failed', e);
+                  }
+                  setIsEvaluatingCalc(false);
+                }}
+                style={{
+                  width: '100%',
+                  background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '8px 14px',
+                  fontWeight: 700,
+                  fontSize: '12px',
+                  cursor: 'pointer'
+                }}
+              >
+                {isEvaluatingCalc ? 'Evaluating...' : 'Execute Calculation (Law 4)'}
+              </button>
+            </div>
+          </div>
+
+          {/* Formula Breakdown Display */}
+          {calcResult && (
+            <div style={{ background: 'rgba(0,0,0,0.3)', padding: '16px', borderRadius: '10px', border: '1px solid var(--surface-border)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <span style={{ fontSize: '11px', color: '#818cf8', fontWeight: 700 }}>FORMULA BREAKDOWN AUDIT TRAIL</span>
+                <span style={{ fontSize: '12px', fontWeight: 800, color: '#34d399' }}>
+                  Result: {calcResult.formulaType === 'NET_MARGIN' ? `Margin ${calcResult.outputs.marginPct}% (Profit ₹${calcResult.outputs.netProfitINR.toLocaleString('en-IN')})` : calcResult.formulaType === 'FUEL_SURCHARGE' ? `Final Tariff ₹${calcResult.outputs.finalTariffINR.toLocaleString('en-IN')}` : `Penalty ₹${calcResult.outputs.totalPenaltyINR.toLocaleString('en-IN')}`}
+                </span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontFamily: 'monospace', fontSize: '11px', color: '#cbd5e1' }}>
+                {calcResult.formulaBreakdown.map((step, idx) => (
+                  <div key={idx}>{step}</div>
+                ))}
+              </div>
+            </div>
+          )}
+        </motion.div>
 
         {/* Invoice Summary + Top Vendors */}
         <div style={styles.bentoRow}>

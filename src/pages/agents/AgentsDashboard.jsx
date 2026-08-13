@@ -13,6 +13,7 @@ import {
   ShieldAlert, Cpu, Terminal, ChevronLeft
 } from 'lucide-react';
 import { aiAgents, aiAgentsExtendedData } from '../../data/mockData';
+import { RealityEngine } from '../../data/RealityEngine';
 
 // ---- Icon map ----
 const ICON_MAP = {
@@ -93,9 +94,23 @@ const CircularProgress = ({ value, size = 52, stroke = 4, color }) => {
 const AgentsDashboard = () => {
   useEffect(() => { injectKeyframes(); }, []);
 
+  const [engineState, setEngineState] = useState(RealityEngine.getState());
+  useEffect(() => {
+    return RealityEngine.subscribe((state) => {
+      setEngineState(state);
+    });
+  }, []);
+
   const [hoveredAgent, setHoveredAgent] = useState(null);
   const [selectedAgentId, setSelectedAgentId] = useState(null);
   const [agents, setAgents] = useState(aiAgents);
+
+  // Plane 3: Multi-Agent Consensus State
+  const [consensusTaskTitle, setConsensusTaskTitle] = useState('NH48 Surat Emergency Reroute & Toll Rebate');
+  const [consensusTaskAmount, setConsensusTaskAmount] = useState(125000);
+  const [consensusTaskRisk, setConsensusTaskRisk] = useState(45);
+  const [activeConsensusResult, setActiveConsensusResult] = useState(null);
+  const [isEvaluatingConsensus, setIsEvaluatingConsensus] = useState(false);
   
   // Level +100 Finance Agent States
   const [financeAuditThreshold, setFinanceAuditThreshold] = useState(10000);
@@ -1842,8 +1857,42 @@ const AgentsDashboard = () => {
             Live
           </span>
         </div>
-        <p style={styles.subtitle}>Autonomous agents powering your operations</p>
+        <p style={styles.subtitle}>Autonomous agents powering your operations (Plane 3 & Plane 10 Governance Kernel)</p>
       </header>
+
+      {/* Universal Agent Kill Switch Active Warning Banner (Plane 10 & Law 11) */}
+      {engineState.killSwitchActive && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{
+            background: 'rgba(239, 68, 68, 0.15)',
+            border: '2px solid #ef4444',
+            borderRadius: '16px',
+            padding: '16px 24px',
+            marginBottom: '24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            boxShadow: '0 0 20px rgba(239, 68, 68, 0.3)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <ShieldAlert size={28} color="#ef4444" />
+            <div>
+              <div style={{ fontSize: '15px', fontWeight: 800, color: '#fca5a5' }}>
+                UNIVERSAL AGENT KILL SWITCH IS ACTIVE — ALL L3–L5 AUTONOMOUS DISPATCHES PAUSED
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                Enforces Law 11 (Reversibility). Autonomous AI agent dispatches are suspended system-wide until deactivated in Security Fortress.
+              </div>
+            </div>
+          </div>
+          <span style={{ fontSize: '11px', fontWeight: 800, padding: '4px 12px', borderRadius: '20px', background: '#ef4444', color: 'white' }}>
+            CIRCUIT BREAKER ENGAGED
+          </span>
+        </motion.div>
+      )}
 
       {/* ---- Summary Bar ---- */}
       <motion.div
@@ -1907,6 +1956,37 @@ const AgentsDashboard = () => {
                   </div>
                   <div>
                     <div style={styles.agentName}>{agent.name}</div>
+                    {/* Plane 3: Dynamic Autonomy Level Selector */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }} onClick={(e) => e.stopPropagation()}>
+                      <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 700 }}>AUTONOMY:</span>
+                      <select
+                        value={agent.autonomyLevel || 'L3_EXECUTE_LOW_RISK'}
+                        onChange={async (e) => {
+                          const newLevel = e.target.value;
+                          await RealityEngine.updateAgentAutonomy(agent.id, newLevel);
+                          setAgents(prev => prev.map(a => a.id === agent.id ? { ...a, autonomyLevel: newLevel } : a));
+                          showToast(`Updated ${agent.name} autonomy level to ${newLevel}`);
+                        }}
+                        style={{
+                          background: 'rgba(0,0,0,0.4)',
+                          border: '1px solid var(--surface-border)',
+                          borderRadius: '4px',
+                          color: '#818cf8',
+                          fontSize: '10px',
+                          fontWeight: 700,
+                          padding: '2px 6px',
+                          outline: 'none',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <option value="L0_OBSERVE">L0 Observe</option>
+                        <option value="L1_RECOMMEND">L1 Recommend</option>
+                        <option value="L2_PREPARE">L2 Prepare</option>
+                        <option value="L3_EXECUTE_LOW_RISK">L3 Execute Low Risk</option>
+                        <option value="L4_EXECUTE_APPROVED">L4 Execute Approved</option>
+                        <option value="L5_AUTONOMOUS_OPTIMIZATION">L5 Autonomous Peak</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
                 <div style={styles.statusBadge(agent.status)}>
@@ -1971,6 +2051,129 @@ const AgentsDashboard = () => {
           );
         })}
       </div>
+
+      {/* ---- PLANE 3: MULTI-AGENT ADVERSARIAL DEBATE & CONSENSUS INSPECTOR ---- */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        style={{
+          background: 'var(--surface)',
+          border: '1px solid rgba(99, 102, 241, 0.25)',
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          boxShadow: '0 8px 30px rgba(0,0,0,0.25)'
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <Brain size={24} color="#818cf8" />
+            <div>
+              <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white' }}>
+                Multi-Agent Adversarial Debate & Consensus Engine (Plane 3)
+              </h3>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                Simulates real-time consensus reviews between Finance, Logistics, and Risk agents before dispatching high-impact operational decisions.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={async () => {
+              setIsEvaluatingConsensus(true);
+              const result = await RealityEngine.runMultiAgentConsensus({
+                title: consensusTaskTitle,
+                financialExposureINR: Number(consensusTaskAmount),
+                riskScore: Number(consensusTaskRisk)
+              });
+              setActiveConsensusResult(result);
+              setIsEvaluatingConsensus(false);
+              showToast(`Multi-Agent Consensus evaluation finished! Decision: ${result.status}`);
+            }}
+            disabled={isEvaluatingConsensus}
+            style={{
+              background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '10px 20px',
+              fontWeight: 700,
+              fontSize: '13px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: '0 4px 15px rgba(99, 102, 241, 0.3)'
+            }}
+          >
+            <Zap size={16} />
+            {isEvaluatingConsensus ? 'Debating...' : 'Trigger Multi-Agent Consensus Debate'}
+          </button>
+        </div>
+
+        {/* Input parameters bar */}
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '16px', marginBottom: '20px', background: 'rgba(0,0,0,0.2)', padding: '12px 16px', borderRadius: '10px' }}>
+          <div>
+            <label style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 700, display: 'block', marginBottom: '4px' }}>DISPATCH DECISION TITLE</label>
+            <input
+              type="text"
+              value={consensusTaskTitle}
+              onChange={(e) => setConsensusTaskTitle(e.target.value)}
+              style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--surface-border)', padding: '6px 10px', borderRadius: '6px', color: 'white', fontSize: '12px' }}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 700, display: 'block', marginBottom: '4px' }}>FINANCIAL EXPOSURE (₹)</label>
+            <input
+              type="number"
+              value={consensusTaskAmount}
+              onChange={(e) => setConsensusTaskAmount(e.target.value)}
+              style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--surface-border)', padding: '6px 10px', borderRadius: '6px', color: 'white', fontSize: '12px' }}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 700, display: 'block', marginBottom: '4px' }}>RISK SCORE (0-100)</label>
+            <input
+              type="number"
+              value={consensusTaskRisk}
+              onChange={(e) => setConsensusTaskRisk(e.target.value)}
+              style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--surface-border)', padding: '6px 10px', borderRadius: '6px', color: 'white', fontSize: '12px' }}
+            />
+          </div>
+        </div>
+
+        {/* Live Consensus Results Display */}
+        {activeConsensusResult && (
+          <div style={{ background: 'rgba(0,0,0,0.3)', padding: '16px', borderRadius: '12px', border: '1px solid var(--surface-border)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <div>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 700 }}>CONSENSUS OUTCOME</span>
+                <div style={{ fontSize: '16px', fontWeight: 800, color: activeConsensusResult.status === 'CONSENSUS_APPROVED' ? '#10b981' : '#f59e0b', marginTop: '2px' }}>
+                  {activeConsensusResult.status === 'CONSENSUS_APPROVED' ? '✅ CONSENSUS APPROVED (MAJORITY 2/3+)' : '⚠️ HUMAN OVERRIDE REQUIRED (RISK BOUNDS)'}
+                </div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>CONFIDENCE INDEX</span>
+                <div style={{ fontSize: '18px', fontWeight: 800, color: '#818cf8' }}>{(activeConsensusResult.consensusConfidence * 100).toFixed(0)}%</div>
+              </div>
+            </div>
+
+            {/* Agent Reasoning Perspectives Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+              {activeConsensusResult.perspectives.map(p => (
+                <div key={p.agentId} style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid var(--surface-border)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <span style={{ fontWeight: 700, fontSize: '12px', color: 'white' }}>{p.agentName}</span>
+                    <span style={{ fontSize: '10px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', background: p.vote === 'APPROVE' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)', color: p.vote === 'APPROVE' ? '#34d399' : '#f87171' }}>
+                      {p.vote}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '11px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>{p.reasoning}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </motion.div>
 
       {/* ---- Activity Timeline ---- */}
       <motion.div

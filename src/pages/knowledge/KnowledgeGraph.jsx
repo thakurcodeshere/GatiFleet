@@ -989,8 +989,11 @@ const KnowledgeGraph = () => {
   const [sidebarTab, setSidebarTab] = useState('metaphors'); // Default to Metaphors
   const [nodeDetails, setNodeDetails] = useState(nodeDetailData);
   const [actionAlert, setActionAlert] = useState(null);
+  const [impactAnalysisData, setImpactAnalysisData] = useState(null);
+  const [isAnalyzingImpact, setIsAnalyzingImpact] = useState(false);
+
   const [terminalLogs, setTerminalLogs] = useState([
-    'Knowledge Graph Cognitive Engine initialized.',
+    'Knowledge Graph Cognitive Engine initialized (Plane 4).',
     'Graph telemetry synced. 10 anomalies flagged.'
   ]);
 
@@ -1953,6 +1956,103 @@ const KnowledgeGraph = () => {
           </button>
         </div>
       </div>
+
+      {/* ---- PLANE 4: CASCADE IMPACT ANALYSIS CONTROL BANNER ---- */}
+      <div style={{
+        background: 'rgba(15, 23, 42, 0.9)',
+        borderBottom: '1px solid rgba(99, 102, 241, 0.3)',
+        padding: '12px 24px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        boxShadow: '0 4px 15px rgba(0,0,0,0.3)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <Network size={20} color="#818cf8" />
+          <div>
+            <div style={{ fontSize: '13px', fontWeight: 800, color: 'white' }}>
+              Plane 4 Knowledge Graph Engine — Relational Cascade Impact Solver
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+              Analyzes multi-hop graph dependencies to calculate revenue-at-risk and SLA exposures during operational disruptions.
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={async () => {
+            setIsAnalyzingImpact(true);
+            const targetId = selectedNode || 'TRK-001';
+            try {
+              const res = await fetch('http://localhost:3000/api/kg/impact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ entityId: targetId })
+              });
+              if (res.ok) {
+                const impactData = await res.json();
+                setImpactAnalysisData(impactData);
+                logToTerminal(`Cascade Impact Solved for [${targetId}]: Revenue at Risk ₹${impactData.financialImpact.revenueAtRiskINR.toLocaleString('en-IN')}`);
+              }
+            } catch (err) {
+              console.error('Impact analysis failed', err);
+            }
+            setIsAnalyzingImpact(false);
+          }}
+          style={{
+            background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            padding: '8px 16px',
+            fontSize: '12px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+        >
+          <Sparkles size={14} />
+          {isAnalyzingImpact ? 'Solving Graph...' : `Run Cascade Impact Analysis (${selectedNode || 'TRK-001'})`}
+        </button>
+      </div>
+
+      {/* Render Impact Results Overlay */}
+      {impactAnalysisData && (
+        <div style={{
+          background: 'rgba(15, 23, 42, 0.95)',
+          borderBottom: '2px solid #818cf8',
+          padding: '16px 24px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <div>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <span style={{ fontSize: '14px', fontWeight: 800, color: '#f87171' }}>
+                🚨 CASCADE IMPACT ANALYSIS RESULTS [{impactAnalysisData.triggerEntityId}]
+              </span>
+              <span style={{ fontSize: '10px', background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', padding: '2px 8px', borderRadius: '10px', fontWeight: 700 }}>
+                {impactAnalysisData.affectedNodesCount} DOWNSTREAM NODES AFFECTED
+              </span>
+            </div>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+              Revenue at Risk: <strong style={{ color: '#f87171' }}>₹{impactAnalysisData.financialImpact.revenueAtRiskINR.toLocaleString('en-IN')}</strong> ·
+              SLA Penalty Exposure: <strong style={{ color: '#fb923c' }}>₹{impactAnalysisData.financialImpact.SLAExposureINR.toLocaleString('en-IN')}</strong>
+            </div>
+            <div style={{ fontSize: '11px', color: '#818cf8', marginTop: '4px' }}>
+              Actions: {impactAnalysisData.recommendedActions.join(' | ')}
+            </div>
+          </div>
+          <button
+            onClick={() => setImpactAnalysisData(null)}
+            style={{ background: 'transparent', border: '1px solid var(--surface-border)', color: 'var(--text-muted)', borderRadius: '4px', padding: '4px 10px', fontSize: '11px', cursor: 'pointer' }}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* ---- MAIN AREA ---- */}
       <div style={styles.mainArea}>
