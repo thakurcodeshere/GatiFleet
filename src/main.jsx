@@ -5,7 +5,7 @@ import './index.css'
 import App from './App.jsx'
 
 // Set default theme
-const savedTheme = localStorage.getItem('gatifleet-theme') || 'dark';
+const savedTheme = localStorage.getItem('gatifleet-theme') || 'light';
 document.documentElement.setAttribute('data-theme', savedTheme);
 
 createRoot(document.getElementById('root')).render(
