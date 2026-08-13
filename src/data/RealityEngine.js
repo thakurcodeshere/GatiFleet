@@ -181,6 +181,13 @@ class TransportationRealityEngine {
   }
 
   async fetchData() {
+    // Only attempt local backend API connection if running on localhost dev server
+    const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    if (!isLocalhost) {
+      console.log('Running in Production / Vercel environment: Reality Engine initialized in Autonomous Offline Simulation mode.');
+      return;
+    }
+
     try {
       // 1. Authenticate with backend using seeded Admin credentials
       const authRes = await fetch('http://localhost:3000/api/auth/login', {

@@ -970,7 +970,33 @@ const RevenueChart = () => {
   );
 };
 
-
+// ---- INDIA MAP SECTION ----
+const FleetMapSection = ({ dispatched }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5, delay: 0.6 }}
+    style={{ ...styles.card, gridColumn: 'span 6' }}
+  >
+    <SectionHeader
+      icon={MapPin}
+      title="Fleet Distribution"
+      subtitle="Active truck clusters across India"
+      action={
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--success-500)' }}>
+            <div style={{
+              width: 6, height: 6, borderRadius: '50%', background: 'var(--success-500)',
+              animation: 'pulse 2s infinite',
+            }} />
+          </div>
+          <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>Live</span>
+        </div>
+      }
+    />
+    <IndiaMap dispatched={dispatched} />
+  </motion.div>
+);
 
 // ---- TOP ROUTES TABLE (REDESIGNED WITH CITY-TO-CITY DERIVATIONS & INTERACTIVE DEEP-DIVE) ----
 const getRouteDerivationData = (route) => {
