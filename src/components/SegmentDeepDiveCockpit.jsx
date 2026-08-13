@@ -328,11 +328,17 @@ const generateChartData = (segmentKey, timeframe, region, category, scaleMode) =
   return { labels, baseValues, targetValues };
 };
 
-const SegmentDeepDiveCockpit = ({ segmentKey, onClose }) => {
+const SegmentDeepDiveCockpit = ({ segmentKey, initialTab = 'graph', onClose }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  const [activeTab, setActiveTab] = useState('graph'); // graph | features | blueprint
+  const [activeTab, setActiveTab] = useState(initialTab || 'graph');
+
+  React.useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab, segmentKey]);
   const [timeframe, setTimeframe] = useState('30d');
   const [region, setRegion] = useState('all');
   const [category, setCategory] = useState('all');
@@ -426,20 +432,20 @@ const SegmentDeepDiveCockpit = ({ segmentKey, onClose }) => {
       left: 0,
       right: 0,
       bottom: 0,
-      background: 'rgba(0, 0, 0, 0.35)',
-      backdropFilter: 'blur(4px)',
-      WebkitBackdropFilter: 'blur(4px)',
+      background: 'transparent',
+      pointerEvents: 'none',
       zIndex: 1200,
       display: 'flex',
       justifyContent: 'flex-end',
     },
     drawer: {
-      width: isExpanded ? 'calc(100vw - 280px)' : '620px',
+      pointerEvents: 'auto',
+      width: isExpanded ? 'calc(100vw - 280px)' : '640px',
       maxWidth: '100%',
       height: 'calc(100vh - 60px)',
       background: isDark ? '#0f172a' : '#ffffff',
-      borderLeft: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1',
-      boxShadow: isDark ? '-10px 0 30px rgba(0,0,0,0.5)' : '-10px 0 30px rgba(0,0,0,0.12)',
+      borderLeft: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid #cbd5e1',
+      boxShadow: isDark ? '-10px 0 35px rgba(0,0,0,0.6)' : '-10px 0 35px rgba(0,0,0,0.18)',
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden',

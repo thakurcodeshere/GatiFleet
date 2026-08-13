@@ -6,7 +6,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import SegmentArchitectureModal from '../components/SegmentArchitectureModal';
 import SegmentDeepDiveCockpit from '../components/SegmentDeepDiveCockpit';
 import {
   TrendingUp, TrendingDown, Truck, Gauge, Clock, Users, Fuel,
@@ -495,7 +494,7 @@ const formatKPIValue = (value, format) => {
   }
 };
 
-const KPICard = ({ config, index, isSelected, onClick, onOpenModal }) => {
+const KPICard = ({ config, index, isSelected, onClick, onOpenBlueprint }) => {
   const animatedVal = useAnimatedValue(config.value, 1400 + index * 100);
   const Icon = config.icon;
 
@@ -576,7 +575,7 @@ const KPICard = ({ config, index, isSelected, onClick, onOpenModal }) => {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onOpenModal && onOpenModal(config.key);
+                onOpenBlueprint && onOpenBlueprint(config.key);
               }}
               style={{
                 background: 'transparent',
@@ -1280,9 +1279,9 @@ const Dashboard = () => {
     { id: 'alerts', label: 'Operational Alerts Feed', icon: AlertTriangle },
   ];
 
-  // --- Stateful variables for segment selection & modal views ---
+  // --- Stateful variables for segment selection & side panel views ---
   const [selectedSegmentKey, setSelectedSegmentKey] = useState(null);
-  const [architectureModalSegment, setArchitectureModalSegment] = useState(null);
+  const [sidePanelTab, setSidePanelTab] = useState('graph');
 
   // --- Stateful variables for platform metrics ---
   const [kpis, setKpis] = useState({
@@ -1840,8 +1839,14 @@ const Dashboard = () => {
                 config={config}
                 index={i}
                 isSelected={selectedSegmentKey === config.key}
-                onClick={(key) => setSelectedSegmentKey(key)}
-                onOpenModal={(key) => setArchitectureModalSegment(key)}
+                onClick={(key) => {
+                  setSelectedSegmentKey(key);
+                  setSidePanelTab('graph');
+                }}
+                onOpenBlueprint={(key) => {
+                  setSelectedSegmentKey(key);
+                  setSidePanelTab('blueprint');
+                }}
               />
             </div>
           ))}
@@ -1850,6 +1855,7 @@ const Dashboard = () => {
           {selectedSegmentKey && (
             <SegmentDeepDiveCockpit
               segmentKey={selectedSegmentKey}
+              initialTab={sidePanelTab}
               onClose={() => setSelectedSegmentKey(null)}
             />
           )}
@@ -2221,14 +2227,6 @@ const Dashboard = () => {
           ))}
         </AnimatePresence>
       </div>
-
-      {/* Architecture Blueprint Modal */}
-      {architectureModalSegment && (
-        <SegmentArchitectureModal
-          segmentKey={architectureModalSegment}
-          onClose={() => setArchitectureModalSegment(null)}
-        />
-      )}
 
       {/* Pulse animation keyframes injected via style tag */}
       <style>{`
