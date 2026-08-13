@@ -970,104 +970,7 @@ const RevenueChart = () => {
   );
 };
 
-// ---- AI INSIGHTS PANEL ----
-const insightIcons = {
-  revenue: TrendingUp,
-  efficiency: Fuel,
-  churn: ShieldAlert,
-  maintenance: AlertTriangle,
-  route: MapPin,
-};
 
-const insightColors = {
-  revenue: '#38CE3C',
-  efficiency: '#3b82f6',
-  churn: '#FF4D6B',
-  maintenance: '#f59e0b',
-  route: '#8b5cf6',
-};
-
-const AIInsightsPanel = ({ insights, onAction, span = 4 }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5, delay: 0.55 }}
-    style={{ ...styles.card, gridColumn: `span ${span}`, display: 'flex', flexDirection: 'column' }}
-  >
-    <SectionHeader
-      icon={Brain}
-      title="AI Insights"
-      subtitle="Copilot recommendations"
-      action={
-        <div style={{ ...styles.badge, background: 'rgba(99, 102, 241, 0.15)', color: 'var(--primary-400)' }}>
-          <Sparkles size={10} /> {insights.length} New
-        </div>
-      }
-    />
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12, overflow: 'auto' }}>
-      {insights.slice(0, 4).map((insight, i) => {
-        const Icon = insightIcons[insight.type] || Lightbulb;
-        const color = insightColors[insight.type] || '#6366f1';
-        return (
-          <motion.div
-            key={insight.id}
-            initial={{ opacity: 0, x: 12 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.6 + i * 0.08 }}
-            whileHover={{ x: 3 }}
-            style={styles.insightCard}
-          >
-            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-              <div
-                style={{
-                  minWidth: 30,
-                  height: 30,
-                  borderRadius: 'var(--radius-sm)',
-                  background: `${color}18`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Icon size={14} color={color} />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 2 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>
-                    {insight.title}
-                  </div>
-                  <button
-                    onClick={() => {
-                      const caseMap = { revenue: 1, efficiency: 1, churn: 5, route: 3, maintenance: 6 };
-                      onAction(caseMap[insight.type] || 1);
-                    }}
-                    style={styles.insightActionLink}
-                  >
-                    Optimize
-                  </button>
-                </div>
-                <div style={{ fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.4 }}>
-                  {insight.summary}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 5 }}>
-                  <span style={{
-                    fontSize: 9, fontWeight: 600, padding: '2px 6px',
-                    borderRadius: 4, background: `${color}18`, color,
-                  }}>
-                    {insight.confidence}% confidence
-                  </span>
-                  <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>
-                    {insight.impact}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        );
-      })}
-    </div>
-  </motion.div>
-);
 
 // ---- TOP ROUTES TABLE (REDESIGNED WITH CITY-TO-CITY DERIVATIONS & INTERACTIVE DEEP-DIVE) ----
 const getRouteDerivationData = (route) => {
@@ -1523,186 +1426,533 @@ const TopRoutes = ({ routes }) => {
   );
 };
 
-// ---- INDIA MAP SECTION ----
-const FleetMapSection = ({ dispatched }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5, delay: 0.6 }}
-    style={{ ...styles.card, gridColumn: 'span 6' }}
-  >
-    <SectionHeader
-      icon={MapPin}
-      title="Fleet Distribution"
-      subtitle="Active truck clusters across India"
-      action={
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--success-500)' }}>
-            <div style={{
-              width: 6, height: 6, borderRadius: '50%', background: 'var(--success-500)',
-              animation: 'pulse 2s infinite',
-            }} />
-          </div>
-          <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>Live</span>
-        </div>
-      }
-    />
-    <IndiaMap dispatched={dispatched} />
-  </motion.div>
-);
+// ---- AI INSIGHTS PANEL (REDESIGNED WITH INTERACTIVE ROOT-CAUSE INSPECTOR & FILTERS) ----
+const insightIcons = {
+  revenue: TrendingUp,
+  efficiency: Fuel,
+  churn: ShieldAlert,
+  maintenance: AlertTriangle,
+  route: MapPin,
+};
 
-// ---- REVENUE STREAMS CHART ----
-const RevenueStreamsChart = () => {
-  const sortedStreams = useMemo(() =>
-    [...revenueStreams].sort((a, b) => b.value - a.value),
-    []
+const insightColors = {
+  revenue: '#16a34a',
+  efficiency: '#2563eb',
+  churn: '#dc2626',
+  maintenance: '#d97706',
+  route: '#7c3aed',
+};
+
+const AIInsightsPanel = ({ insights, onAction, span = 4 }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [selectedInsightId, setSelectedInsightId] = useState(null);
+  const [executedNotification, setExecutedNotification] = useState(null);
+
+  const filteredInsights = useMemo(() => {
+    if (categoryFilter === 'all') return insights;
+    return insights.filter(i => i.type === categoryFilter);
+  }, [insights, categoryFilter]);
+
+  const handleExecuteOptimization = (insight) => {
+    setExecutedNotification(`AI Action Executed: "${insight.title}" — Strategy deployed to operational ledger.`);
+    setTimeout(() => setExecutedNotification(null), 4000);
+    const caseMap = { revenue: 1, efficiency: 1, churn: 5, route: 3, maintenance: 6 };
+    onAction && onAction(caseMap[insight.type] || 1);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.55 }}
+      style={{
+        ...styles.card,
+        gridColumn: `span ${span}`,
+        display: 'flex',
+        flexDirection: 'column',
+        border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1',
+        boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.4)' : '0 4px 16px rgba(0,0,0,0.06)'
+      }}
+    >
+      <SectionHeader
+        icon={Brain}
+        title="AI Copilot Insights & Root Cause Engine"
+        subtitle="Click any recommendation card to inspect root causes, sensor pings, and trigger autonomous execution"
+        action={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--primary-400)', background: 'rgba(99, 102, 241, 0.12)', padding: '3px 8px', borderRadius: 6 }}>
+              <Sparkles size={10} style={{ display: 'inline', marginRight: 3 }} /> {filteredInsights.length} Recommendations
+            </span>
+          </div>
+        }
+      />
+
+      {/* Filter Category Toolbar */}
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10, paddingBottom: 8, borderBottom: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0' }}>
+        {[
+          { id: 'all', label: 'All Insights' },
+          { id: 'revenue', label: '💰 Revenue' },
+          { id: 'efficiency', label: '⛽ Fuel & Efficiency' },
+          { id: 'churn', label: '🛡️ Churn Risk' },
+          { id: 'maintenance', label: '🔧 Maintenance' }
+        ].map(cat => (
+          <button
+            key={cat.id}
+            onClick={() => setCategoryFilter(cat.id)}
+            style={{
+              background: categoryFilter === cat.id ? 'var(--primary-500)' : isDark ? '#1e293b' : '#f1f5f9',
+              color: categoryFilter === cat.id ? '#ffffff' : isDark ? '#cbd5e1' : '#334155',
+              border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1',
+              borderRadius: 6, padding: '3px 8px', fontSize: 10, fontWeight: 700, cursor: 'pointer'
+            }}
+          >
+            {cat.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Notification Toast */}
+      {executedNotification && (
+        <div style={{ marginTop: 8, background: 'rgba(22, 163, 74, 0.12)', border: '1px solid rgba(22, 163, 74, 0.3)', color: '#16a34a', padding: '6px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600 }}>
+          ✓ {executedNotification}
+        </div>
+      )}
+
+      {/* Insights List */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10, marginTop: 10, overflowY: 'auto', maxHeight: 420 }}>
+        {filteredInsights.map((insight, i) => {
+          const Icon = insightIcons[insight.type] || Lightbulb;
+          const color = insightColors[insight.type] || '#6366f1';
+          const isSelected = selectedInsightId === insight.id;
+
+          return (
+            <motion.div
+              key={insight.id}
+              initial={{ opacity: 0, x: 12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 + i * 0.05 }}
+              onClick={() => setSelectedInsightId(isSelected ? null : insight.id)}
+              style={{
+                ...styles.insightCard,
+                cursor: 'pointer',
+                borderLeft: `4px solid ${color}`,
+                background: isSelected
+                  ? (isDark ? 'rgba(99, 102, 241, 0.15)' : 'rgba(99, 102, 241, 0.06)')
+                  : (isDark ? 'rgba(30, 41, 59, 0.5)' : '#ffffff'),
+                border: isSelected ? `1.5px solid ${color}` : (isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #cbd5e1'),
+                boxShadow: isSelected ? `0 0 12px ${color}30` : '0 2px 6px rgba(0,0,0,0.03)'
+              }}
+            >
+              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <div
+                  style={{
+                    minWidth: 32,
+                    height: 32,
+                    borderRadius: 8,
+                    background: `${color}18`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Icon size={16} color={color} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 2 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a' }}>
+                      {insight.title}
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleExecuteOptimization(insight);
+                      }}
+                      style={{
+                        background: color,
+                        border: 'none',
+                        color: '#ffffff',
+                        borderRadius: 6,
+                        padding: '4px 10px',
+                        fontSize: 10,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+                      }}
+                    >
+                      Optimize Now
+                    </button>
+                  </div>
+                  <div style={{ fontSize: 11, color: isDark ? '#cbd5e1' : '#334155', lineHeight: 1.4, margin: '4px 0' }}>
+                    {insight.summary}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
+                    <span style={{
+                      fontSize: 10, fontWeight: 700, padding: '2px 8px',
+                      borderRadius: 4, background: `${color}18`, color: color,
+                    }}>
+                      {insight.confidence}% AI confidence
+                    </span>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a' }}>
+                      Impact: {insight.impact}
+                    </span>
+                    <span style={{ fontSize: 10, color: 'var(--primary-400)', marginLeft: 'auto' }}>
+                      {isSelected ? '▲ Hide Root Cause' : '▼ Inspect Root Cause & Math'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Inline Root Cause & Telemetry Derivation Inspector */}
+              {isSelected && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  style={{
+                    marginTop: 10, paddingTop: 10,
+                    borderTop: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0',
+                    display: 'flex', flexDirection: 'column', gap: 6, fontSize: 11
+                  }}
+                >
+                  <div style={{ fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a' }}>
+                    🔍 Underlying Telemetry & Root Cause Derivation:
+                  </div>
+                  <div style={{ color: isDark ? '#cbd5e1' : '#475569', background: isDark ? 'rgba(0,0,0,0.2)' : '#f8fafc', padding: 8, borderRadius: 6 }}>
+                    <div>• <strong>Trigger:</strong> {insight.action || 'AI Agent observed 60-day historical variance anomaly.'}</div>
+                    <div>• <strong>Primary Engine:</strong> Autonomous Intelligence Platform (AIP) & Knowledge Graph.</div>
+                    <div>• <strong>Projected ROI:</strong> {insight.impact} within 30 days of execution.</div>
+                  </div>
+                </motion.div>
+              )}
+            </motion.div>
+          );
+        })}
+      </div>
+    </motion.div>
   );
-  const maxVal = sortedStreams[0]?.value || 1;
+};
+// ---- REVENUE STREAMS CHART (REDESIGNED WITH PRODUCT VERTICAL DEEP-DIVE & FILTERS) ----
+const RevenueStreamsChart = () => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  const [streamFilterCategory, setStreamFilterCategory] = useState('all');
+  const [selectedStreamName, setSelectedStreamName] = useState(null);
+
+  const filteredStreams = useMemo(() => {
+    const list = [...revenueStreams].sort((a, b) => b.value - a.value);
+    if (streamFilterCategory === 'all') return list;
+    if (streamFilterCategory === 'saas') return list.filter(s => s.name.includes('SaaS') || s.name.includes('Subscription') || s.name.includes('API') || s.name.includes('Copilot') || s.name.includes('ERP') || s.name.includes('CRM'));
+    if (streamFilterCategory === 'logistics') return list.filter(s => s.name.includes('GPS') || s.name.includes('Toll') || s.name.includes('Fuel') || s.name.includes('Marketplace') || s.name.includes('Predictive'));
+    return list.filter(s => s.name.includes('Insurance') || s.name.includes('Financing'));
+  }, [streamFilterCategory]);
+
+  const maxVal = filteredStreams[0]?.value || 1;
+  const totalRev = filteredStreams.reduce((sum, s) => sum + s.value, 0);
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.75 }}
-      style={{ ...styles.card, gridColumn: 'span 8' }}
+      style={{
+        ...styles.card,
+        gridColumn: 'span 8',
+        border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1',
+        boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.4)' : '0 4px 16px rgba(0,0,0,0.06)'
+      }}
     >
       <SectionHeader
         icon={BarChart3}
-        title="Revenue Streams"
-        subtitle={`${revenueStreams.length} product verticals`}
+        title="Product Vertical Revenue Streams"
+        subtitle={`Click any of the ${filteredStreams.length} product verticals to inspect MRR/ARR derivation formulas, ARPU, and active accounts`}
         action={
-          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-            Total: <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-              {formatCurrency(revenueStreams.reduce((sum, s) => sum + s.value, 0))}
+          <div style={{ fontSize: 11, color: isDark ? '#cbd5e1' : '#334155' }}>
+            Total Vertical Revenue: <span style={{ color: '#16a34a', fontWeight: 800 }}>
+              {formatCurrency(totalRev)}
             </span>
           </div>
         }
       />
-      <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {sortedStreams.map((stream, i) => (
-          <motion.div
-            key={stream.name}
-            initial={{ opacity: 0, x: -16 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.8 + i * 0.04 }}
-            style={{ display: 'flex', alignItems: 'center', gap: 12 }}
+
+      {/* Category Filter Tabs */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, paddingBottom: 8, borderBottom: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0' }}>
+        {[
+          { id: 'all', label: 'All 12 Verticals' },
+          { id: 'saas', label: '💻 SaaS & Subscriptions' },
+          { id: 'logistics', label: '🚛 Logistics & Telematics' },
+          { id: 'finance', label: '💳 Financial & Financing' }
+        ].map(cat => (
+          <button
+            key={cat.id}
+            onClick={() => setStreamFilterCategory(cat.id)}
+            style={{
+              background: streamFilterCategory === cat.id ? 'var(--primary-500)' : isDark ? '#1e293b' : '#f1f5f9',
+              color: streamFilterCategory === cat.id ? '#ffffff' : isDark ? '#cbd5e1' : '#334155',
+              border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1',
+              borderRadius: 6, padding: '4px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer'
+            }}
           >
-            <div style={{
-              width: 140, fontSize: 11, color: 'var(--text-secondary)',
-              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-              flexShrink: 0,
-            }}>
-              {stream.name}
-            </div>
-            <div style={{ flex: 1, position: 'relative', height: 22, borderRadius: 4, background: 'var(--bg-600)', overflow: 'hidden' }}>
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${(stream.value / maxVal) * 100}%` }}
-                transition={{ duration: 0.9, delay: 0.85 + i * 0.05 }}
-                style={{
-                  height: '100%',
-                  borderRadius: 4,
-                  background: `linear-gradient(90deg, ${stream.color}cc, ${stream.color})`,
-                  position: 'relative',
-                }}
-              />
-            </div>
-            <div style={{ width: 65, fontSize: 11, fontWeight: 600, color: 'var(--text-primary)', textAlign: 'right', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>
-              {formatCurrency(stream.value)}
-            </div>
-            <div style={{
-              width: 50, fontSize: 10, fontWeight: 600, textAlign: 'right', flexShrink: 0,
-              color: stream.growth >= 30 ? 'var(--success-500)' : stream.growth >= 15 ? 'var(--primary-400)' : 'var(--text-secondary)',
-            }}>
-              +{stream.growth}%
-            </div>
-          </motion.div>
+            {cat.label}
+          </button>
         ))}
+      </div>
+
+      <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {filteredStreams.map((stream, i) => {
+          const isSelected = selectedStreamName === stream.name;
+          const sharePct = ((stream.value / totalRev) * 100).toFixed(1);
+
+          return (
+            <div key={stream.name} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <motion.div
+                initial={{ opacity: 0, x: -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 + i * 0.03 }}
+                onClick={() => setSelectedStreamName(isSelected ? null : stream.name)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 12, padding: '6px 10px', borderRadius: 8, cursor: 'pointer',
+                  background: isSelected ? (isDark ? 'rgba(99,102,241,0.15)' : 'rgba(99,102,241,0.08)') : 'transparent',
+                  border: isSelected ? '1px solid var(--primary-500)' : '1px solid transparent'
+                }}
+              >
+                <div style={{
+                  width: 150, fontSize: 12, fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a',
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flexShrink: 0,
+                }}>
+                  {stream.name}
+                </div>
+                <div style={{ flex: 1, position: 'relative', height: 22, borderRadius: 6, background: isDark ? '#1e293b' : '#e2e8f0', overflow: 'hidden' }}>
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(stream.value / maxVal) * 100}%` }}
+                    transition={{ duration: 0.8, delay: 0.15 + i * 0.04 }}
+                    style={{
+                      height: '100%',
+                      borderRadius: 6,
+                      background: `linear-gradient(90deg, ${stream.color}dd, ${stream.color})`,
+                      position: 'relative',
+                    }}
+                  />
+                </div>
+                <div style={{ width: 75, fontSize: 12, fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a', textAlign: 'right', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>
+                  {formatCurrency(stream.value)}
+                </div>
+                <div style={{
+                  width: 60, fontSize: 11, fontWeight: 700, textAlign: 'right', flexShrink: 0,
+                  color: stream.growth >= 30 ? '#16a34a' : stream.growth >= 15 ? 'var(--primary-400)' : '#d97706',
+                }}>
+                  +{stream.growth}%
+                </div>
+              </motion.div>
+
+              {/* Product Vertical Derivation Drawer */}
+              {isSelected && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  style={{
+                    margin: '0 10px 6px', padding: 12, background: isDark ? '#1e293b' : '#f8fafc',
+                    border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1', borderRadius: 8,
+                    display: 'flex', flexDirection: 'column', gap: 6, fontSize: 11
+                  }}
+                >
+                  <div style={{ fontWeight: 700, color: stream.color, fontSize: 12 }}>
+                    💰 {stream.name} — Revenue Derivation Breakdown ({sharePct}% Vertical Share):
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginTop: 4 }}>
+                    <div>• <strong>Annual Growth Rate:</strong> +{stream.growth}% YoY</div>
+                    <div>• <strong>Active Subscribed Fleet:</strong> 524,389 Vehicles</div>
+                    <div>• <strong>Net Revenue Retention:</strong> 98.4% NRR</div>
+                  </div>
+                  <code style={{ fontSize: 10, fontFamily: 'monospace', color: isDark ? '#a5b4fc' : '#4338ca', display: 'block', background: isDark ? 'rgba(0,0,0,0.3)' : '#ffffff', padding: '6px 8px', borderRadius: 4, marginTop: 4 }}>
+                    MRR Derivation = Active Subscriptions ({stream.value > 100000000 ? '48,000 Shippers' : '108,000 Vehicles'}) × Average ARPU (₹{Math.round(stream.value / 524389)}) / month
+                  </code>
+                </motion.div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </motion.div>
   );
 };
-
-// ---- ALERTS FEED ----
+// ---- ALERTS FEED (REDESIGNED WITH INCIDENT INVESTIGATION HUD & SEVERITY FILTERS) ----
 const alertTypeColors = {
-  danger: 'var(--danger-500)',
-  warning: 'var(--warning-500)',
-  success: 'var(--success-500)',
-  info: 'var(--info-500)',
+  danger: '#dc2626',
+  warning: '#d97706',
+  success: '#16a34a',
+  info: '#2563eb',
 };
 
 const AlertsFeed = ({ alerts, onResolveClick, span = 4 }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  const [severityFilter, setSeverityFilter] = useState('all');
+  const [selectedAlertId, setSelectedAlertId] = useState(null);
+  const [resolvedToast, setResolvedToast] = useState(null);
+
+  const filteredAlerts = useMemo(() => {
+    if (severityFilter === 'all') return alerts;
+    return alerts.filter(a => a.type === severityFilter);
+  }, [alerts, severityFilter]);
+
+  const handleResolveAlert = (alert) => {
+    setResolvedToast(`Alert Resolved: "${alert.title}" — Resolution logged to GatiFleet Audit Trail.`);
+    setTimeout(() => setResolvedToast(null), 4000);
+    const alertCaseMap = { 'Breakdown': 6, 'Temperature': 6, 'FASTag': 7, 'Fatigue': 4 };
+    const key = Object.keys(alertCaseMap).find(k => alert.title.includes(k) || alert.message.includes(k));
+    onResolveClick && onResolveClick(alertCaseMap[key] || 7);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.85 }}
-      style={{ ...styles.card, gridColumn: `span ${span}`, display: 'flex', flexDirection: 'column' }}
+      style={{
+        ...styles.card,
+        gridColumn: `span ${span}`,
+        display: 'flex',
+        flexDirection: 'column',
+        border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1',
+        boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.4)' : '0 4px 16px rgba(0,0,0,0.06)'
+      }}
     >
       <SectionHeader
         icon={AlertTriangle}
-        title="Operational Alerts"
-        subtitle="Real-time fleet notifications"
+        title="Operational Alerts & Telemetry Feed"
+        subtitle="Click any notification to open live GPS telemetry HUD and dispatch resolution"
         action={
-          <div style={{ ...styles.badge, background: 'rgba(255, 77, 107, 0.15)', color: 'var(--danger-500)' }}>
-            {alerts.filter(a => a.type === 'danger').length} Critical
+          <div style={{ ...styles.badge, background: 'rgba(220, 38, 38, 0.12)', color: '#dc2626', fontWeight: 800 }}>
+            {alerts.filter(a => a.type === 'danger').length} Critical Alerts
           </div>
         }
       />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, marginTop: 10 }}>
-        {alerts.slice(0, 5).map((alert, i) => (
-          <motion.div
-            key={alert.id}
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.9 + i * 0.06 }}
-            whileHover={{ backgroundColor: 'var(--bg-600)' }}
-            style={styles.alertItem}
+
+      {/* Severity Filter Toolbar */}
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10, paddingBottom: 8, borderBottom: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0' }}>
+        {[
+          { id: 'all', label: 'All Alerts' },
+          { id: 'danger', label: '🔴 Critical' },
+          { id: 'warning', label: '🟡 Warning' },
+          { id: 'info', label: '🔵 Info' }
+        ].map(sev => (
+          <button
+            key={sev.id}
+            onClick={() => setSeverityFilter(sev.id)}
+            style={{
+              background: severityFilter === sev.id ? 'var(--primary-500)' : isDark ? '#1e293b' : '#f1f5f9',
+              color: severityFilter === sev.id ? '#ffffff' : isDark ? '#cbd5e1' : '#334155',
+              border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1',
+              borderRadius: 6, padding: '3px 8px', fontSize: 10, fontWeight: 700, cursor: 'pointer'
+            }}
           >
-            <div style={{
-              minWidth: 8, height: 8, borderRadius: '50%',
-              background: alertTypeColors[alert.type],
-              boxShadow: `0 0 8px ${alertTypeColors[alert.type]}60`,
-              marginTop: 4,
-            }} />
-            <div style={{ flex: 1, minWidth: 0 }}>
+            {sev.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Toast Notification */}
+      {resolvedToast && (
+        <div style={{ marginTop: 8, background: 'rgba(22, 163, 74, 0.12)', border: '1px solid rgba(22, 163, 74, 0.3)', color: '#16a34a', padding: '6px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600 }}>
+          ✓ {resolvedToast}
+        </div>
+      )}
+
+      {/* Alerts Feed Items */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10, overflowY: 'auto', maxHeight: 420 }}>
+        {filteredAlerts.slice(0, 6).map((alert, i) => {
+          const isSelected = selectedAlertId === alert.id;
+          const color = alertTypeColors[alert.type] || '#2563eb';
+
+          return (
+            <motion.div
+              key={alert.id}
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 + i * 0.04 }}
+              onClick={() => setSelectedAlertId(isSelected ? null : alert.id)}
+              style={{
+                ...styles.alertItem,
+                cursor: 'pointer',
+                borderRadius: 8,
+                padding: '10px 12px',
+                background: isSelected ? (isDark ? 'rgba(99,102,241,0.15)' : 'rgba(99,102,241,0.06)') : (isDark ? 'rgba(30,41,59,0.4)' : '#ffffff'),
+                border: isSelected ? `1.5px solid ${color}` : (isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #cbd5e1')
+              }}
+            >
               <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: 2,
-              }}>
-                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>
-                  {alert.title}
-                </span>
-                {(alert.title.includes('Breakdown') || alert.title.includes('FASTag') || alert.title.includes('Temperature') || alert.title.includes('Fatigue')) && alert.type !== 'success' ? (
+                minWidth: 10, height: 10, borderRadius: '50%',
+                background: color,
+                boxShadow: `0 0 8px ${color}60`,
+                marginTop: 3,
+              }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: 2 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a' }}>
+                    {alert.title}
+                  </span>
                   <button
-                    onClick={() => {
-                      const alertCaseMap = {
-                        'Breakdown': 6,
-                        'Temperature': 6,
-                        'FASTag': 7,
-                        'Fatigue': 4
-                      };
-                      const key = Object.keys(alertCaseMap).find(k => alert.title.includes(k) || alert.message.includes(k));
-                      onResolveClick(alertCaseMap[key] || 7);
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleResolveAlert(alert);
                     }}
-                    style={styles.alertResolveBtn}
+                    style={{
+                      background: color,
+                      border: 'none',
+                      color: '#ffffff',
+                      borderRadius: 6,
+                      padding: '3px 8px',
+                      fontSize: 10,
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
                   >
                     Resolve
                   </button>
-                ) : null}
+                </div>
+                <div style={{ fontSize: 11, color: isDark ? '#cbd5e1' : '#334155', lineHeight: 1.4, margin: '2px 0' }}>
+                  {alert.message}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, fontSize: 10, color: isDark ? '#94a3b8' : '#64748b' }}>
+                  <span>⏱️ {alert.time}</span>
+                  <span style={{ color: 'var(--primary-400)', fontWeight: 600 }}>
+                    {isSelected ? '▲ Hide Live HUD' : '▼ Inspect Telemetry HUD'}
+                  </span>
+                </div>
+
+                {/* Expanded Telemetry HUD & Incident Action Box */}
+                {isSelected && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    style={{
+                      marginTop: 8, paddingTop: 8,
+                      borderTop: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0',
+                      display: 'flex', flexDirection: 'column', gap: 6, fontSize: 11
+                    }}
+                  >
+                    <div style={{ fontWeight: 700, color: color }}>
+                      📍 Live Incident Telemetry & Action HUD:
+                    </div>
+                    <div style={{ color: isDark ? '#cbd5e1' : '#475569', background: isDark ? 'rgba(0,0,0,0.25)' : '#f8fafc', padding: 8, borderRadius: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <div>• <strong>CAN Bus DTC Code:</strong> OBD-II Ping Active (Code: P0300)</div>
+                      <div>• <strong>FASTag Gate Status:</strong> Auto-recharge trigger standing by.</div>
+                      <div>• <strong>Driver Fatigue Index:</strong> Hours of Service (HOS) boundary active.</div>
+                    </div>
+                  </motion.div>
+                )}
               </div>
-              <div style={{
-                fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.4,
-                overflow: 'hidden', textOverflow: 'ellipsis',
-                display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-              }}>
-                {alert.message}
-              </div>
-              <div style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 3, opacity: 0.7 }}>
-                {alert.time}
-              </div>
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          );
+        })}
       </div>
     </motion.div>
   );
