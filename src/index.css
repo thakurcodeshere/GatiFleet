@@ -145,32 +145,32 @@
   --bg-700: #ffffff;
   --bg-600: #e2e8f0;
   --bg-500: #cbd5e1;
-  --bg-400: #94a3b8;
+  --bg-400: #64748b;
 
-  --surface: rgba(255, 255, 255, 0.85);
+  --surface: #ffffff;
   --surface-solid: #ffffff;
-  --surface-border: rgba(99, 102, 241, 0.1);
-  --surface-hover: rgba(241, 245, 249, 0.95);
-  --surface-active: rgba(226, 232, 240, 0.95);
+  --surface-border: #cbd5e1;
+  --surface-hover: #f1f5f9;
+  --surface-active: #e2e8f0;
 
-  --text-primary: #1e293b;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
-  --text-inverse: #f8fafc;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #475569;
+  --text-inverse: #ffffff;
 
-  --border-subtle: rgba(0, 0, 0, 0.04);
-  --border-default: rgba(0, 0, 0, 0.08);
-  --border-strong: rgba(0, 0, 0, 0.15);
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-default: #cbd5e1;
+  --border-strong: #94a3b8;
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.08);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 20px 30px -10px rgba(0, 0, 0, 0.2);
+  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.12);
 
-  --gradient-dark: linear-gradient(180deg, #f1f5f9 0%, #f8fafc 100%);
-  --gradient-card: linear-gradient(135deg, rgba(99, 102, 241, 0.03) 0%, rgba(139, 92, 246, 0.01) 100%);
-  --gradient-glow: radial-gradient(ellipse at 50% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+  --gradient-dark: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  --gradient-card: linear-gradient(135deg, rgba(99, 102, 241, 0.04) 0%, rgba(139, 92, 246, 0.02) 100%);
+  --gradient-glow: radial-gradient(ellipse at 50% 0%, rgba(99, 102, 241, 0.12) 0%, transparent 70%);
 }
 
 /* ============================================================

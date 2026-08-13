@@ -40,7 +40,7 @@ const ROLE_PERMISSIONS = {
 
 function App() {
   const [theme, setTheme] = useState(
-    () => localStorage.getItem('gatifleet-theme') || 'dark'
+    () => localStorage.getItem('gatifleet-theme') || 'light'
   );
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [copilotOpen, setCopilotOpen] = useState(false);

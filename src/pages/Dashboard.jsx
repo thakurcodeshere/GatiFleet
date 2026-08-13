@@ -1281,7 +1281,7 @@ const Dashboard = () => {
   ];
 
   // --- Stateful variables for segment selection & modal views ---
-  const [selectedSegmentKey, setSelectedSegmentKey] = useState('revenueToday');
+  const [selectedSegmentKey, setSelectedSegmentKey] = useState(null);
   const [architectureModalSegment, setArchitectureModalSegment] = useState(null);
 
   // --- Stateful variables for platform metrics ---
@@ -1846,11 +1846,11 @@ const Dashboard = () => {
             </div>
           ))}
 
-          {/* Interactive Scalable Graph Cockpit & Feature Deep-Dive */}
+          {/* Interactive Scalable Graph Cockpit & Feature Deep-Dive (Side Drawer Panel) */}
           {selectedSegmentKey && (
             <SegmentDeepDiveCockpit
               segmentKey={selectedSegmentKey}
-              onOpenArchitecture={(key) => setArchitectureModalSegment(key)}
+              onClose={() => setSelectedSegmentKey(null)}
             />
           )}
 
