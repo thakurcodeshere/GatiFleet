@@ -971,32 +971,42 @@ const RevenueChart = () => {
 };
 
 // ---- INDIA MAP SECTION ----
-const FleetMapSection = ({ dispatched }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5, delay: 0.6 }}
-    style={{ ...styles.card, gridColumn: 'span 6' }}
-  >
-    <SectionHeader
-      icon={MapPin}
-      title="Fleet Distribution"
-      subtitle="Active truck clusters across India"
-      action={
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--success-500)' }}>
-            <div style={{
-              width: 6, height: 6, borderRadius: '50%', background: 'var(--success-500)',
-              animation: 'pulse 2s infinite',
-            }} />
+const FleetMapSection = ({ dispatched, span = 8 }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.6 }}
+      style={{
+        ...styles.card,
+        gridColumn: `span ${span}`,
+        border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1',
+        boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.4)' : '0 4px 16px rgba(0,0,0,0.06)'
+      }}
+    >
+      <SectionHeader
+        icon={MapPin}
+        title="Fleet Distribution & Telemetry Map"
+        subtitle="Active truck clusters across India"
+        action={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#16a34a', boxShadow: '0 0 8px #16a34a' }}>
+              <div style={{
+                width: 8, height: 8, borderRadius: '50%', background: '#16a34a',
+                animation: 'pulse 2s infinite',
+              }} />
+            </div>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#16a34a' }}>Live</span>
           </div>
-          <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>Live</span>
-        </div>
-      }
-    />
-    <IndiaMap dispatched={dispatched} />
-  </motion.div>
-);
+        }
+      />
+      <IndiaMap dispatched={dispatched} />
+    </motion.div>
+  );
+};
 
 // ---- TOP ROUTES TABLE (REDESIGNED WITH CITY-TO-CITY DERIVATIONS & INTERACTIVE DEEP-DIVE) ----
 const getRouteDerivationData = (route) => {
@@ -2727,28 +2737,31 @@ const Dashboard = () => {
             />
           )}
 
-          {/* Row 2: Operations Section (Only for Ops, CEO, Admin) */}
-          {(userRole === 'ADMIN' || userRole === 'CEO' || userRole === 'OPERATIONS') && <FleetMapSection dispatched={dispatchedActive} />}
+          {/* Row 2: Top Routes Corridor Engine */}
           {(userRole === 'ADMIN' || userRole === 'CEO' || userRole === 'OPERATIONS') && <TopRoutes routes={routes} />}
 
-          {/* Row 3: Finance Chart (Only for Finance/CEO/Admin) or Customized Panels (HR, Security) */}
+          {/* Row 3: Revenue Overview & Derivation Engine */}
           {(userRole === 'ADMIN' || userRole === 'CEO' || userRole === 'FINANCE' || userRole === 'CFO' || userRole === 'ADVISOR' || userRole === 'CRO') && <RevenueChart />}
           {userRole === 'HR' && <HRWorkforcePanel />}
           {(userRole === 'CTO' || userRole === 'SECURITY') && <TechSecurityPanel />}
-          
+
+          {/* Row 4: Revenue Streams & AI Copilot Insights */}
+          {(userRole === 'ADMIN' || userRole === 'CEO' || userRole === 'FINANCE' || userRole === 'CFO' || userRole === 'ADVISOR' || userRole === 'CRO') && <RevenueStreamsChart />}
           <AIInsightsPanel 
             insights={insights} 
             onAction={handleInlineActionTrigger} 
-            span={userRole === 'OPERATIONS' ? 6 : 4}
+            span={4}
           />
 
-          {/* Row 4: Revenue Streams or full-width Alerts */}
-          {(userRole === 'ADMIN' || userRole === 'CEO' || userRole === 'FINANCE' || userRole === 'CFO' || userRole === 'ADVISOR' || userRole === 'CRO') && <RevenueStreamsChart />}
+          {/* Bottom Row: Fleet Distribution Map frame placed right beside Operational Alerts & Telemetry Feed */}
+          {(userRole === 'ADMIN' || userRole === 'CEO' || userRole === 'OPERATIONS') && (
+            <FleetMapSection dispatched={dispatchedActive} span={8} />
+          )}
           
           <AlertsFeed 
             alerts={alerts} 
             onResolveClick={handleInlineActionTrigger} 
-            span={(userRole === 'ADMIN' || userRole === 'CEO' || userRole === 'FINANCE' || userRole === 'CFO' || userRole === 'ADVISOR' || userRole === 'CRO') ? 4 : (userRole === 'OPERATIONS' ? 6 : 12)}
+            span={4}
           />
         </div>
       )}
