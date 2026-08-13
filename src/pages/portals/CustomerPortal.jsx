@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { RealityEngine } from '../../data/RealityEngine';
 import { ALL_CUSTOMERS, LIFECYCLE_STATES, getHealthColor, getLifecycleColor, getChurnColor, getDealHealthColor } from '../../data/customerData';
+import CustomerOperatingSystem from './CustomerOperatingSystem';
 import { useTheme } from '../../context/ThemeContext';
 
 // ---- CONSTANTS ----
@@ -990,10 +991,7 @@ export default function CustomerPortal() {
 
   const renderTabContent = () => {
     if (viewMode === 'shipper') {
-      if (shipperTab === 'my_shipments') return renderShipperMyShipments();
-      if (shipperTab === 'my_invoices') return renderShipperInvoices();
-      if (shipperTab === 'book') return renderShipperBook();
-      if (shipperTab === 'my_support') return renderShipperSupport();
+      return <CustomerOperatingSystem customer={customer} />;
     }
     if (activeTab === 'profile') return renderProfile();
     if (activeTab === 'twins') return renderTwins();
