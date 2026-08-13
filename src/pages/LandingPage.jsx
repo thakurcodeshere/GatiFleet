@@ -74,13 +74,6 @@ export default function LandingPage() {
   const [error, setError] = useState('');
   const [authSuccess, setAuthSuccess] = useState(false);
 
-  const quickLaunchRole = (roleId, targetPath = '/customer-portal') => {
-    setAuthSuccess(true);
-    setUserRole(roleId);
-    localStorage.setItem('gatifleet-user-role', roleId);
-    window.location.hash = `#${targetPath}`;
-  };
-
   const handleRoleAuth = (e) => {
     e.preventDefault();
     if (!selectedRole) return;
